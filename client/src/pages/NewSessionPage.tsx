@@ -1,0 +1,185 @@
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { api } from '../api/client'
+import type { Game } from '../api/client'
+
+export default function NewSessionPage() {
+  const navigate = useNavigate()
+  const [games, setGames] = useState<Game[]>([])
+  const [selectedGame, setSelectedGame] = useState<Game | null>(null)
+  const [title, setTitle] = useState('')
+  const [config, setConfig] = useState<Record<string, number>>({})
+  const [playerNames, setPlayerNames] = useState<string[]>(['', ''])
+  const [loading, setLoading] = useState(true)
+  const [creating, setCreating] = useState(false)
+
+  useEffect(() => {
+    api.listGames().then((games) => {
+      setGames(games)
+      setLoading(false)
+    })
+  }, [])
+
+  useEffect(() => {
+    if (selectedGame?.config_schema) {
+      const defaults: Record<string, number> = {}
+      for (const field of selectedGame.config_schema) {
+        defaults[field.key] = field.defaultValue
+      }
+      setConfig(defaults)
+    }
+  }, [selectedGame])
+
+  function updateConfig(key: string, value: number) {
+    setConfig((prev) => ({ ...prev, [key]: value }))
+  }
+
+  function addPlayer() {
+    setPlayerNames([...playerNames, ''])
+  }
+
+  function removePlayer(i: number) {
+    setPlayerNames(playerNames.filter((_, idx) => idx !== i))
+  }
+
+  function updatePlayer(i: number, name: string) {
+    const next = [...playerNames]
+    next[i] = name
+    setPlayerNames(next)
+  }
+
+  async function handleStart() {
+    if (!selectedGame) return
+    setCreating(true)
+    const session = await api.createSession({
+      game_id: selectedGame.id,
+      title: title || undefined,
+    })
+    for (const name of playerNames.filter(Boolean)) {
+      await api.addPlayer(session.id, name)
+    }
+    await api.startSession(session.id, config)
+    navigate(`/sessions/${session.id}`)
+  }
+
+  if (loading) return <p className="text-gray-500">Loading games...</p>
+
+  const validCount = playerNames.filter(Boolean).length
+  const canStart =
+    selectedGame &&
+    validCount >= selectedGame.min_players &&
+    validCount <= selectedGame.max_players
+
+  return (
+    <div className="max-w-xl">
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">New Game</h1>
+
+      {/* Game selector */}
+      <section className="mb-8">
+        <h2 className="text-sm font-medium text-gray-700 mb-3">Select Game</h2>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {games.map((g) => (
+            <button
+              key={g.id}
+              onClick={() => setSelectedGame(g)}
+              className={`text-left p-4 rounded-lg border-2 transition ${
+                selectedGame?.id === g.id
+                  ? 'border-blue-500 bg-blue-50'
+                  : 'border-gray-200 bg-white hover:border-gray-300'
+              }`}
+            >
+              <h3 className="font-semibold text-gray-900">{g.name}</h3>
+              <p className="text-sm text-gray-500 mt-1">{g.description}</p>
+              <p className="text-xs text-gray-400 mt-2">
+                {g.min_players}-{g.max_players} players
+              </p>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {selectedGame && (
+        <>
+          {/* Session title & game config */}
+          <section className="mb-8 space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700 block mb-1">
+                Session Title
+              </label>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="e.g. Friday Night Game"
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            {selectedGame.config_schema.map((field) => (
+              <div key={field.key}>
+                <label className="text-sm font-medium text-gray-700 block mb-1">
+                  {field.label}
+                </label>
+                <input
+                  type="number"
+                  value={config[field.key] ?? field.defaultValue}
+                  onChange={(e) => updateConfig(field.key, Number(e.target.value))}
+                  min={field.min}
+                  max={field.max}
+                  className="w-24 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                {field.description && (
+                  <p className="text-xs text-gray-400 mt-1">{field.description}</p>
+                )}
+              </div>
+            ))}
+          </section>
+
+          {/* Players */}
+          <section className="mb-8">
+            <h2 className="text-sm font-medium text-gray-700 mb-3">
+              Players ({validCount}/{selectedGame.min_players}–{selectedGame.max_players})
+            </h2>
+            <div className="space-y-2">
+              {playerNames.map((name, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <span className="text-sm text-gray-400 w-6">{i + 1}.</span>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => updatePlayer(i, e.target.value)}
+                    placeholder={`Player ${i + 1}`}
+                    className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  {playerNames.length > 2 && (
+                    <button
+                      onClick={() => removePlayer(i)}
+                      className="text-red-500 hover:text-red-700 text-sm"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+            {validCount < selectedGame.max_players && (
+              <button
+                onClick={addPlayer}
+                className="mt-2 text-sm text-blue-600 hover:text-blue-800"
+              >
+                + Add player
+              </button>
+            )}
+          </section>
+
+          <button
+            onClick={handleStart}
+            disabled={!canStart || creating}
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+          >
+            {creating ? 'Starting...' : 'Start Game'}
+          </button>
+        </>
+      )}
+    </div>
+  )
+}
