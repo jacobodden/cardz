@@ -28,7 +28,7 @@ export const upAndDown: CardGame = {
         key: 'peak',
         label: 'Peak hand size',
         type: 'number',
-        defaultValue: 3,
+        defaultValue: 10,
         min: 1,
         max: 10,
         description: 'Maximum number of cards per hand at the peak round (capped by player count)',
