@@ -1,7 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api/client'
-import type { Game } from '../api/client'
+import type { ConfigField, Game } from '../api/client'
+
+function calculatePeak(numPlayers: number, field?: ConfigField): number {
+  if (numPlayers < 1) return field?.defaultValue ?? 3
+  return Math.min(Math.floor(51 / numPlayers), field?.max ?? 10)
+}
 
 export default function NewSessionPage() {
   const navigate = useNavigate()
@@ -13,6 +18,9 @@ export default function NewSessionPage() {
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
 
+  const lastAutoPeak = useRef<number | null>(null)
+  const prevGameId = useRef<number | null>(null)
+
   useEffect(() => {
     api.listGames().then((games) => {
       setGames(games)
@@ -21,14 +29,33 @@ export default function NewSessionPage() {
   }, [])
 
   useEffect(() => {
-    if (selectedGame?.config_schema) {
+    if (!selectedGame) return
+
+    // Reset auto-peak tracking when switching games
+    if (prevGameId.current !== selectedGame.id) {
+      lastAutoPeak.current = null
+      prevGameId.current = selectedGame.id
+    }
+
+    if (selectedGame.slug === 'up-and-down') {
+      const numPlayers = playerNames.filter(Boolean).length
+      const peakField = selectedGame.config_schema.find((f) => f.key === 'peak')
+      const calculatedPeak = calculatePeak(numPlayers, peakField)
+
+      // Only auto-update if user hasn't manually edited the peak
+      // `config` is intentionally excluded from deps to avoid a loop on setConfig
+      if (lastAutoPeak.current === null || config.peak === lastAutoPeak.current) {
+        setConfig((prev) => ({ ...prev, peak: calculatedPeak }))
+        lastAutoPeak.current = calculatedPeak
+      }
+    } else {
       const defaults: Record<string, number> = {}
       for (const field of selectedGame.config_schema) {
         defaults[field.key] = field.defaultValue
       }
       setConfig(defaults)
     }
-  }, [selectedGame])
+  }, [selectedGame, playerNames])
 
   function updateConfig(key: string, value: number) {
     setConfig((prev) => ({ ...prev, [key]: value }))
@@ -114,24 +141,34 @@ export default function NewSessionPage() {
                 className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            {selectedGame.config_schema.map((field) => (
-              <div key={field.key}>
-                <label className="text-sm font-medium text-gray-700 block mb-1">
-                  {field.label}
-                </label>
-                <input
-                  type="number"
-                  value={config[field.key] ?? field.defaultValue}
-                  onChange={(e) => updateConfig(field.key, Number(e.target.value))}
-                  min={field.min}
-                  max={field.max}
-                  className="w-24 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                {field.description && (
-                  <p className="text-xs text-gray-400 mt-1">{field.description}</p>
-                )}
-              </div>
-            ))}
+            {selectedGame.config_schema.map((field) => {
+              const isPeak = selectedGame.slug === 'up-and-down' && field.key === 'peak'
+              const autoValue = isPeak && validCount >= 1 ? calculatePeak(validCount, field) : null
+              const isManuallyEdited = isPeak && lastAutoPeak.current !== null && config.peak !== lastAutoPeak.current
+              return (
+                <div key={field.key}>
+                  <label className="text-sm font-medium text-gray-700 block mb-1">
+                    {field.label}
+                  </label>
+                  <input
+                    type="number"
+                    value={config[field.key] ?? field.defaultValue}
+                    onChange={(e) => updateConfig(field.key, Number(e.target.value))}
+                    min={field.min}
+                    max={field.max}
+                    className="w-24 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  {autoValue !== null && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      {isManuallyEdited ? 'Suggested' : 'Calculated'} peak: {autoValue} for {validCount} player{validCount > 1 ? 's' : ''}
+                    </p>
+                  )}
+                  {!autoValue && field.description && (
+                    <p className="text-xs text-gray-400 mt-1">{field.description}</p>
+                  )}
+                </div>
+              )
+            })}
           </section>
 
           {/* Players */}
