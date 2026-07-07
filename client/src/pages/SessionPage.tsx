@@ -4,10 +4,10 @@ import { api } from '../api/client'
 import type { Session, CurrentRound, ScoreboardRow, InputField, ScoreDataValue, RoundMetaInfo } from '../api/client'
 
 const SUIT_COLORS: Record<string, string> = {
-  '♠': 'text-gray-900',
-  '♥': 'text-red-600',
-  '♣': 'text-gray-900',
-  '♦': 'text-red-600',
+  '♠': 'text-gray-900 dark:text-gray-100',
+  '♥': 'text-red-600 dark:text-red-400',
+  '♣': 'text-gray-900 dark:text-gray-100',
+  '♦': 'text-red-600 dark:text-red-400',
 }
 
 function findWinners(rows: ScoreboardRow[], gameSlug?: string): Set<number> {
@@ -118,7 +118,7 @@ export default function SessionPage() {
     }
   }
 
-  if (!session) return <p className="text-gray-500">Loading...</p>
+  if (!session) return <p className="text-gray-500 dark:text-gray-400">Loading...</p>
 
   const sessionPlayers = session.players ?? []
   const roundFields = round?.fields?.filter((f) => f.scope === 'round') ?? []
@@ -142,11 +142,11 @@ export default function SessionPage() {
     : null
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-2">
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
         {session.title || session.game?.name || 'Game'}
       </h1>
       {session.game && (
-        <p className="text-sm text-gray-500 mb-6">{session.game.name}</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">{session.game.name}</p>
       )}
 
       {/* Scoreboard */}
@@ -154,7 +154,7 @@ export default function SessionPage() {
         <table className="w-full text-sm border-collapse">
           <thead>
             <tr>
-              <th className="text-left p-2 border-b border-gray-200 font-medium text-gray-700">
+              <th className="text-left p-2 border-b border-gray-200 dark:border-gray-700 font-medium text-gray-700 dark:text-gray-300">
                 Player
               </th>
               {totalRounds > 0 && Array.from({ length: totalRounds }, (_, i) => {
@@ -164,7 +164,7 @@ export default function SessionPage() {
                 return (
                   <th
                     key={i}
-                    className="text-center p-2 border-b border-gray-200 font-medium text-gray-700 w-16"
+                    className="text-center p-2 border-b border-gray-200 dark:border-gray-700 font-medium text-gray-700 dark:text-gray-300 min-w-[2.5rem] sm:w-16"
                   >
                     <div className="text-xs">R{roundNum}</div>
                     {trump && (
@@ -178,7 +178,7 @@ export default function SessionPage() {
                   </th>
                 )
               })}
-              <th className="text-center p-2 border-b border-gray-200 font-medium text-gray-700 w-12">
+              <th className="text-center p-2 border-b border-gray-200 dark:border-gray-700 font-medium text-gray-700 dark:text-gray-300 min-w-[3rem] sm:w-12">
                 Total
               </th>
             </tr>
@@ -189,13 +189,13 @@ export default function SessionPage() {
               return (
                 <tr
                   key={row.player_id}
-                  className={`hover:bg-gray-50 ${isWinner && isComplete ? 'bg-yellow-50' : ''}`}
+                  className={`hover:bg-gray-50 dark:hover:bg-gray-800/50 ${isWinner && isComplete ? 'bg-yellow-50 dark:bg-yellow-900/20' : ''}`}
                 >
-                  <td className="p-2 border-b border-gray-100 text-gray-900 font-medium">
+                  <td className="p-2 border-b border-gray-100 dark:border-gray-800 text-gray-900 dark:text-gray-100 font-medium">
                     <span className="flex items-center gap-1">
                       {row.name}
                       {isWinner && isComplete && (
-                        <span className="text-yellow-500 text-sm" title="Winner">
+                        <span className="text-yellow-500 dark:text-yellow-400 text-sm" title="Winner">
                           👑
                         </span>
                       )}
@@ -204,15 +204,15 @@ export default function SessionPage() {
                   {row.scores.map((s, i) => (
                     <td
                       key={i}
-                      className={`text-center p-2 border-b border-gray-100 ${
-                        s !== null ? 'text-gray-900' : 'text-gray-300'
+                      className={`text-center p-2 border-b border-gray-100 dark:border-gray-800 ${
+                        s !== null ? 'text-gray-900 dark:text-gray-100' : 'text-gray-300 dark:text-gray-600'
                       }`}
                     >
                       {s !== null ? s : '-'}
                     </td>
                   ))}
-                  <td className={`text-center p-2 border-b border-gray-100 font-bold ${
-                    isWinner && isComplete ? 'text-yellow-700' : 'text-gray-900'
+                  <td className={`text-center p-2 border-b border-gray-100 dark:border-gray-800 font-bold ${
+                    isWinner && isComplete ? 'text-yellow-700 dark:text-yellow-400' : 'text-gray-900 dark:text-gray-100'
                   }`}>
                     {row.total}
                   </td>
@@ -225,22 +225,22 @@ export default function SessionPage() {
 
       {/* Current round input */}
       {!isComplete && round && !round.complete && (
-        <section className="bg-white rounded-lg border border-gray-200 p-4">
+        <section className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4">
           <div className="flex items-baseline gap-3 mb-1">
-            <h2 className="font-semibold text-gray-900">
+            <h2 className="font-semibold text-gray-900 dark:text-gray-100">
               Round {round.round_number}
             </h2>
             {currentDealer && (
-              <span className="text-xs text-gray-400">Dealer: {currentDealer}</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500">Dealer: {currentDealer}</span>
             )}
           </div>
           {handSize > 0 && (
-            <p className="text-sm text-gray-500 mb-4">{handSize} cards</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{handSize} cards</p>
           )}
 
           {roundFields.length > 0 && (
-            <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-              <p className="text-xs font-medium text-gray-500 uppercase mb-2">Round Settings</p>
+            <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">Round Settings</p>
               <div className="flex items-center gap-3 flex-wrap">
                 {roundFields.map((f) => (
                   <RoundFieldInput
@@ -256,36 +256,38 @@ export default function SessionPage() {
 
           <div className="space-y-3">
             {sessionPlayers.map((p) => (
-              <div key={p.id} className="flex items-center gap-3 flex-wrap">
-                <span className="text-sm font-medium text-gray-700 w-24">{p.name}</span>
-                {playerFields.map((f) => (
-                  <PlayerFieldInput
-                    key={f.key}
-                    field={f}
-                    value={playerData[p.id]?.[f.key]}
-                    onChange={(v) =>
-                      setPlayerData((prev) => ({
-                        ...prev,
-                        [p.id]: { ...prev[p.id], [f.key]: v },
-                      }))
-                    }
-                  />
-                ))}
+              <div key={p.id} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-2 sm:p-0 rounded-lg sm:rounded-none odd:bg-gray-50 dark:odd:bg-gray-800/50 sm:odd:bg-transparent sm:dark:odd:bg-transparent">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 sm:w-24 sm:shrink-0">{p.name}</span>
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                  {playerFields.map((f) => (
+                    <PlayerFieldInput
+                      key={f.key}
+                      field={f}
+                      value={playerData[p.id]?.[f.key]}
+                      onChange={(v) =>
+                        setPlayerData((prev) => ({
+                          ...prev,
+                          [p.id]: { ...prev[p.id], [f.key]: v },
+                        }))
+                      }
+                    />
+                  ))}
+                </div>
               </div>
             ))}
           </div>
 
           {hookRuleViolated && (
-            <p className="text-red-600 text-sm mt-2">
+            <p className="text-red-600 dark:text-red-400 text-sm mt-2">
               Hook rule: total bids ({totalBids}) cannot equal hand size ({handSize}). Someone must fail.
             </p>
           )}
-          {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
+          {error && <p className="text-red-600 dark:text-red-400 text-sm mt-2">{error}</p>}
 
           <button
             onClick={handleSubmit}
             disabled={submitting || hookRuleViolated}
-            className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm"
+            className="w-full sm:w-auto mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-800 disabled:opacity-50 text-sm"
           >
             {submitting ? 'Saving...' : 'Submit Round'}
           </button>
@@ -294,8 +296,8 @@ export default function SessionPage() {
 
       {isComplete && (
         <div className="text-center py-6">
-          <p className="text-green-600 font-bold text-lg">Game Complete!</p>
-          <p className="text-gray-500 text-sm mt-1">
+          <p className="text-green-600 dark:text-green-400 font-bold text-lg">Game Complete!</p>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
             {session.game?.slug === 'pay-me' ? 'Lowest score wins' : 'Highest score wins'}
           </p>
         </div>
@@ -303,6 +305,8 @@ export default function SessionPage() {
     </div>
   )
 }
+
+const SUIT_SYMBOLS = new Set(['♠', '♥', '♣', '♦'])
 
 function RoundFieldInput({
   field,
@@ -314,13 +318,39 @@ function RoundFieldInput({
   onChange: (v: ScoreDataValue) => void
 }) {
   if (field.type === 'select' && field.options) {
+    const isSuitField = field.options.every(s => SUIT_SYMBOLS.has(s))
+
+    if (isSuitField) {
+      return (
+        <div>
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1.5">{field.label}</p>
+          <div className="flex gap-1">
+            {field.options.map((opt) => (
+              <button
+                key={opt}
+                type="button"
+                onClick={() => onChange(opt)}
+                className={`w-10 h-10 flex items-center justify-center rounded-lg border-2 text-xl transition ${
+                  value === opt
+                    ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30'
+                    : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600'
+                } ${SUIT_COLORS[opt] ?? 'text-gray-500 dark:text-gray-400'}`}
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
+        </div>
+      )
+    }
+
     return (
-      <label className="text-sm text-gray-500">
+      <label className="text-sm text-gray-500 dark:text-gray-400">
         {field.label}
         <select
           value={value ?? ''}
           onChange={(e) => onChange(e.target.value)}
-          className="ml-2 border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="ml-2 border border-gray-300 dark:border-gray-700 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
         >
           <option value="" disabled>
             Select...
@@ -336,7 +366,7 @@ function RoundFieldInput({
   }
 
   return (
-    <label className="text-sm text-gray-500">
+    <label className="text-sm text-gray-500 dark:text-gray-400">
       {field.label}
       <input
         type="number"
@@ -344,7 +374,7 @@ function RoundFieldInput({
         max={field.max}
         value={value ?? ''}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="ml-2 border border-gray-300 rounded px-2 py-1 w-20 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="ml-2 border border-gray-300 dark:border-gray-700 rounded px-2 py-1.5 w-20 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
       />
     </label>
   )
@@ -361,7 +391,7 @@ function PlayerFieldInput({
 }) {
   if (field.type === 'number') {
     return (
-      <label className="text-sm text-gray-500">
+      <label className="text-sm text-gray-500 dark:text-gray-400">
         {field.label}
         <input
           type="number"
@@ -369,7 +399,7 @@ function PlayerFieldInput({
           max={field.max}
           value={value ?? ''}
           onChange={(e) => onChange(Number(e.target.value))}
-          className="ml-1 border border-gray-300 rounded px-2 py-1 w-16 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="ml-1 border border-gray-300 dark:border-gray-700 rounded px-2 py-1.5 w-16 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
         />
       </label>
     )
@@ -377,12 +407,12 @@ function PlayerFieldInput({
 
   if (field.type === 'select' && field.options) {
     return (
-      <label className="text-sm text-gray-500">
+      <label className="text-sm text-gray-500 dark:text-gray-400">
         {field.label}
         <select
           value={value ?? ''}
           onChange={(e) => onChange(e.target.value)}
-          className="ml-1 border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="ml-1 border border-gray-300 dark:border-gray-700 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
         >
           <option value="" disabled>
             Select...
