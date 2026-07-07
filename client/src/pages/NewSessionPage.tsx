@@ -89,7 +89,7 @@ export default function NewSessionPage() {
     navigate(`/sessions/${session.id}`)
   }
 
-  if (loading) return <p className="text-gray-500">Loading games...</p>
+  if (loading) return <p className="text-gray-500 dark:text-gray-400">Loading games...</p>
 
   const validCount = playerNames.filter(Boolean).length
   const canStart =
@@ -99,11 +99,11 @@ export default function NewSessionPage() {
 
   return (
     <div className="max-w-xl">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">New Game</h1>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">New Game</h1>
 
       {/* Game selector */}
       <section className="mb-8">
-        <h2 className="text-sm font-medium text-gray-700 mb-3">Select Game</h2>
+        <h2 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Select Game</h2>
         <div className="grid gap-3 sm:grid-cols-2">
           {games.map((g) => (
             <button
@@ -111,13 +111,13 @@ export default function NewSessionPage() {
               onClick={() => setSelectedGame(g)}
               className={`text-left p-4 rounded-lg border-2 transition ${
                 selectedGame?.id === g.id
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 bg-white hover:border-gray-300'
+                  ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30'
+                  : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600'
               }`}
             >
-              <h3 className="font-semibold text-gray-900">{g.name}</h3>
-              <p className="text-sm text-gray-500 mt-1">{g.description}</p>
-              <p className="text-xs text-gray-400 mt-2">
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100">{g.name}</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{g.description}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
                 {g.min_players}-{g.max_players} players
               </p>
             </button>
@@ -130,7 +130,7 @@ export default function NewSessionPage() {
           {/* Session title & game config */}
           <section className="mb-8 space-y-4">
             <div>
-              <label className="text-sm font-medium text-gray-700 block mb-1">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">
                 Session Title
               </label>
               <input
@@ -138,7 +138,7 @@ export default function NewSessionPage() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. Friday Night Game"
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 dark:border-gray-700 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
               />
             </div>
             {selectedGame.config_schema.map((field) => {
@@ -147,7 +147,7 @@ export default function NewSessionPage() {
               const isManuallyEdited = isPeak && lastAutoPeak.current !== null && config.peak !== lastAutoPeak.current
               return (
                 <div key={field.key}>
-                  <label className="text-sm font-medium text-gray-700 block mb-1">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">
                     {field.label}
                   </label>
                   <input
@@ -156,7 +156,7 @@ export default function NewSessionPage() {
                     onChange={(e) => updateConfig(field.key, Number(e.target.value))}
                     min={field.min}
                     max={field.max}
-                    className="w-24 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full sm:w-24 border border-gray-300 dark:border-gray-700 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                   />
                   {autoValue !== null && (
                     <p className="text-xs text-gray-400 mt-1">
@@ -164,7 +164,7 @@ export default function NewSessionPage() {
                     </p>
                   )}
                   {!autoValue && field.description && (
-                    <p className="text-xs text-gray-400 mt-1">{field.description}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{field.description}</p>
                   )}
                 </div>
               )
@@ -173,24 +173,24 @@ export default function NewSessionPage() {
 
           {/* Players */}
           <section className="mb-8">
-            <h2 className="text-sm font-medium text-gray-700 mb-3">
+            <h2 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
               Players ({validCount}/{selectedGame.min_players}–{selectedGame.max_players})
             </h2>
             <div className="space-y-2">
               {playerNames.map((name, i) => (
                 <div key={i} className="flex items-center gap-2">
-                  <span className="text-sm text-gray-400 w-6">{i + 1}.</span>
+                  <span className="text-sm text-gray-400 dark:text-gray-500 w-6">{i + 1}.</span>
                   <input
                     type="text"
                     value={name}
                     onChange={(e) => updatePlayer(i, e.target.value)}
                     placeholder={`Player ${i + 1}`}
-                    className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 border border-gray-300 dark:border-gray-700 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                   />
                   {playerNames.length > 2 && (
                     <button
                       onClick={() => removePlayer(i)}
-                      className="text-red-500 hover:text-red-700 text-sm"
+                      className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-sm"
                     >
                       ×
                     </button>
@@ -201,7 +201,7 @@ export default function NewSessionPage() {
             {validCount < selectedGame.max_players && (
               <button
                 onClick={addPlayer}
-                className="mt-2 text-sm text-blue-600 hover:text-blue-800"
+                className="mt-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
               >
                 + Add player
               </button>
@@ -211,7 +211,7 @@ export default function NewSessionPage() {
           <button
             onClick={handleStart}
             disabled={!canStart || creating}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+            className="w-full sm:w-auto bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
           >
             {creating ? 'Starting...' : 'Start Game'}
           </button>
