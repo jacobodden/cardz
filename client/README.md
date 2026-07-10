@@ -1,32 +1,32 @@
-# React + TypeScript + Vite
+# cardz-local
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A local-first card game scorekeeper. Track sessions, players, rounds, and scores for card games like Up & Down The River and Pay Me.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Frontend**: Vite + React 19 + Tailwind CSS v4
+- **Storage**: Dexie.js + IndexedDB (local-only, no server)
+- **No server, no sync, no sign-in** — all data stays in your browser.
 
-## React Compiler
+## Scripts
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start dev server at `localhost:5173` |
+| `npm run build` | Type-check + production build to `dist/` |
+| `npm run lint` | Run oxlint |
 
-## Expanding the Oxlint configuration
+## Architecture
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+All data lives in IndexedDB via Dexie.js in five object stores:
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```
+games → sessions → players → rounds → scores
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Game scoring logic (pure functions) lives in `src/games/`. Data access helpers live in `src/db/`. Components use `useLiveQuery` from `dexie-react-hooks` for reactive data loading.
+
+## Games
+
+- **Up & Down The River** — Trick-taking game where you bid the exact number of tricks you will win.
+- **Pay Me** — Contract Rummy game. Lowest score after 11 rounds wins.

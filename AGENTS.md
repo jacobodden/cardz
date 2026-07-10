@@ -75,11 +75,11 @@ All numeric IDs auto-increment via Dexie's `++id` syntax.
 - [x] Clean up root `node_modules` / `package-lock.json`
 - [x] Verify `npm run build` and `npm run dev` in client/ work standalone
 
-### Phase 5 — Cleanup
-- [ ] Remove `api/client.ts` entirely
-- [ ] Remove unused server dependencies from root `package.json`
-- [ ] Update `README.md` if present
-- [ ] Run `npm run build` to verify clean build
+### Phase 5 — Cleanup &#10003;
+- [x] Remove `api/client.ts` entirely
+- [x] Remove unused server dependencies from root `package.json` (rewrote to only `dev`, `build`, `lint` — all prefixed to client)
+- [x] Update `README.md` with current project description
+- [x] Run `npm run build` to verify clean build
 
 ## Key conventions
 - Dexie schema strings follow the format: `'++id, field1, field2'` — `++id` means auto-increment primary key
