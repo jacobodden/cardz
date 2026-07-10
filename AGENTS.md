@@ -67,11 +67,13 @@ All numeric IDs auto-increment via Dexie's `++id` syntax.
 - [x] Update `NewSessionPage.tsx` — create session + players via Dexie
 - [x] Update `SessionPage.tsx` — load scoreboard, get current round, submit round via Dexie
 
-### Phase 4 — Server removal
-- [ ] Delete `server/` directory
-- [ ] Remove server scripts from root `package.json`
-- [ ] Remove Vite proxy config (if any)
-- [ ] Verify `npm run build` and `npm run dev` in client/ work standalone
+### Phase 4 — Server removal &#10003;
+- [x] Delete `server/` directory
+- [x] Remove server scripts from root `package.json` (rewrote to only `dev`, `build`, `lint` — all prefixed to client)
+- [x] Remove Vite proxy config (`/api` → `localhost:3001` removed from `vite.config.ts`)
+- [x] Remove unused `concurrently` dependency
+- [x] Clean up root `node_modules` / `package-lock.json`
+- [x] Verify `npm run build` and `npm run dev` in client/ work standalone
 
 ### Phase 5 — Cleanup
 - [ ] Remove `api/client.ts` entirely
