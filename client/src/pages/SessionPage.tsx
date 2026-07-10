@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useState, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
-import { api } from '../api/client'
-import type { Session, CurrentRound, ScoreboardRow, InputField, ScoreDataValue, RoundMetaInfo } from '../api/client'
+import { getSession } from '../db/sessions'
+import { getCurrentRound, submitRound, getScoreboard } from '../db/rounds'
+import type { SessionDetail } from '../db/sessions'
+import type { CurrentRoundResult, ScoreboardRow, RoundMetaInfo } from '../db/rounds'
+import type { InputField } from '../games/types'
 
 const SUIT_COLORS: Record<string, string> = {
   '♠': 'text-gray-900 dark:text-gray-100',
@@ -20,26 +23,26 @@ function findWinners(rows: ScoreboardRow[], gameSlug?: string): Set<number> {
 export default function SessionPage() {
   const { id } = useParams<{ id: string }>()
   const sessionId = Number(id)
-  const [session, setSession] = useState<Session | null>(null)
-  const [round, setRound] = useState<CurrentRound | null>(null)
+  const [session, setSession] = useState<SessionDetail | null>(null)
+  const [round, setRound] = useState<CurrentRoundResult | null>(null)
   const [players, setPlayersState] = useState<ScoreboardRow[]>([])
   const [roundsMeta, setRoundsMeta] = useState<RoundMetaInfo[]>([])
-  const [roundData, setRoundData] = useState<Record<string, ScoreDataValue>>({})
-  const [playerData, setPlayerData] = useState<Record<number, Record<string, ScoreDataValue>>>({})
+  const [roundData, setRoundData] = useState<Record<string, string | number>>({})
+  const [playerData, setPlayerData] = useState<Record<number, Record<string, string | number>>>({})
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     const [s, sb] = await Promise.all([
-      api.getSession(sessionId),
-      api.getScoreboard(sessionId),
+      getSession(sessionId),
+      getScoreboard(sessionId),
     ])
     setSession(s)
     setPlayersState(sb.players)
     setRoundsMeta(sb.rounds_meta)
 
     try {
-      const r = await api.getCurrentRound(sessionId)
+      const r = await getCurrentRound(sessionId)
       setRound(r)
     } catch {
       setRound(null)
@@ -64,14 +67,14 @@ export default function SessionPage() {
 
       const playerScopeFields = round.fields?.filter((f) => f.scope !== 'round') ?? []
       const scores = (session?.players ?? []).map((p) => {
-        const data: Record<string, ScoreDataValue> = {}
+        const data: Record<string, any> = {}
         for (const f of playerScopeFields) {
           if (playerData[p.id]?.[f.key] !== undefined) data[f.key] = playerData[p.id][f.key]
         }
         return { player_id: p.id, data }
       })
 
-      await api.submitRound(sessionId, { round_data, scores })
+      await submitRound(sessionId, { round_data, scores })
 
       setRoundData({})
       setPlayerData({})
@@ -99,23 +102,14 @@ export default function SessionPage() {
   function getTrumpForRound(roundNum: number): string | null {
     const meta = roundsMeta.find((r) => r.round_number === roundNum)
     if (!meta) return null
-    try {
-      const data = JSON.parse(meta.data_json)
-      return data.trump ?? null
-    } catch {
-      return null
-    }
+    return meta.data_json?.trump ?? null
   }
 
   function getDealerForRound(roundNum: number): string | null {
     const meta = roundsMeta.find((r) => r.round_number === roundNum)
     if (!meta) return null
-    try {
-      const data = JSON.parse(meta.data_json)
-      return data.dealer_player_id ? (playerMap[data.dealer_player_id] ?? null) : null
-    } catch {
-      return null
-    }
+    const dealerId = meta.data_json?.dealer_player_id
+    return dealerId ? (playerMap[dealerId] ?? null) : null
   }
 
   if (!session) return <p className="text-gray-500 dark:text-gray-400">Loading...</p>
@@ -126,9 +120,7 @@ export default function SessionPage() {
   const isComplete = round?.complete || session.status === 'completed'
   const totalRounds = session.total_rounds ?? 0
 
-  const rawRoundData: Record<string, any> = round?.data_json
-    ? (() => { try { return JSON.parse(round.data_json) } catch { return {} } })()
-    : {}
+  const rawRoundData: Record<string, any> = round?.data_json ?? {}
   const handSize: number = rawRoundData.handSize ?? 0
 
   const hasBidField = playerFields.some((f) => f.key === 'bid')
@@ -314,8 +306,8 @@ function RoundFieldInput({
   onChange,
 }: {
   field: InputField
-  value: ScoreDataValue | undefined
-  onChange: (v: ScoreDataValue) => void
+  value: string | number | undefined
+  onChange: (v: string | number) => void
 }) {
   if (field.type === 'select' && field.options) {
     const isSuitField = field.options.every(s => SUIT_SYMBOLS.has(s))
@@ -386,8 +378,8 @@ function PlayerFieldInput({
   onChange,
 }: {
   field: InputField
-  value: ScoreDataValue | undefined
-  onChange: (v: ScoreDataValue) => void
+  value: string | number | undefined
+  onChange: (v: string | number) => void
 }) {
   if (field.type === 'number') {
     return (

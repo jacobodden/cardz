@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { api } from '../api/client'
-import type { Session } from '../api/client'
+import { listSessions } from '../db/sessions'
+import type { SessionSummary } from '../db/sessions'
 
 export default function HomePage() {
-  const [sessions, setSessions] = useState<Session[]>([])
+  const [sessions, setSessions] = useState<SessionSummary[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    api.listSessions().then((sessions) => {
+    listSessions().then((sessions) => {
       setSessions(sessions)
       setLoading(false)
     })
@@ -48,7 +48,7 @@ export default function HomePage() {
             >
               <div className="flex items-center justify-between">
                 <h2 className="font-semibold text-gray-900 dark:text-gray-100">
-                  {(s as any).game_name || s.title || `Session #${s.id}`}
+                  {s.game_name || s.title || `Session #${s.id}`}
                 </h2>
                 <span className={`text-xs px-2 py-1 rounded-full ${
                     s.status === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
