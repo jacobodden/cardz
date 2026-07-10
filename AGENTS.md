@@ -42,15 +42,24 @@ All numeric IDs auto-increment via Dexie's `++id` syntax.
 
 ## Migration steps
 
-### Phase 1 — Foundation
-- [ ] `npm install dexie dexie-react-hooks` in client/
-- [ ] Create `client/src/db/dexie-db.ts` — Dexie DB subclass with schema definition
-- [ ] Create `client/src/db/seed.ts` — seed game definitions into the `games` table
-- [ ] Copy scoring logic from `server/src/games/` to `client/src/games/` (pure functions, no DB deps)
+### Phase 1 — Foundation &#10003;
+- [x] `npm install dexie dexie-react-hooks` in client/
+- [x] Create `client/src/db/dexie-db.ts` — Dexie DB subclass with schema definition
+- [x] Create `client/src/db/seed.ts` — seed game definitions into the `games` table
+- [x] Copy scoring logic from `server/src/games/` to `client/src/games/` (pure functions, no DB deps)
 
 ### Phase 2 — Data access layer
-- [ ] Create `client/src/db/sessions.ts` — Dexie-based CRUD helpers for sessions+players
-- [ ] Create `client/src/db/rounds.ts` — Dexie-based round + score operations
+- [x] Create `client/src/db/sessions.ts` — Dexie-based CRUD helpers for sessions+players
+  - `listSessions()` — joins sessions with games, ordered by created_at DESC
+  - `getSession(id)` — returns session with game + players + total_rounds
+  - `createSession(game_id, title?)` — inserts session, returns new record
+  - `addPlayer(sessionId, name)` — inserts player with auto-incrementing order_index
+  - `removePlayer(sessionId, playerId)` — deletes player
+  - `startSession(sessionId, config)` — generates rounds via game impl, stores config, creates first round
+- [x] Create `client/src/db/rounds.ts` — Dexie-based round + score operations
+  - `getCurrentRound(sessionId)` — finds first unscored round, returns with schema fields
+  - `submitRound(sessionId, roundData)` — hook rule validation, score computation, score insertion, next round creation
+  - `getScoreboard(sessionId)` — builds per-player per-round score table
 - [ ] Replace `api/client.ts` calls in all page components with Dexie operations
 
 ### Phase 3 — Component updates
