@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { api } from '../api/client'
-import type { ConfigField, Game } from '../api/client'
+import { db } from '../db/dexie-db'
+import { createSession, addPlayer as addPlayerToSession, startSession } from '../db/sessions'
+import type { Game } from '../db/dexie-db'
+import type { ConfigField } from '../games/types'
 
 function calculatePeak(numPlayers: number, field?: ConfigField): number {
   if (numPlayers < 1) return field?.defaultValue ?? 3
@@ -22,7 +24,7 @@ export default function NewSessionPage() {
   const prevGameId = useRef<number | null>(null)
 
   useEffect(() => {
-    api.listGames().then((games) => {
+    db.games.toArray().then((games) => {
       setGames(games)
       setLoading(false)
     })
@@ -34,7 +36,7 @@ export default function NewSessionPage() {
     // Reset auto-peak tracking when switching games
     if (prevGameId.current !== selectedGame.id) {
       lastAutoPeak.current = null
-      prevGameId.current = selectedGame.id
+      prevGameId.current = selectedGame.id!
     }
 
     if (selectedGame.slug === 'up-and-down') {
@@ -78,14 +80,11 @@ export default function NewSessionPage() {
   async function handleStart() {
     if (!selectedGame) return
     setCreating(true)
-    const session = await api.createSession({
-      game_id: selectedGame.id,
-      title: title || undefined,
-    })
+    const session = await createSession(selectedGame.id!, title || undefined)
     for (const name of playerNames.filter(Boolean)) {
-      await api.addPlayer(session.id, name)
+      await addPlayerToSession(session.id, name)
     }
-    await api.startSession(session.id, config)
+    await startSession(session.id, config)
     navigate(`/sessions/${session.id}`)
   }
 

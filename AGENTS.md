@@ -48,7 +48,7 @@ All numeric IDs auto-increment via Dexie's `++id` syntax.
 - [x] Create `client/src/db/seed.ts` — seed game definitions into the `games` table
 - [x] Copy scoring logic from `server/src/games/` to `client/src/games/` (pure functions, no DB deps)
 
-### Phase 2 — Data access layer
+### Phase 2 — Data access layer &#10003;
 - [x] Create `client/src/db/sessions.ts` — Dexie-based CRUD helpers for sessions+players
   - `listSessions()` — joins sessions with games, ordered by created_at DESC
   - `getSession(id)` — returns session with game + players + total_rounds
@@ -60,12 +60,12 @@ All numeric IDs auto-increment via Dexie's `++id` syntax.
   - `getCurrentRound(sessionId)` — finds first unscored round, returns with schema fields
   - `submitRound(sessionId, roundData)` — hook rule validation, score computation, score insertion, next round creation
   - `getScoreboard(sessionId)` — builds per-player per-round score table
-- [ ] Replace `api/client.ts` calls in all page components with Dexie operations
+- [x] Replace `api/client.ts` calls in all page components with Dexie operations
 
-### Phase 3 — Component updates
-- [ ] Update `HomePage.tsx` — list sessions via Dexie instead of `api.listSessions()`
-- [ ] Update `NewSessionPage.tsx` — create session + players via Dexie
-- [ ] Update `SessionPage.tsx` — load scoreboard, get current round, submit round via Dexie
+### Phase 3 — Component updates &#10003;
+- [x] Update `HomePage.tsx` — list sessions via Dexie instead of `api.listSessions()`
+- [x] Update `NewSessionPage.tsx` — create session + players via Dexie
+- [x] Update `SessionPage.tsx` — load scoreboard, get current round, submit round via Dexie
 
 ### Phase 4 — Server removal
 - [ ] Delete `server/` directory
