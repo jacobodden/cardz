@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cardz-local — idb vs Dexie.js Comparison</title>
+  <style>
+    :root {
+      --bg: #f5f5f0;
+      --surface: #ffffff;
+      --text: #1a1a1a;
+      --muted: #6b6b6b;
+      --border: #d4d4c8;
+      --accent-idb: #7c3aed;
+      --accent-dexie: #0891b2;
+      --pro-bg: #ecfdf5;
+      --pro-border: #6ee7b7;
+      --con-bg: #fef2f2;
+      --con-border: #fca5a5;
+      --code-bg: #1e293b;
+      --code-fg: #e2e8f0;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 2rem 1rem;
+    }
+    .container { max-width: 1100px; margin: 0 auto; }
+
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+    header h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; }
+    header p { color: var(--muted); margin-top: 0.5rem; font-size: 1.05rem; }
+    header .meta { margin-top: 0.75rem; font-size: 0.85rem; color: var(--muted); }
+    header .decision {
+      display: inline-block;
+      margin-top: 1rem;
+      padding: 0.5rem 1.25rem;
+      background: #ecfdf5;
+      border: 1px solid #6ee7b7;
+      border-radius: 8px;
+      font-size: 0.88rem;
+    }
+
+    /* At-a-glance row */
+    .atg {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    @media (min-width: 800px) {
+      .atg { grid-template-columns: 1fr 1fr 1fr; }
+    }
+    .atg-item {
+      text-align: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+    }
+    .atg-item .num {
+      font-size: 1.75rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    .atg-item .lbl {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+    }
+
+    /* Card grid */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    @media (min-width: 800px) {
+      .grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .card {
+      background: var(--surface);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .card-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .card-header h2 { font-size: 1.2rem; font-weight: 600; }
+    .card-header .sub {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-top: 0.2rem;
+    }
+    .card-body { padding: 1.25rem 1.5rem 1.5rem; flex: 1; }
+
+    .card-body h3 {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin: 1.25rem 0 0.5rem;
+    }
+    .card-body h3:first-child { margin-top: 0; }
+
+    .pro-list, .con-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .pro-list li, .con-list li {
+      padding: 0.5rem 0.7rem;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      border-left: 3px solid transparent;
+    }
+    .pro-list li { background: var(--pro-bg); border-left-color: var(--pro-border); }
+    .con-list li { background: var(--con-bg); border-left-color: var(--con-border); }
+
+    .tag {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      margin-right: 0.3rem;
+      vertical-align: middle;
+    }
+    .tag-sz  { background: #fce7f3; color: #9d174d; }
+    .tag-api { background: #e0e7ff; color: #3730a3; }
+    .tag-dx  { background: #fef3c7; color: #92400e; }
+    .tag-ft  { background: #d1fae5; color: #065f46; }
+    .tag-rsk { background: #fee2e2; color: #991b1b; }
+
+    /* Code samples */
+    .code-sample {
+      margin-top: 1.5rem;
+    }
+    .code-sample h4 {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+    }
+    pre {
+      background: var(--code-bg);
+      color: var(--code-fg);
+      border-radius: 6px;
+      padding: 0.75rem 1rem;
+      font-size: 0.78rem;
+      overflow-x: auto;
+      line-height: 1.5;
+    }
+    code { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+    .kw { color: #c084fc; }
+    .fn { color: #67e8f9; }
+    .str { color: #a5f3fc; }
+    .cm { color: #64748b; font-style: italic; }
+    .num { color: #fbbf24; }
+    .op { color: #f472b6; }
+
+    /* Feature table */
+    .feat-table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 2rem;
+      overflow-x: auto;
+    }
+    .feat-table-wrap h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+    table.feat {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    table.feat th, table.feat td {
+      text-align: left;
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+    table.feat th {
+      font-weight: 600;
+      color: var(--muted);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    table.feat tr:last-child td { border-bottom: none; }
+    table.feat .center { text-align: center; }
+    .check { color: #059669; }
+    .cross { color: #dc2626; }
+    .warn  { color: #d97706; }
+
+    /* Recommendation */
+    .rec {
+      background: var(--surface);
+      border: 2px solid var(--accent-dexie);
+      border-radius: 12px;
+      padding: 1.5rem 2rem;
+    }
+    .rec h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+    .rec p { font-size: 0.92rem; margin-bottom: 0.5rem; }
+    .rec p:last-child { margin-bottom: 0; }
+
+    /* Verdict scores inline */
+    .score-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      margin: 0.5rem 0;
+    }
+    .score-dot { width: 14px; height: 14px; border-radius: 50%; }
+    .dot-on  { background: #059669; }
+    .dot-off { background: #d4d4c8; }
+    .score-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-left: 0.4rem;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>&#128451;&#65039; IndexedDB Library Comparison: <code>idb</code> vs <code>dexie</code></h1>
+    <p>Choosing a wrapper for client-only IndexedDB storage in &#9936;-local</p>
+    <p class="meta">Decision context: offline-first, single-device, no server sync | July 2026</p>
+    <div class="decision">&#128215; Previous decision: migrate from Express+SQLite to client-side IndexedDB</div>
+  </header>
+
+  <!-- At-a-glance stats -->
+  <div class="atg">
+    <div class="atg-item">
+      <div class="num" style="color: var(--accent-idb);">idb</div>
+      <div class="lbl">v8.0.3</div>
+      <div style="font-size:0.8rem;color:var(--muted);margin-top:0.25rem;">npm i idb</div>
+    </div>
+    <div class="atg-item">
+      <div class="num" style="color: var(--accent-dexie);">dexie</div>
+      <div class="lbl">v4.4.4</div>
+      <div style="font-size:0.8rem;color:var(--muted);margin-top:0.25rem;">npm i dexie</div>
+    </div>
+    <div class="atg-item">
+      <div class="num" style="color: var(--text);">local-only</div>
+      <div class="lbl">no server sync</div>
+      <div style="font-size:0.8rem;color:var(--muted);margin-top:0.25rem;">single-device offline</div>
+    </div>
+  </div>
+
+  <!-- SIDE-BY-SIDE CARDS -->
+  <div class="grid">
+
+    <!-- idb -->
+    <div class="card">
+      <div class="card-header" style="border-left: 4px solid var(--accent-idb);">
+        <h2><code>idb</code> &mdash; minimal promise wrapper</h2>
+        <div class="sub">by Jake Archibald &middot; ~1.5 KB gzipped</div>
+      </div>
+      <div class="card-body">
+
+        <div class="score-bar">
+          <span class="score-dot dot-on"></span><span class="score-dot dot-on"></span><span class="score-dot dot-on"></span>
+          <span class="score-dot dot-on"></span><span class="score-dot dot-off"></span>
+          <span class="score-label">4/5 &mdash; Simplicity &amp; size</span>
+        </div>
+
+        <h3>&#9989; Pros</h3>
+        <ul class="pro-list">
+          <li><span class="tag tag-sz">Size</span> Tiny &mdash; adds negligible bundle weight (~1.5 KB gzipped)</li>
+          <li><span class="tag tag-api">API</span> Mirrors native IndexedDB &mdash; no magic, zero surprises</li>
+          <li><span class="tag tag-dx">DX</span> Just adds <code>await</code> to the native API &mdash; nothing to learn</li>
+          <li><span class="tag tag-dx">DX</span> TypeScript-first &mdash; excellent type inference</li>
+          <li><span class="tag tag-ft">FT</span> Full access to all IDB features (indexes, cursors, ranges, transactions)</li>
+          <li><span class="tag tag-ft">FT</span> Works with any build tool, no config needed</li>
+          <li><span class="tag tag-rsk">Risk</span> Low risk &mdash; thin wrapper, unlikely to break or need updates</li>
+        </ul>
+
+        <h3>&#10060; Cons</h3>
+        <ul class="con-list">
+          <li><span class="tag tag-api">API</span> Verbose &mdash; still need to open stores, manage transactions manually</li>
+          <li><span class="tag tag-api">API</span> No query builder &mdash; must use IDB ranges and indexes directly</li>
+          <li><span class="tag tag-dx">DX</span> No schema DSL &mdash; schema is defined in <code>onupgradeneeded</code></li>
+          <li><span class="tag tag-dx">DX</span> No live queries / reactivity &mdash; manual re-fetch on writes</li>
+          <li><span class="tag tag-dx">DX</span> More boilerplate for complex queries (compound sorts, filters)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- dexie -->
+    <div class="card">
+      <div class="card-header" style="border-left: 4px solid var(--accent-dexie);">
+        <h2><code>dexie</code> &mdash; full-featured DB wrapper</h2>
+        <div class="sub">by David Fahlander &middot; ~16 KB gzipped</div>
+      </div>
+      <div class="card-body">
+
+        <div class="score-bar">
+          <span class="score-dot dot-on"></span><span class="score-dot dot-on"></span><span class="score-dot dot-on"></span>
+          <span class="score-dot dot-on"></span><span class="score-dot dot-on"></span>
+          <span class="score-label">5/5 &mdash; Fit for app-level data</span>
+        </div>
+
+        <h3>&#9989; Pros</h3>
+        <ul class="pro-list">
+          <li><span class="tag tag-api">API</span> Rich query builder &mdash; <code>.where(&hellip;).sortBy(&hellip;)</code>, compound queries</li>
+          <li><span class="tag tag-api">API</span> Declarative schema with <code>db.version().stores()</code> &mdash; clean migrations</li>
+          <li><span class="tag tag-dx">DX</span> <code>liveQuery()</code> &mdash; Observable-powered reactivity for React</li>
+          <li><span class="tag tag-dx">DX</span> Built-in transaction helpers &mdash; <code>db.transaction('rw', &hellip;)</code></li>
+          <li><span class="tag tag-dx">DX</span> Table filtering &amp; collection API &mdash; <code>.filter()</code>, <code>.and()</code>, <code>.toArray()</code></li>
+          <li><span class="tag tag-dx">DX</span> Schema versioning &amp; migration callbacks built in</li>
+          <li><span class="tag tag-ft">FT</span> <code>db.cloud</code> if sync is ever needed later (optional addon)</li>
+          <li><span class="tag tag-dx">DX</span> Excellent documentation and community examples</li>
+        </ul>
+
+        <h3>&#10060; Cons</h3>
+        <ul class="con-list">
+          <li><span class="tag tag-sz">Size</span> ~10&times; larger than idb (~16 KB vs ~1.5 KB gzipped)</li>
+          <li><span class="tag tag-api">API</span> More abstraction &mdash; magic can hide what IndexedDB is actually doing</li>
+          <li><span class="tag tag-rsk">Risk</span> Slightly higher maintenance risk &mdash; bigger API surface, more bug surface</li>
+          <li><span class="tag tag-rsk">Risk</span> Lock-in &mdash; switching from Dexie later means rewriting the data layer</li>
+          <li><span class="tag tag-dx">DX</span> Live query unsubscribes must be managed to avoid memory leaks</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- FEATURE COMPARISON TABLE -->
+  <div class="feat-table-wrap">
+    <h2>&#128202; Feature Comparison</h2>
+    <table class="feat">
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th class="center">idb</th>
+          <th class="center">dexie</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Bundle size (gzipped)</td>
+          <td class="center check">~1.5 KB</td>
+          <td class="center warn">~16 KB</td>
+          <td>idb is ~10&times; smaller</td>
+        </tr>
+        <tr>
+          <td>Schema DSL</td>
+          <td class="center cross">&#10007;</td>
+          <td class="center check">&#10003;</td>
+          <td>Dexie: <code>db.version(1).stores({ sessions: 'id, game_id' })</code></td>
+        </tr>
+        <tr>
+          <td>Migration handling</td>
+          <td class="center warn">Manual</td>
+          <td class="center check">Built-in</td>
+          <td>Dexie version blocks with <code>upgrade()</code> callbacks</td>
+        </tr>
+        <tr>
+          <td>Query builder</td>
+          <td class="center cross">&#10007;</td>
+          <td class="center check">&#10003;</td>
+          <td>Dexie: <code>where</code>, <code>equals</code>, <code>between</code>, <code>startsWith</code>, etc.</td>
+        </tr>
+        <tr>
+          <td>Compound indexes</td>
+          <td class="center check">&#10003;</td>
+          <td class="center check">&#10003;</td>
+          <td>Both support IDB compound indexes</td>
+        </tr>
+        <tr>
+          <td>Live queries (reactivity)</td>
+          <td class="center cross">&#10007;</td>
+          <td class="center check">&#10003;</td>
+          <td>Dexie's <code>liveQuery()</code> returns an Observable</td>
+        </tr>
+        <tr>
+          <td>Transactions</td>
+          <td class="center check">&#10003;</td>
+          <td class="center check">&#10003;</td>
+          <td>Both support readwrite / readonly transactions</td>
+        </tr>
+        <tr>
+          <td>TypeScript</td>
+          <td class="center check">&#10003;</td>
+          <td class="center check">&#10003;</td>
+          <td>Both ship TS types</td>
+        </tr>
+        <tr>
+          <td>React hooks integration</td>
+          <td class="center warn">Roll your own</td>
+          <td class="center check">&#10003;</td>
+          <td>Dexie has <code>useLiveQuery</code> hook; community <code>dexie-react-hooks</code></td>
+        </tr>
+        <tr>
+          <td>IndexedDB knowledge required</td>
+          <td class="center warn">Yes (most of it)</td>
+          <td class="center check">Minimal</td>
+          <td>Dexie abstracts away open/upgrade/store/transaction details</td>
+        </tr>
+        <tr>
+          <td>Lock-in risk</td>
+          <td class="center check">Low</td>
+          <td class="center warn">Medium</td>
+          <td>idb is close enough to native that switching is easy</td>
+        </tr>
+        <tr>
+          <td>npm weekly downloads</td>
+          <td class="center">~2.5M</td>
+          <td class="center">~600K</td>
+          <td>idb is more widely depended-on (often as transitive dep)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- CODE COMPARISON -->
+  <div class="feat-table-wrap">
+    <h2>&#128220; Code Comparison &mdash; Same operations in both libraries</h2>
+
+    <table class="feat">
+      <thead>
+        <tr><th style="width:18%;">Operation</th><th style="width:41%;">idb</th><th style="width:41%;">dexie</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Open DB<br>&amp; define schema</strong></td>
+          <td>
+<pre><code><span class="kw">import</span> { openDB } <span class="kw">from</span> <span class="str">'idb'</span>
+
+<span class="kw">const</span> db = <span class="kw">await</span> <span class="fn">openDB</span>(<span class="str">'cardz'</span>, <span class="num">1</span>, {
+  <span class="fn">upgrade</span>(db) {
+    db.<span class="fn">createObjectStore</span>(<span class="str">'sessions'</span>, { <span class="kw">keyPath</span>: <span class="str">'id'</span> })
+    <span class="kw">const</span> store = db.<span class="fn">createObjectStore</span>(<span class="str">'players'</span>, { <span class="kw">keyPath</span>: <span class="str">'id'</span> })
+    store.<span class="fn">createIndex</span>(<span class="str">'session_id'</span>, <span class="str">'session_id'</span>)
+  }
+})</code></pre>
+          </td>
+          <td>
+<pre><code><span class="kw">import</span> Dexie <span class="kw">from</span> <span class="str">'dexie'</span>
+
+<span class="kw">const</span> db = <span class="kw">new</span> <span class="fn">Dexie</span>(<span class="str">'cardz'</span>)
+db.<span class="fn">version</span>(<span class="num">1</span>).<span class="fn">stores</span>({
+  sessions: <span class="str">'id'</span>,
+  players:  <span class="str">'id, session_id'</span>,
+  rounds:   <span class="str">'id, session_id'</span>,
+  scores:   <span class="str">'id, round_id'</span>,
+})</code></pre>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Insert a session <br>with players (transaction)</strong></td>
+          <td>
+<pre><code><span class="kw">const</span> tx = db.<span class="fn">transaction</span>([<span class="str">'sessions'</span>, <span class="str">'players'</span>], <span class="str">'readwrite'</span>)
+<span class="kw">await</span> tx.objectStore(<span class="str">'sessions'</span>).<span class="fn">add</span>(session)
+<span class="kw">for</span> (<span class="kw">const</span> p <span class="kw">of</span> players) {
+  <span class="kw">await</span> tx.objectStore(<span class="str">'players'</span>).<span class="fn">add</span>(p)
+}
+<span class="kw">await</span> tx.done</code></pre>
+          </td>
+          <td>
+<pre><code><span class="kw">await</span> db.<span class="fn">transaction</span>(<span class="str">'rw'</span>, db.sessions, db.players, <span class="kw">async</span> () => {
+  <span class="kw">await</span> db.sessions.<span class="fn">add</span>(session)
+  <span class="kw">for</span> (<span class="kw">const</span> p <span class="kw">of</span> players) {
+    <span class="kw">await</span> db.players.<span class="fn">add</span>(p)
+  }
+})</code></pre>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Query: rounds<br>for a session</strong></td>
+          <td>
+<pre><code><span class="kw">const</span> rounds = <span class="kw">await</span> db.<span class="fn">getAllFromIndex</span>(
+  <span class="str">'rounds'</span>, <span class="str">'session_id'</span>, sessionId
+)</code></pre>
+          </td>
+          <td>
+<pre><code><span class="kw">const</span> rounds = <span class="kw">await</span> db.rounds
+  .<span class="fn">where</span>(<span class="str">'session_id'</span>).<span class="fn">equals</span>(sessionId)
+  .<span class="fn">toArray</span>()</code></pre>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Query: scoreboard<br>(scores for round)</strong></td>
+          <td>
+<pre><code><span class="kw">const</span> scores = <span class="kw">await</span> db.<span class="fn">getAllFromIndex</span>(
+  <span class="str">'scores'</span>, <span class="str">'round_id'</span>, roundId
+)</code></pre>
+          </td>
+          <td>
+<pre><code><span class="kw">const</span> scores = <span class="kw">await</span> db.scores
+  .<span class="fn">where</span>(<span class="str">'round_id'</span>).<span class="fn">equals</span>(roundId)
+  .<span class="fn">toArray</span>()</code></pre>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>React: live<br>scoreboard</strong></td>
+          <td>
+<pre><code><span class="cm">// Must re-fetch manually after every mutation</span>
+<span class="kw">const</span> [data, setData] = <span class="fn">useState</span>([])
+<span class="kw">const</span> load = <span class="kw">async</span> () => {
+  <span class="kw">const</span> d = <span class="kw">await</span> <span class="fn">loadScoreboard</span>(sessionId)
+  <span class="fn">setData</span>(d)
+}
+<span class="fn">useEffect</span>(() => { <span class="fn">load</span>() }, [sessionId])</code></pre>
+          </td>
+          <td>
+<pre><code><span class="kw">import</span> { useLiveQuery } <span class="kw">from</span> <span class="str">'dexie-react-hooks'</span>
+
+<span class="kw">const</span> players = <span class="fn">useLiveQuery</span>(() =>
+  db.players.<span class="fn">where</span>(<span class="str">'session_id'</span>)
+    .<span class="fn">equals</span>(sessionId).<span class="fn">toArray</span>()
+)</code></pre>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ARCHITECTURE SKETCH -->
+  <div class="feat-table-wrap">
+    <h2>&#127959;&#65039; How each would plug into the existing codebase</h2>
+
+    <table class="feat">
+      <thead>
+        <tr><th style="width:20%;">Layer</th><th style="width:40%;">idb approach</th><th style="width:40%;">dexie approach</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>New file(s)</strong></td>
+          <td><code>client/src/db/idb.ts</code> &mdash; schema init + exported helpers<br><code>client/src/db/sessions.ts</code> &mdash; per-entity CRUD</td>
+          <td><code>client/src/db/dexie-db.ts</code> &mdash; Dexie subclass + schema<br>that&rsquo;s it &mdash; Dexie tables are the CRUD layer</td>
+        </tr>
+        <tr>
+          <td><strong>API replacement</strong></td>
+          <td>Replace <code>api/client.ts</code> calls with calls to idb helpers. Each page component imports from <code>../db/</code> instead of <code>../api/</code>.</td>
+          <td>Replace <code>api/client.ts</code> calls with <code>db.sessions.get(id)</code>, <code>db.sessions.add()</code>, etc. Each page imports <code>db</code> from <code>../db/dexie-db</code>.</td>
+        </tr>
+        <tr>
+          <td><strong>Data fetching pattern</strong></td>
+          <td><code>useEffect</code> + manual setState (same as current pattern, but hitting IndexedDB instead of HTTP)</td>
+          <td><code>useLiveQuery</code> hook &mdash; components become reactive with zero manual fetch wiring</td>
+        </tr>
+        <tr>
+          <td><strong>Game logic (scoring)</strong></td>
+          <td>Move scoring functions from <code>server/src/games/</code> to <code>client/src/games/</code> &mdash; they are pure functions, no DB deps</td>
+          <td>Same &mdash; scoring is pure math, no Dexie coupling</td>
+        </tr>
+        <tr>
+          <td><strong>Server removal</strong></td>
+          <td>Entire <code>server/</code> directory can be deleted (or kept as optional sync)</td>
+          <td>Same &mdash; server becomes unnecessary</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- RECOMMENDATION -->
+  <div class="rec">
+    <h2>&#128200; Recommendation: <code>dexie</code> for cardz-local</h2>
+
+    <p><strong>Why Dexie wins for this codebase:</strong></p>
+    <p>
+      &#8226; The data model has <strong>relational cross-references</strong> (sessions &#8594; players, rounds &#8594; scores).
+      Dexie&rsquo;s query builder and compound indexes make these lookups trivial; with <code>idb</code> you&rsquo;d be
+      manually managing IDB index ranges and cursor iteration.
+    </p>
+    <p>
+      &#8226; <strong>Schema versioning is essential</strong> &mdash; as the app evolves, table schemas will change.
+      Dexie&rsquo;s <code>db.version(N).stores({...})</code> + <code>.upgrade()</code> is far cleaner than manually
+      wrangling <code>onupgradeneeded</code> version-switch blocks.
+    </p>
+    <p>
+      &#8226; <strong>React integration.</strong> Dexie&rsquo;s <code>useLiveQuery</code> hook directly replaces the
+      current pattern of <code>useEffect + fetch + setState</code>. Every page currently re-fetches on mount &mdash;
+      Dexie makes that automatic and incremental.
+    </p>
+    <p>
+      &#8226; <strong>Bundle size is not a constraint</strong> in this project &mdash; ~16 KB gzipped is negligible
+      for an app that already loads React, React Router, etc. (well over 100 KB gzipped).
+    </p>
+    <p>
+      &#8226; <strong>Will not need server sync</strong> &mdash; the <code>db.cloud</code> optional addon is irrelevant here,
+      but it&rsquo;s nice that it exists if the decision ever changes.
+    </p>
+
+    <p style="margin-top: 0.75rem;"><strong>When would you pick <code>idb</code> instead?</strong></p>
+    <p>
+      If you needed to bundle under ~50 KB total, or if the data layer was very simple (single object store,
+      no relational queries), or if you wanted maximum control and minimal abstraction. For a game session manager
+      with relational data and React integration, Dexie is the better fit.
+    </p>
+  </div>
+
+</div>
+</body>
+</html>

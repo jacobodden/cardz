@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cardz-local — Storage Refactor Comparison</title>
+  <style>
+    :root {
+      --bg: #f5f5f0;
+      --surface: #ffffff;
+      --text: #1a1a1a;
+      --muted: #6b6b6b;
+      --border: #d4d4c8;
+      --accent-current: #2563eb;
+      --accent-local: #d97706;
+      --accent-idb: #059669;
+      --pro-bg: #ecfdf5;
+      --pro-border: #6ee7b7;
+      --con-bg: #fef2f2;
+      --con-border: #fca5a5;
+      --neutral-bg: #f8fafc;
+      --neutral-border: #cbd5e1;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 2rem 1rem;
+    }
+    .container { max-width: 1280px; margin: 0 auto; }
+
+    /* Header */
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+    header h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; }
+    header p { color: var(--muted); margin-top: 0.5rem; font-size: 1.05rem; }
+    header .meta { margin-top: 0.75rem; font-size: 0.85rem; color: var(--muted); }
+
+    /* Comparison grid */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+    @media (min-width: 900px) {
+      .grid { grid-template-columns: 1fr 1fr 1fr; }
+    }
+
+    /* Card */
+    .card {
+      background: var(--surface);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .card-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .card-header h2 { font-size: 1.2rem; font-weight: 600; }
+    .card-header .badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      margin-top: 0.35rem;
+    }
+    .card-body { padding: 1.25rem 1.5rem 1.5rem; flex: 1; }
+
+    /* Badge colors */
+    .badge-current { background: #dbeafe; color: #1e40af; }
+    .badge-local  { background: #fef3c7; color: #92400e; }
+    .badge-idb    { background: #d1fae5; color: #065f46; }
+
+    /* Section headings inside cards */
+    .card-body h3 {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin: 1.25rem 0 0.5rem;
+    }
+    .card-body h3:first-child { margin-top: 0; }
+
+    /* Pros / Cons lists */
+    .pro-list, .con-list, .neutral-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .pro-list li, .con-list li, .neutral-list li {
+      padding: 0.5rem 0.7rem;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      border-left: 3px solid transparent;
+    }
+    .pro-list li    { background: var(--pro-bg); border-left-color: var(--pro-border); }
+    .con-list li    { background: var(--con-bg); border-left-color: var(--con-border); }
+    .neutral-list li { background: var(--neutral-bg); border-left-color: var(--neutral-border); }
+
+    /* Tag inside list items */
+    .tag {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      margin-right: 0.35rem;
+      vertical-align: middle;
+    }
+    .tag-data    { background: #e0e7ff; color: #3730a3; }
+    .tag-perf    { background: #fce7f3; color: #9d174d; }
+    .tag-ux      { background: #d1fae5; color: #065f46; }
+    .tag-dev     { background: #fef3c7; color: #92400e; }
+    .tag-infra   { background: #e5e7eb; color: #374151; }
+    .tag-arch    { background: #ede9fe; color: #5b21b6; }
+
+    /* Footer comparison row */
+    .verdict {
+      margin-top: 2rem;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    @media (min-width: 900px) {
+      .verdict { grid-template-columns: 1fr 1fr 1fr; }
+    }
+    .verdict-item {
+      background: var(--surface);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      padding: 1.25rem 1.5rem;
+    }
+    .verdict-item h3 {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+    .verdict-item .score {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+    .verdict-item p {
+      font-size: 0.88rem;
+      color: var(--muted);
+      margin-top: 0.25rem;
+    }
+
+    /* Details section */
+    .details-section {
+      margin-top: 2.5rem;
+    }
+    .details-section h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+    .details-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    @media (min-width: 768px) {
+      .details-grid { grid-template-columns: 1fr 1fr; }
+    }
+    .detail-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem 1.5rem;
+    }
+    .detail-card h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .detail-card table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    .detail-card th, .detail-card td {
+      text-align: left;
+      padding: 0.4rem 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .detail-card th { font-weight: 600; color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; }
+    .detail-card td { vertical-align: top; }
+
+    .check { color: #059669; }
+    .cross { color: #dc2626; }
+    .warn  { color: #d97706; }
+
+    pre {
+      background: #1e293b;
+      color: #e2e8f0;
+      border-radius: 6px;
+      padding: 0.75rem 1rem;
+      font-size: 0.78rem;
+      overflow-x: auto;
+      margin-top: 0.5rem;
+    }
+    code { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+
+    .impact-meter {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .impact-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+    }
+    .dot-high  { background: #dc2626; }
+    .dot-med   { background: #d97706; }
+    .dot-low   { background: #059669; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>Storage Persistence Refactor &mdash; Comparison</h1>
+    <p>Evaluating three architectures for &#9936;-local: <strong>Current (Express + SQLite)</strong> vs <strong>localStorage</strong> vs <strong>IndexedDB</strong></p>
+    <p class="meta">Prepared for planning &mdash; July 2026</p>
+  </header>
+
+  <!-- ===== THREE-COLUMN COMPARISON ===== -->
+  <div class="grid">
+
+    <!-- CURRENT -->
+    <div class="card">
+      <div class="card-header">
+        <h2>&#128218; Current &mdash; Express + SQLite</h2>
+        <span class="badge badge-current">Server-side SQL via better-sqlite3</span>
+      </div>
+      <div class="card-body">
+
+        <h3>&#9989; Pros</h3>
+        <ul class="pro-list">
+          <li><span class="tag tag-data">Data</span> Authoritative server-side data with ACID transactions</li>
+          <li><span class="tag tag-data">Data</span> Foreign keys, CHECK constraints, data integrity</li>
+          <li><span class="tag tag-data">Data</span> SQL queries with indexes &mdash; efficient, flexible</li>
+          <li><span class="tag tag-infra">Infra</span> Multi-device &amp; multiplayer ready (one DB, many clients)</li>
+          <li><span class="tag tag-infra">Infra</span> Concurrent access handled by the server</li>
+          <li><span class="tag tag-infra">Infra</span> Backup/restore: just copy <code>cardz.db</code></li>
+          <li><span class="tag tag-perf">Perf</span> Large datasets (100k+ rows) are fine</li>
+          <li><span class="tag tag-dev">Dev</span> Already built, tested, and working</li>
+        </ul>
+
+        <h3>&#10060; Cons</h3>
+        <ul class="con-list">
+          <li><span class="tag tag-ux">UX</span> Requires a running server &mdash; no offline use</li>
+          <li><span class="tag tag-ux">UX</span> Every action = HTTP round-trip + network latency</li>
+          <li><span class="tag tag-perf">Perf</span> State is re-fetched on every navigation (no cache)</li>
+          <li><span class="tag tag-infra">Infra</span> Deployment is more complex (server process, port, CORS)</li>
+          <li><span class="tag tag-dev">Dev</span> Need to maintain both client <em>and</em> server code</li>
+          <li><span class="tag tag-arch">Arch</span> Game logic split across server (scoring) and client (UI)</li>
+        </ul>
+
+        <h3>&#9888;&#65039; Risks if unchanged</h3>
+        <ul class="neutral-list">
+          <li>Zero offline capability &mdash; app is dead without the server</li>
+          <li>Growing API surface as features are added</li>
+          <li>Session management, auth, and concurrency complexity if scaled</li>
+        </ul>
+
+      </div>
+    </div>
+
+    <!-- localStorage -->
+    <div class="card">
+      <div class="card-header">
+        <h2>&#128451;&#65039; Option A &mdash; localStorage</h2>
+        <span class="badge badge-local">Client-side key-value (strings)</span>
+      </div>
+      <div class="card-body">
+
+        <h3>&#9989; Pros</h3>
+        <ul class="pro-list">
+          <li><span class="tag tag-dev">Dev</span> Dead simple API: <code>getItem</code> / <code>setItem</code> / <code>removeItem</code></li>
+          <li><span class="tag tag-dev">Dev</span> Synchronous &mdash; no async/await, no callbacks</li>
+          <li><span class="tag tag-dev">Dev</span> No dependencies, no build step, no server changes</li>
+          <li><span class="tag tag-ux">UX</span> Works fully offline</li>
+          <li><span class="tag tag-perf">Perf</span> Near-zero latency for reads/writes (in-process)</li>
+          <li><span class="tag tag-infra">Infra</span> Eliminates the entire Express server for persistence</li>
+          <li><span class="tag tag-dev">Dev</span> Trivial to inspect in DevTools</li>
+        </ul>
+
+        <h3>&#10060; Cons</h3>
+        <ul class="con-list">
+          <li><span class="tag tag-data">Data</span> <strong>5&ndash;10 MB limit</strong> &mdash; risky for sessions with many rounds/scores</li>
+          <li><span class="tag tag-data">Data</span> Strings only &rarr; <code>JSON.stringify</code> every read/write (2&ndash;5&times; overhead)</li>
+          <li><span class="tag tag-data">Data</span> <strong>No transactions</strong> &mdash; partial writes corrupt state silently</li>
+          <li><span class="tag tag-data">Data</span> <strong>No indexes or queries</strong> &mdash; must load &amp; scan everything in JS</li>
+          <li><span class="tag tag-perf">Perf</span> <strong>Synchronous</strong> &mdash; blocks the main thread on every access</li>
+          <li><span class="tag tag-arch">Arch</span> Single-device only &mdash; data is tied to one browser</li>
+          <li><span class="tag tag-arch">Arch</span> Browser can clear data without warning (storage pressure, user action)</li>
+          <li><span class="tag tag-dev">Dev</span> Manual migration logic &mdash; no versioned schema</li>
+          <li><span class="tag tag-infra">Infra</span> Eliminating the server means losing the <strong>single source of truth</strong></li>
+        </ul>
+
+        <h3>&#9888;&#65039; Key risk</h3>
+        <ul class="neutral-list">
+          <li>Storage limit will be hit with moderate use (e.g. 10 sessions &times; 8 players &times; 20 rounds = ~1600 score rows)</li>
+          <li>No way to recover data once localStorage is cleared</li>
+          <li>Major rewrite of all data-access code in the client</li>
+        </ul>
+
+      </div>
+    </div>
+
+    <!-- IndexedDB -->
+    <div class="card">
+      <div class="card-header">
+        <h2>&#128451;&#65039; Option B &mdash; IndexedDB</h2>
+        <span class="badge badge-idb">Client-side NoSQL (structured)</span>
+      </div>
+      <div class="card-body">
+
+        <h3>&#9989; Pros</h3>
+        <ul class="pro-list">
+          <li><span class="tag tag-data">Data</span> <strong>Large storage</strong> (usually &ge;50 MB, often unlimited)</li>
+          <li><span class="tag tag-data">Data</span> Stores structured data directly &mdash; no JSON serialization overhead</li>
+          <li><span class="tag tag-data">Data</span> Indexes for efficient querying (e.g. <q>all rounds for session X</q>)</li>
+          <li><span class="tag tag-data">Data</span> <strong>ACID transactions</strong> across multiple object stores</li>
+          <li><span class="tag tag-perf">Perf</span> Asynchronous &mdash; does <em>not</em> block the main thread</li>
+          <li><span class="tag tag-ux">UX</span> Works fully offline</li>
+          <li><span class="tag tag-dev">Dev</span> Built-in versioned schema (migrations via <code>onupgradeneeded</code>)</li>
+          <li><span class="tag tag-arch">Arch</span> Object stores map naturally to existing DB tables</li>
+          <li><span class="tag tag-infra">Infra</span> Can eliminate the server, or keep it as a sync endpoint</li>
+        </ul>
+
+        <h3>&#10060; Cons</h3>
+        <ul class="con-list">
+          <li><span class="tag tag-dev">Dev</span> <strong>Complex API</strong> &mdash; raw IndexedDB is callback-heavy and error-prone</li>
+          <li><span class="tag tag-dev">Dev</span> Realistically <strong>needs a wrapper</strong> (Dexie.js, idb) &rarr; added dependency</li>
+          <li><span class="tag tag-dev">Dev</span> Steeper learning curve than localStorage</li>
+          <li><span class="tag tag-arch">Arch</span> Single-device only &mdash; same limitation as localStorage</li>
+          <li><span class="tag tag-arch">Arch</span> No built-in server sync &mdash; must build if multi-device needed later</li>
+          <li><span class="tag tag-perf">Perf</span> Transaction overhead for small, simple writes</li>
+          <li><span class="tag tag-ux">UX</span> Quiet quota failures &mdash; QuotaExceededError requires handling</li>
+          <li><span class="tag tag-dev">Dev</span> Harder to debug than localStorage (though DevTools has improved)</li>
+          <li><span class="tag tag-infra">Infra</span> If server is removed, there&rsquo;s no cloud backup of user data</li>
+        </ul>
+
+        <h3>&#9888;&#65039; Key risk</h3>
+        <ul class="neutral-list">
+          <li>API complexity makes the migration itself risky &mdash; thorough tests are essential</li>
+          <li>Still single-device unless a sync layer is added later</li>
+        </ul>
+
+      </div>
+    </div>
+
+  </div>
+  <!-- /grid -->
+
+  <!-- ===== SIDEBAR: Verdict scores ===== -->
+  <div class="verdict">
+    <div class="verdict-item">
+      <h3>&#128218; Current (SQLite)</h3>
+      <div class="score" style="color: var(--accent-current);">&#9733;&#9733;&#9733;&#9734;&#9734;</div>
+      <p>Best for multi-device, data integrity, and scaling. Worst for offline, simplicity, and deployment overhead.</p>
+    </div>
+    <div class="verdict-item">
+      <h3>&#128451;&#65039; localStorage</h3>
+      <div class="score" style="color: var(--accent-local);">&#9733;&#9733;&#9734;&#9734;&#9734;</div>
+      <p>Best for trivial, small-scope data (theme, prefs). <strong>Not recommended</strong> for game sessions, rounds, and scores &mdash; storage limits and lack of transactions are dealbreakers.</p>
+    </div>
+    <div class="verdict-item">
+      <h3>&#128451;&#65039; IndexedDB</h3>
+      <div class="score" style="color: var(--accent-idb);">&#9733;&#9733;&#9733;&#9733;&#9734;</div>
+      <p>Best for offline-first client-heavy apps. Viable replacement if multiplayer is not a priority. Recommended over localStorage for this domain.</p>
+    </div>
+  </div>
+
+  <!-- ===== DETAILED COMPARISON TABLES ===== -->
+  <div class="details-section">
+    <h2>&#128202; Feature-by-Feature Comparison</h2>
+    <div class="details-grid">
+
+      <!-- Data model -->
+      <div class="detail-card">
+        <h3><span>&#128196;</span> Data Model Fit</h3>
+        <table>
+          <tr><th>Dimension</th><th>SQLite (current)</th><th>localStorage</th><th>IndexedDB</th></tr>
+          <tr>
+            <td>Structured data</td>
+            <td class="check">&#10003;</td>
+            <td class="cross">&#10007; (strings only)</td>
+            <td class="check">&#10003;</td>
+          </tr>
+          <tr>
+            <td>Indexes / queries</td>
+            <td class="check">&#10003; SQL</td>
+            <td class="cross">&#10007; (full scan)</td>
+            <td class="check">&#10003; indexes</td>
+          </tr>
+          <tr>
+            <td>Transactions</td>
+            <td class="check">&#10003; ACID</td>
+            <td class="cross">&#10007;</td>
+            <td class="check">&#10003; ACID</td>
+          </tr>
+          <tr>
+            <td>Foreign keys</td>
+            <td class="check">&#10003;</td>
+            <td class="cross">&#10007;</td>
+            <td class="cross">&#10007; (app-enforced)</td>
+          </tr>
+          <tr>
+            <td>Schema migrations</td>
+            <td class="check">&#10003; manual</td>
+            <td class="cross">&#10007; manual</td>
+            <td class="check">&#10003; versioned</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Storage capacity -->
+      <div class="detail-card">
+        <h3><span>&#128190;</span> Storage Capacity</h3>
+        <table>
+          <tr><th>Approach</th><th>Limit</th><th>Sufficient?</th></tr>
+          <tr><td>SQLite (server)</td><td>Disk (TB+)</td><td class="check">&#10003;</td></tr>
+          <tr><td>localStorage</td><td>5&ndash;10 MB</td><td class="cross">&#10007;</td></tr>
+          <tr><td>IndexedDB</td><td>&ge;50 MB (often unlimited)</td><td class="warn">~&#10003;</td></tr>
+        </table>
+        <p style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--muted);">
+          <strong>Rough estimate:</strong> 1 session with 8 players &times; 20 rounds = ~640 bytes as JSON.
+          100 such sessions ~ 64 KB. localStorage is fine here.<br>
+          <strong>But</strong>: if <code>data_json</code> blobs grow large (e.g. full game logs), or number of sessions grows, localStorage could fill up quickly.
+        </p>
+      </div>
+
+      <!-- Performance -->
+      <div class="detail-card">
+        <h3><span>&#9889;</span> Performance &amp; Responsiveness</h3>
+        <table>
+          <tr><th>Operation</th><th>SQLite (current)</th><th>localStorage</th><th>IndexedDB</th></tr>
+          <tr><td>Read (small)</td><td>~5&ndash;50 ms (network)</td><td>&lt;1 ms</td><td>~1&ndash;5 ms</td></tr>
+          <tr><td>Read (large set)</td><td>~5&ndash;50 ms</td><td>&lt;1 ms (but sync)</td><td>~1&ndash;10 ms (async)</td></tr>
+          <tr><td>Write (small)</td><td>~5&ndash;50 ms (network)</td><td>&lt;1 ms</td><td>~5&ndash;20 ms (txn overhead)</td></tr>
+          <tr><td>Blocks main thread</td><td class="check">No</td><td class="cross">Yes</td><td class="check">No</td></tr>
+          <tr><td>Offline capable</td><td class="cross">No</td><td class="check">Yes</td><td class="check">Yes</td></tr>
+        </table>
+      </div>
+
+      <!-- Developer experience -->
+      <div class="detail-card">
+        <h3><span>&#128736;&#65039;</span> Developer Experience</h3>
+        <table>
+          <tr><th>Aspect</th><th>SQLite (current)</th><th>localStorage</th><th>IndexedDB</th></tr>
+          <tr><td>API simplicity</td><td>Medium</td><td class="check">Very simple</td><td class="cross">Complex</td></tr>
+          <tr><td>Client LOC to maintain</td><td>~130 (api/client.ts)</td><td>~entire data layer</td><td>~entire data layer</td></tr>
+          <tr><td>Server code needed</td><td>Yes (~400 LOC)</td><td class="check">No</td><td class="check">No</td></tr>
+          <tr><td>Debugging</td><td>Easy (SQLite CLI)</td><td class="check">Very easy</td><td>Medium (DevTools)</td></tr>
+          <tr><td>Testing</td><td>Well understood</td><td>Easy (mock storage)</td><td>Medium (needs fake IndexedDB)</td></tr>
+          <tr><td>Migration effort</td><td>&mdash; (current)</td><td class="cross">High</td><td class="cross">High</td></tr>
+        </table>
+      </div>
+
+      <!-- Data safety -->
+      <div class="detail-card">
+        <h3><span>&#128737;&#65039;</span> Data Safety &amp; Reliability</h3>
+        <table>
+          <tr><th>Property</th><th>SQLite (current)</th><th>localStorage</th><th>IndexedDB</th></tr>
+          <tr><td>Atomic writes</td><td class="check">&#10003;</td><td class="cross">&#10007;</td><td class="check">&#10003;</td></tr>
+          <tr><td>Rollback on failure</td><td class="check">&#10003;</td><td class="cross">&#10007;</td><td class="check">&#10003;</td></tr>
+          <tr><td>Data survives clear</td><td class="check">&#10003; (server disk)</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td></tr>
+          <tr><td>Multi-device</td><td class="check">&#10003;</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td></tr>
+          <tr><td>Concurrent users</td><td class="check">&#10003;</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td></tr>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===== ARCHITECTURE COMPARISON ===== -->
+  <div class="details-section">
+    <h2>&#127959;&#65039; Architecture Sketches</h2>
+    <div class="details-grid">
+
+      <div class="detail-card">
+        <h3>&#128218; Current: Express + SQLite</h3>
+        <pre>Browser                    Express Server               SQLite
+  &#9475;                          &#9475;                       &#9475;
+  &#9475;-- GET /api/sessions ------>&#9475;                       &#9475;
+  &#9475;                          &#9475;-- db.prepare(SQL) ------>&#9475;
+  &#9475;                          &#9475;  &lt;- result -------------&#9475;
+  &#9475;&lt;-- JSON response ----------&#9475;                       &#9475;
+  &#9475;                          &#9475;                       &#9475;
+  &#9475;-- POST /api/sessions/:id/rounds -->&#9475;               &#9475;
+  &#9475;                          &#9475;-- transaction() ------->&#9475;
+  &#9475;                          &#9475;  INSERT rounds          &#9475;
+  &#9475;                          &#9475;  INSERT scores (x8)     &#9475;
+  &#9475;                          &#9475;  &lt;- commit ------------&#9475;
+  &#9475;&lt;-- JSON response ----------&#9475;                       &#9475;</pre>
+      </div>
+
+      <div class="detail-card">
+        <h3>&#128451;&#65039; IndexedDB (recommended option)</h3>
+        <pre>Browser (no server needed for storage)
+  &#9475;
+  &#9475;  const db = await idb.openDB('cardz', 1, {
+  &#9475;    upgrade(db) {
+  &#9475;      db.createObjectStore('sessions', {keyPath:'id'})
+  &#9475;      db.createObjectStore('players', {keyPath:'id'})
+  &#9475;        .createIndex('sessionId','session_id')
+  &#9475;      db.createObjectStore('rounds', {keyPath:'id'})
+  &#9475;        .createIndex('sessionId','session_id')
+  &#9475;      db.createObjectStore('scores', {keyPath:'id'})
+  &#9475;        .createIndex('roundId','round_id')
+  &#9475;    }
+  &#9475;  })
+  &#9475;
+  &#9475;  // Transactional write
+  &#9475;  const tx = db.transaction(['rounds','scores'], 'readwrite')
+  &#9475;  await tx.objectStore('rounds').add(round)
+  &#9475;  for (const s of scores) await tx.objectStore('scores').add(s)
+  &#9475;  await tx.done
+  &#9475;
+  &#9475; // Query with index
+  &#9475; const rounds = await db.getAllFromIndex('rounds','sessionId', sessionId)</pre>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===== MIGRATION EFFORT ===== -->
+  <div class="details-section">
+    <h2>&#128295; Migration Impact Assessment</h2>
+    <div class="details-grid">
+
+      <div class="detail-card">
+        <h3><span class="impact-meter"><span class="impact-dot dot-high"></span> <span class="impact-dot dot-high"></span> <span class="impact-dot dot-high"></span></span> localStorage</h3>
+        <ul style="font-size: 0.88rem; list-style: disc; padding-left: 1.2rem; display: flex; flex-direction: column; gap: 0.35rem;">
+          <li><strong>Files touched:</strong> ~10+ (all pages, api/client.ts, possibly game logic)</li>
+          <li><strong>Server changes:</strong> Could remove server entirely (or keep for sync later)</li>
+          <li><strong>New deps:</strong> None</li>
+          <li><strong>Testing:</strong> Rework all integration tests; add storage-mock tests</li>
+          <li><strong>Risk:</strong> High &mdash; storage limit and no transactions are fundamental limitations</li>
+        </ul>
+      </div>
+
+      <div class="detail-card">
+        <h3><span class="impact-meter"><span class="impact-dot dot-high"></span> <span class="impact-dot dot-high"></span> <span class="impact-dot dot-med"></span></span> IndexedDB</h3>
+        <ul style="font-size: 0.88rem; list-style: disc; padding-left: 1.2rem; display: flex; flex-direction: column; gap: 0.35rem;">
+          <li><strong>Files touched:</strong> ~10+ (same scope as localStorage, minus server elimination)</li>
+          <li><strong>Server changes:</strong> Could eliminate the server or keep as optional sync layer</li>
+          <li><strong>New deps:</strong> 1 (recommended: <code>idb</code> or <code>dexie</code>)</li>
+          <li><strong>Testing:</strong> Rework integration tests; use <code>fake-indexeddb</code> for unit tests</li>
+          <li><strong>Risk:</strong> Medium &mdash; API complexity, but fundamentally capable</li>
+        </ul>
+      </div>
+
+      <div class="detail-card" style="grid-column: 1 / -1;">
+        <h3>&#128220; Recommended approach</h3>
+        <p style="font-size: 0.9rem;">
+          <strong>Option B (IndexedDB)</strong> is the better choice <em>if</em> the goal is a truly offline-first, client-heavy app.
+          It avoids localStorage&rsquo;s hard limits and transaction problems, and maps well to the existing relational model.
+          Use the <code>idb</code> library (<code>npm i idb</code>) to get a Promise-based API that hides IndexedDB&rsquo;s callback complexity.
+        </p>
+        <p style="font-size: 0.9rem; margin-top: 0.5rem;">
+          <strong>However</strong>, the current Express + SQLite architecture is not broken. If multiplayer or multi-device sync
+          is ever a goal, keeping the server and adding IndexedDB as a <em>local cache layer</em> (for offline support)
+          is a stronger long-term strategy than a full migration to either client-only option.
+        </p>
+        <p style="font-size: 0.9rem; margin-top: 0.5rem;">
+          <strong>Recommendation:</strong> Add IndexedDB as an <em>offline cache</em> in front of the existing API, rather than
+          replacing the server wholesale. This gives offline capability without sacrificing the server as a source of truth.
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
