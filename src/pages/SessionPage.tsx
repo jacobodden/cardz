@@ -149,6 +149,10 @@ export default function SessionPage() {
     sessionPlayers.some((p) =>
       booleanFields.some((f) => playerData[p.id]?.[f.key] === undefined)
     )
+  const allSucceeded = session?.game?.slug === 'up-and-down' && hasBooleanFields &&
+    sessionPlayers.every((p) =>
+      booleanFields.every((f) => playerData[p.id]?.[f.key] === true)
+    )
   const hasScoredRounds = players.some((p) => p.scores.some((s) => s !== null))
 
   const currentDealer = round && !isComplete
@@ -254,9 +258,9 @@ export default function SessionPage() {
                 onClick={handleUndo}
                 disabled={undoing}
                 title="Undo last round"
-                className="text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-50 transition"
+                className="flex items-center gap-1 px-3 py-1.5 text-base rounded-lg border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 transition"
               >
-                {undoing ? '...' : '↶'}
+                {undoing ? '...' : '↶ Undo'}
               </button>
             )}
           </div>
@@ -303,26 +307,11 @@ export default function SessionPage() {
             ))}
           </div>
 
-          {hookRuleViolated && (
-            <p className="text-red-600 dark:text-red-400 text-sm mt-2">
-              Hook rule: total bids ({totalBids}) cannot equal hand size ({handSize}). Someone must fail.
-            </p>
-          )}
-          {trumpMissing && (
-            <p className="text-red-600 dark:text-red-400 text-sm mt-2">
-              Select trump suit before submitting
-            </p>
-          )}
-          {successMissing && (
-            <p className="text-red-600 dark:text-red-400 text-sm mt-2">
-              Mark all players as success or failure
-            </p>
-          )}
           {error && <p className="text-red-600 dark:text-red-400 text-sm mt-2">{error}</p>}
 
           <button
             onClick={handleSubmit}
-            disabled={submitting || hookRuleViolated || trumpMissing || successMissing}
+            disabled={submitting || hookRuleViolated || trumpMissing || successMissing || allSucceeded}
             className="w-full sm:w-auto mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-800 disabled:opacity-50 text-sm"
           >
             {submitting ? 'Saving...' : 'Submit Round'}
