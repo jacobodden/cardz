@@ -44,6 +44,7 @@ export const upAndDown: CardGame = {
         type: 'select',
         options: SUITS,
         scope: 'round',
+        required: true,
       },
       {
         key: 'bid',
@@ -54,11 +55,9 @@ export const upAndDown: CardGame = {
         scope: 'player',
       },
       {
-        key: 'tricks',
-        label: 'Tricks Won',
-        type: 'number',
-        min: 0,
-        max: round.hand_size,
+        key: 'success',
+        label: 'Made Bid?',
+        type: 'boolean',
         scope: 'player',
       },
     ]
@@ -67,12 +66,12 @@ export const upAndDown: CardGame = {
   computeScore(_meta: RoundMeta, inputs: PlayerScoreInput[]): PlayerScoreResult[] {
     return inputs.map((i) => {
       const bid = i.data.bid ?? 0
-      const tricks = i.data.tricks ?? 0
-      const score = bid === tricks ? 10 + tricks : 0
+      const success = i.data.success ?? false
+      const score = success ? 10 + bid : 0
       return {
         player_id: i.player_id,
         score,
-        data: { bid, tricks },
+        data: { bid, success },
       }
     })
   },
