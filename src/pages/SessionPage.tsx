@@ -168,11 +168,11 @@ export default function SessionPage() {
       )}
 
       {/* Scoreboard */}
-      <section className="mb-8 overflow-x-auto">
-        <table className="w-full text-sm border-collapse">
+      <section className="mb-8 overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+        <table className="w-full text-xs sm:text-sm border-collapse">
           <thead>
             <tr>
-              <th className="text-left p-2 border-b border-gray-200 dark:border-gray-700 font-medium text-gray-700 dark:text-gray-300">
+              <th className="text-left p-1.5 sm:p-2 border-b border-gray-200 dark:border-gray-700 font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
                 Player
               </th>
               {totalRounds > 0 && Array.from({ length: totalRounds }, (_, i) => {
@@ -182,22 +182,22 @@ export default function SessionPage() {
                 return (
                   <th
                     key={i}
-                    className="text-center p-2 border-b border-gray-200 dark:border-gray-700 font-medium text-gray-700 dark:text-gray-300 min-w-[2.5rem] sm:w-16"
+                    className="text-center p-1.5 sm:p-2 border-b border-gray-200 dark:border-gray-700 font-medium text-gray-700 dark:text-gray-300 min-w-[2rem] sm:min-w-[2.5rem]"
                   >
-                    <div className="text-xs">R{roundNum}</div>
+                    <div className="text-[11px] sm:text-xs">R{roundNum}</div>
                     {trump && (
-                      <div className={`text-base leading-tight ${SUIT_COLORS[trump] ?? 'text-gray-500'}`}>
+                      <div className={`text-sm sm:text-base leading-tight ${SUIT_COLORS[trump] ?? 'text-gray-500'}`}>
                         {trump}
                       </div>
                     )}
                     {dealer && (
-                      <div className="text-[10px] text-gray-400 leading-tight mt-0.5">{dealer}</div>
+                      <div className="text-[9px] sm:text-[10px] text-gray-400 leading-tight mt-0.5">{dealer}</div>
                     )}
                   </th>
                 )
               })}
-              <th className="text-center p-2 border-b border-gray-200 dark:border-gray-700 font-medium text-gray-700 dark:text-gray-300 min-w-[3rem] sm:w-12">
-                Total
+              <th className="text-center p-1.5 sm:p-2 border-b border-gray-200 dark:border-gray-700 font-medium text-gray-700 dark:text-gray-300 min-w-[2.5rem] sm:min-w-[3rem]">
+                Tot
               </th>
             </tr>
           </thead>
@@ -209,7 +209,7 @@ export default function SessionPage() {
                   key={row.player_id}
                   className={`hover:bg-gray-50 dark:hover:bg-gray-800/50 ${isWinner && isComplete ? 'bg-yellow-50 dark:bg-yellow-900/20' : ''}`}
                 >
-                  <td className="p-2 border-b border-gray-100 dark:border-gray-800 text-gray-900 dark:text-gray-100 font-medium">
+                  <td className="p-1.5 sm:p-2 border-b border-gray-100 dark:border-gray-800 text-gray-900 dark:text-gray-100 font-medium">
                     <span className="flex items-center gap-1">
                       {row.name}
                       {isWinner && isComplete && (
@@ -222,14 +222,14 @@ export default function SessionPage() {
                   {row.scores.map((s, i) => (
                     <td
                       key={i}
-                      className={`text-center p-2 border-b border-gray-100 dark:border-gray-800 ${
+                      className={`text-center p-1.5 sm:p-2 border-b border-gray-100 dark:border-gray-800 ${
                         s !== null ? 'text-gray-900 dark:text-gray-100' : 'text-gray-300 dark:text-gray-600'
                       }`}
                     >
                       {s !== null ? s : '-'}
                     </td>
                   ))}
-                  <td className={`text-center p-2 border-b border-gray-100 dark:border-gray-800 font-bold ${
+                  <td className={`text-center p-1.5 sm:p-2 border-b border-gray-100 dark:border-gray-800 font-bold ${
                     isWinner && isComplete ? 'text-yellow-700 dark:text-yellow-400' : 'text-gray-900 dark:text-gray-100'
                   }`}>
                     {row.total}
@@ -244,8 +244,8 @@ export default function SessionPage() {
       {/* Current round input */}
       {!isComplete && round && !round.complete && (
         <section className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4">
-          <div className="flex items-center justify-between mb-1">
-            <div className="flex items-baseline gap-3">
+          <div className="flex items-start sm:items-center justify-between mb-1 gap-2">
+            <div className="flex items-baseline gap-3 min-w-0">
               <h2 className="font-semibold text-gray-900 dark:text-gray-100">
                 Round {round.round_number}
               </h2>
@@ -258,7 +258,7 @@ export default function SessionPage() {
                 onClick={handleUndo}
                 disabled={undoing}
                 title="Undo last round"
-                className="flex items-center gap-1 px-3 py-1.5 text-base rounded-lg border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 transition"
+                className="shrink-0 flex items-center gap-1 px-4 py-2.5 text-sm rounded-lg border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 transition active:scale-[0.98]"
               >
                 {undoing ? '...' : '↶ Undo'}
               </button>
@@ -312,7 +312,7 @@ export default function SessionPage() {
           <button
             onClick={handleSubmit}
             disabled={submitting || hookRuleViolated || trumpMissing || successMissing || allSucceeded}
-            className="w-full sm:w-auto mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-800 disabled:opacity-50 text-sm"
+            className="w-full sm:w-auto mt-4 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-800 disabled:opacity-50 text-sm font-medium active:scale-[0.98] transition"
           >
             {submitting ? 'Saving...' : 'Submit Round'}
           </button>
@@ -349,13 +349,13 @@ function RoundFieldInput({
       return (
         <div>
           <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1.5">{field.label}</p>
-          <div className="flex gap-1">
+          <div className="flex gap-1.5">
             {field.options.map((opt) => (
               <button
                 key={opt}
                 type="button"
                 onClick={() => onChange(opt)}
-                className={`w-10 h-10 flex items-center justify-center rounded-lg border-2 text-xl transition ${
+                className={`w-12 h-12 sm:w-11 sm:h-11 flex items-center justify-center rounded-lg border-2 text-xl transition active:scale-[0.95] ${
                   value === opt
                     ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30'
                     : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600'
@@ -370,12 +370,12 @@ function RoundFieldInput({
     }
 
     return (
-      <label className="text-sm text-gray-500 dark:text-gray-400">
-        {field.label}
+      <label className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5 flex-wrap">
+        <span>{field.label}</span>
         <select
           value={value ?? ''}
           onChange={(e) => onChange(e.target.value)}
-          className="ml-2 border border-gray-300 dark:border-gray-700 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+          className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
         >
           <option value="" disabled>
             Select...
@@ -391,15 +391,15 @@ function RoundFieldInput({
   }
 
   return (
-    <label className="text-sm text-gray-500 dark:text-gray-400">
-      {field.label}
+    <label className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5 flex-wrap">
+      <span>{field.label}</span>
       <input
         type="number"
         min={field.min}
         max={field.max}
         value={value ?? ''}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="ml-2 border border-gray-300 dark:border-gray-700 rounded px-2 py-1.5 w-20 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+        className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2.5 w-20 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
       />
     </label>
   )
@@ -421,7 +421,7 @@ function PlayerFieldInput({
         <button
           type="button"
           onClick={() => onChange(false)}
-          className={`px-2.5 py-1.5 text-sm rounded-lg border-2 transition ${
+          className={`px-4 py-2.5 text-sm rounded-lg border-2 transition active:scale-[0.95] ${
             value === false
               ? 'border-red-500 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300'
               : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-400 dark:text-gray-500 hover:border-gray-300 dark:hover:border-gray-600'
@@ -432,7 +432,7 @@ function PlayerFieldInput({
         <button
           type="button"
           onClick={() => onChange(true)}
-          className={`px-2.5 py-1.5 text-sm rounded-lg border-2 transition ${
+          className={`px-4 py-2.5 text-sm rounded-lg border-2 transition active:scale-[0.95] ${
             value === true
               ? 'border-green-500 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300'
               : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-400 dark:text-gray-500 hover:border-gray-300 dark:hover:border-gray-600'
@@ -446,15 +446,15 @@ function PlayerFieldInput({
 
   if (field.type === 'number') {
     return (
-      <label className="text-sm text-gray-500 dark:text-gray-400">
-        {field.label}
+      <label className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5 flex-wrap">
+        <span>{field.label}</span>
         <input
           type="number"
           min={field.min}
           max={field.max}
           value={(value ?? '') as string | number}
           onChange={(e) => onChange(Number(e.target.value))}
-          className="ml-1 border border-gray-300 dark:border-gray-700 rounded px-2 py-1.5 w-16 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+          className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2.5 w-16 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
         />
       </label>
     )
@@ -462,12 +462,12 @@ function PlayerFieldInput({
 
   if (field.type === 'select' && field.options) {
     return (
-      <label className="text-sm text-gray-500 dark:text-gray-400">
-        {field.label}
+      <label className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5 flex-wrap">
+        <span>{field.label}</span>
         <select
           value={(value ?? '') as string | number}
           onChange={(e) => onChange(e.target.value)}
-          className="ml-1 border border-gray-300 dark:border-gray-700 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+          className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
         >
           <option value="" disabled>
             Select...
