@@ -7,11 +7,12 @@ export interface RoundMeta {
 export interface InputField {
   key: string
   label: string
-  type: 'number' | 'select'
+  type: 'number' | 'select' | 'boolean'
   options?: string[]
   min?: number
   max?: number
   scope?: 'round' | 'player'
+  required?: boolean
 }
 
 export interface PlayerScoreInput {

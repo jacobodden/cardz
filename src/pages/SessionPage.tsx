@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
 import { getSession } from '../db/sessions'
-import { getCurrentRound, submitRound, getScoreboard } from '../db/rounds'
+import { getCurrentRound, submitRound, getScoreboard, undoLastRound } from '../db/rounds'
 import type { SessionDetail } from '../db/sessions'
 import type { CurrentRoundResult, ScoreboardRow, RoundMetaInfo } from '../db/rounds'
 import type { InputField } from '../games/types'
@@ -28,8 +28,9 @@ export default function SessionPage() {
   const [players, setPlayersState] = useState<ScoreboardRow[]>([])
   const [roundsMeta, setRoundsMeta] = useState<RoundMetaInfo[]>([])
   const [roundData, setRoundData] = useState<Record<string, string | number>>({})
-  const [playerData, setPlayerData] = useState<Record<number, Record<string, string | number>>>({})
+  const [playerData, setPlayerData] = useState<Record<number, Record<string, string | number | boolean>>>({})
   const [submitting, setSubmitting] = useState(false)
+  const [undoing, setUndoing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const load = useCallback(async () => {
@@ -86,6 +87,18 @@ export default function SessionPage() {
     setSubmitting(false)
   }
 
+  async function handleUndo() {
+    setUndoing(true)
+    setError(null)
+    try {
+      await undoLastRound(sessionId)
+      await load()
+    } catch (err: any) {
+      setError(err.message)
+    }
+    setUndoing(false)
+  }
+
   const winners = useMemo(
     () => findWinners(players, session?.game?.slug),
     [players, session?.game?.slug]
@@ -128,6 +141,15 @@ export default function SessionPage() {
     ? sessionPlayers.reduce((sum, p) => sum + (Number(playerData[p.id]?.bid) || 0), 0)
     : 0
   const hookRuleViolated = hasBidField && handSize > 0 && totalBids === handSize
+
+  const trumpMissing = roundFields.some((f) => f.required && roundData[f.key] === undefined)
+  const hasBooleanFields = playerFields.some((f) => f.type === 'boolean')
+  const booleanFields = playerFields.filter((f) => f.type === 'boolean')
+  const successMissing = hasBooleanFields &&
+    sessionPlayers.some((p) =>
+      booleanFields.some((f) => playerData[p.id]?.[f.key] === undefined)
+    )
+  const hasScoredRounds = players.some((p) => p.scores.some((s) => s !== null))
 
   const currentDealer = round && !isComplete
     ? getDealerForRound(round.round_number)
@@ -218,12 +240,24 @@ export default function SessionPage() {
       {/* Current round input */}
       {!isComplete && round && !round.complete && (
         <section className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4">
-          <div className="flex items-baseline gap-3 mb-1">
-            <h2 className="font-semibold text-gray-900 dark:text-gray-100">
-              Round {round.round_number}
-            </h2>
-            {currentDealer && (
-              <span className="text-xs text-gray-400 dark:text-gray-500">Dealer: {currentDealer}</span>
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-baseline gap-3">
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100">
+                Round {round.round_number}
+              </h2>
+              {currentDealer && (
+                <span className="text-xs text-gray-400 dark:text-gray-500">Dealer: {currentDealer}</span>
+              )}
+            </div>
+            {hasScoredRounds && (
+              <button
+                onClick={handleUndo}
+                disabled={undoing}
+                title="Undo last round"
+                className="text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-50 transition"
+              >
+                {undoing ? '...' : '↶'}
+              </button>
             )}
           </div>
           {handSize > 0 && (
@@ -274,11 +308,21 @@ export default function SessionPage() {
               Hook rule: total bids ({totalBids}) cannot equal hand size ({handSize}). Someone must fail.
             </p>
           )}
+          {trumpMissing && (
+            <p className="text-red-600 dark:text-red-400 text-sm mt-2">
+              Select trump suit before submitting
+            </p>
+          )}
+          {successMissing && (
+            <p className="text-red-600 dark:text-red-400 text-sm mt-2">
+              Mark all players as success or failure
+            </p>
+          )}
           {error && <p className="text-red-600 dark:text-red-400 text-sm mt-2">{error}</p>}
 
           <button
             onClick={handleSubmit}
-            disabled={submitting || hookRuleViolated}
+            disabled={submitting || hookRuleViolated || trumpMissing || successMissing}
             className="w-full sm:w-auto mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-800 disabled:opacity-50 text-sm"
           >
             {submitting ? 'Saving...' : 'Submit Round'}
@@ -378,9 +422,39 @@ function PlayerFieldInput({
   onChange,
 }: {
   field: InputField
-  value: string | number | undefined
-  onChange: (v: string | number) => void
+  value: string | number | boolean | undefined
+  onChange: (v: string | number | boolean) => void
 }) {
+  if (field.type === 'boolean') {
+    return (
+      <div className="flex items-center gap-1">
+        <span className="text-sm text-gray-500 dark:text-gray-400 mr-0.5">{field.label}</span>
+        <button
+          type="button"
+          onClick={() => onChange(false)}
+          className={`px-2.5 py-1.5 text-sm rounded-lg border-2 transition ${
+            value === false
+              ? 'border-red-500 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+              : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-400 dark:text-gray-500 hover:border-gray-300 dark:hover:border-gray-600'
+          }`}
+        >
+          ✗
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange(true)}
+          className={`px-2.5 py-1.5 text-sm rounded-lg border-2 transition ${
+            value === true
+              ? 'border-green-500 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+              : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-400 dark:text-gray-500 hover:border-gray-300 dark:hover:border-gray-600'
+          }`}
+        >
+          ✓
+        </button>
+      </div>
+    )
+  }
+
   if (field.type === 'number') {
     return (
       <label className="text-sm text-gray-500 dark:text-gray-400">
@@ -389,7 +463,7 @@ function PlayerFieldInput({
           type="number"
           min={field.min}
           max={field.max}
-          value={value ?? ''}
+          value={(value ?? '') as string | number}
           onChange={(e) => onChange(Number(e.target.value))}
           className="ml-1 border border-gray-300 dark:border-gray-700 rounded px-2 py-1.5 w-16 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
         />
@@ -402,7 +476,7 @@ function PlayerFieldInput({
       <label className="text-sm text-gray-500 dark:text-gray-400">
         {field.label}
         <select
-          value={value ?? ''}
+          value={(value ?? '') as string | number}
           onChange={(e) => onChange(e.target.value)}
           className="ml-1 border border-gray-300 dark:border-gray-700 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
         >

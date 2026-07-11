@@ -160,6 +160,39 @@ export async function submitRound(
   return { scores: results, complete: false }
 }
 
+export async function undoLastRound(sessionId: number): Promise<void> {
+  const session = await db.sessions.get(sessionId)
+  if (!session) throw new Error('Session not found')
+
+  const allRounds = await db.rounds
+    .where('session_id').equals(sessionId)
+    .sortBy('round_number')
+
+  if (allRounds.length === 0) throw new Error('No rounds to undo')
+
+  const allScores = await db.scores.toArray()
+  const roundsWithScores = allRounds.filter((r) =>
+    allScores.some((s) => s.round_id === r.id)
+  )
+
+  if (roundsWithScores.length === 0) throw new Error('No scored rounds to undo')
+
+  const lastRound = roundsWithScores[roundsWithScores.length - 1]
+
+  await db.transaction('rw', db.scores, db.rounds, db.sessions, async () => {
+    await db.scores.where('round_id').equals(lastRound.id!).delete()
+
+    const nextRound = allRounds.find((r) => r.round_number === lastRound.round_number + 1)
+    if (nextRound) {
+      await db.rounds.delete(nextRound.id!)
+    }
+
+    if (session.status === 'completed') {
+      await db.sessions.update(sessionId, { status: 'active' })
+    }
+  })
+}
+
 export async function getScoreboard(sessionId: number): Promise<ScoreboardResponse> {
   const session = await db.sessions.get(sessionId)
   if (!session) throw new Error('Session not found')

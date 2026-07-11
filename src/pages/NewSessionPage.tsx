@@ -17,6 +17,7 @@ export default function NewSessionPage() {
   const [title, setTitle] = useState('')
   const [config, setConfig] = useState<Record<string, number>>({})
   const [playerNames, setPlayerNames] = useState<string[]>(['', ''])
+  const [firstDealerIndex, setFirstDealerIndex] = useState(0)
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
 
@@ -84,7 +85,7 @@ export default function NewSessionPage() {
     for (const name of playerNames.filter(Boolean)) {
       await addPlayerToSession(session.id, name)
     }
-    await startSession(session.id, config)
+    await startSession(session.id, { ...config, first_dealer_index: firstDealerIndex })
     navigate(`/sessions/${session.id}`)
   }
 
@@ -206,6 +207,25 @@ export default function NewSessionPage() {
               </button>
             )}
           </section>
+
+          {selectedGame.slug === 'up-and-down' && validCount > 0 && (
+            <section className="mb-8">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">
+                First Dealer
+              </label>
+              <select
+                value={firstDealerIndex}
+                onChange={(e) => setFirstDealerIndex(Number(e.target.value))}
+                className="border border-gray-300 dark:border-gray-700 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+              >
+                {playerNames.map((name, i) => (
+                  <option key={i} value={i}>
+                    {name || `Player ${i + 1}`}
+                  </option>
+                ))}
+              </select>
+            </section>
+          )}
 
           <button
             onClick={handleStart}
