@@ -1,11 +1,14 @@
-# cardz-local
+# Cardz
 
-A local-first card game scorekeeper. Track sessions, players, rounds, and scores for card games like Up & Down The River and Pay Me.
+A local-first, installable PWA card game scorekeeper. Track sessions, players, rounds, and scores for your favorite card games.
+
+[Hosted on GitHub Pages](https://jodden.github.io/cardz/) — all data stays in your browser (IndexedDB via Dexie.js).
 
 ## Stack
 
 - **Frontend**: Vite + React 19 + Tailwind CSS v4
 - **Storage**: Dexie.js + IndexedDB (local-only, no server)
+- **Installable**: PWA with service worker for offline use
 - **No server, no sync, no sign-in** — all data stays in your browser.
 
 ## Scripts
@@ -28,5 +31,5 @@ Game scoring logic (pure functions) lives in `src/games/`. Data access helpers l
 
 ## Games
 
-- **Up & Down The River** — Trick-taking game where you bid the exact number of tricks you will win.
-- **Pay Me** — Contract Rummy game. Lowest score after 11 rounds wins.
+- [**Up & Down The River**](docs/games/UpAndDown.md) — Trick-taking game where you bid the exact number of tricks you will win.
+- [**Pay Me**](docs/games/PayMe.md) — Contract Rummy game. Lowest score after 11 rounds wins.
