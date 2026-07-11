@@ -4,8 +4,8 @@ Card game info can be found under @docs/games
 - **Client**: Vite + React 19 + Tailwind CSS v4
 - **Server**: Express + SQLite (being phased out — see Architecture Decision below)
 - **Client-side DB**: Dexie.js + IndexedDB (replacing Express+SQLite for storage)
-- **Tailwind v4**: Configuration is done via CSS `@theme` directives (no `tailwind.config.*`). Custom dark mode variant is defined in `client/src/index.css`: `@custom-variant dark (&:where(.dark, .dark *));`. Theme preference is stored in `localStorage('theme')` and the `.dark` class is toggled on `<html>`.
-- **Build**: `npm run build` in `client/` (runs `tsc -b && vite build`)
+- **Tailwind v4**: Configuration is done via CSS `@theme` directives (no `tailwind.config.*`). Custom dark mode variant is defined in `src/index.css`: `@custom-variant dark (&:where(.dark, .dark *));`. Theme preference is stored in `localStorage('theme')` and the `.dark` class is toggled on `<html>`.
+- **Build**: `npm run build` (runs `tsc -b && vite build`)
 
 ## Architecture Decision — Client-only Dexie/IndexedDB
 
@@ -22,9 +22,9 @@ Move all data persistence from server-side Express + SQLite to local-only Indexe
 | Before | After |
 |--------|-------|
 | Express server + `better-sqlite3` | Removed entirely |
-| `client/src/api/client.ts` (fetch wrapper) | Replaced with Dexie table operations |
-| `server/src/routes/sessions.ts` (CRUD + game logic) | Moved to `client/src/db/` + `client/src/games/` |
-| `server/src/games/` (scoring logic) | Moved to `client/src/games/` (pure functions, no change needed) |
+| `src/api/client.ts` (fetch wrapper) | Replaced with Dexie table operations |
+| `server/src/routes/sessions.ts` (CRUD + game logic) | Moved to `src/db/` + `src/games/` |
+| `server/src/games/` (scoring logic) | Moved to `src/games/` (pure functions, no change needed) |
 | `server/src/db/schema.ts` (SQL schema) | Replaced with Dexie `db.version().stores()` |
 
 ## Database Schema (Dexie)
@@ -43,20 +43,20 @@ All numeric IDs auto-increment via Dexie's `++id` syntax.
 ## Migration steps
 
 ### Phase 1 — Foundation &#10003;
-- [x] `npm install dexie dexie-react-hooks` in client/
-- [x] Create `client/src/db/dexie-db.ts` — Dexie DB subclass with schema definition
-- [x] Create `client/src/db/seed.ts` — seed game definitions into the `games` table
-- [x] Copy scoring logic from `server/src/games/` to `client/src/games/` (pure functions, no DB deps)
+- [x] `npm install dexie dexie-react-hooks`
+- [x] Create `src/db/dexie-db.ts` — Dexie DB subclass with schema definition
+- [x] Create `src/db/seed.ts` — seed game definitions into the `games` table
+- [x] Copy scoring logic from `server/src/games/` to `src/games/` (pure functions, no DB deps)
 
 ### Phase 2 — Data access layer &#10003;
-- [x] Create `client/src/db/sessions.ts` — Dexie-based CRUD helpers for sessions+players
+- [x] Create `src/db/sessions.ts` — Dexie-based CRUD helpers for sessions+players
   - `listSessions()` — joins sessions with games, ordered by created_at DESC
   - `getSession(id)` — returns session with game + players + total_rounds
   - `createSession(game_id, title?)` — inserts session, returns new record
   - `addPlayer(sessionId, name)` — inserts player with auto-incrementing order_index
   - `removePlayer(sessionId, playerId)` — deletes player
   - `startSession(sessionId, config)` — generates rounds via game impl, stores config, creates first round
-- [x] Create `client/src/db/rounds.ts` — Dexie-based round + score operations
+- [x] Create `src/db/rounds.ts` — Dexie-based round + score operations
   - `getCurrentRound(sessionId)` — finds first unscored round, returns with schema fields
   - `submitRound(sessionId, roundData)` — hook rule validation, score computation, score insertion, next round creation
   - `getScoreboard(sessionId)` — builds per-player per-round score table
@@ -73,7 +73,7 @@ All numeric IDs auto-increment via Dexie's `++id` syntax.
 - [x] Remove Vite proxy config (`/api` → `localhost:3001` removed from `vite.config.ts`)
 - [x] Remove unused `concurrently` dependency
 - [x] Clean up root `node_modules` / `package-lock.json`
-- [x] Verify `npm run build` and `npm run dev` in client/ work standalone
+- [x] Verify `npm run build` and `npm run dev` work standalone
 
 ### Phase 5 — Cleanup &#10003;
 - [x] Remove `api/client.ts` entirely
@@ -83,6 +83,6 @@ All numeric IDs auto-increment via Dexie's `++id` syntax.
 
 ## Key conventions
 - Dexie schema strings follow the format: `'++id, field1, field2'` — `++id` means auto-increment primary key
-- All Dexie DB interactions go through the singleton `db` instance exported from `client/src/db/dexie-db.ts`
+- All Dexie DB interactions go through the singleton `db` instance exported from `src/db/dexie-db.ts`
 - Game scoring logic remains as pure functions with no side effects (same as server implementation)
 - Use `useLiveQuery` from `dexie-react-hooks` instead of manual `useEffect` + fetch for reactive data loading
