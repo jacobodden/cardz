@@ -123,6 +123,11 @@ export async function submitRound(
     if (totalBids > 0 && totalBids === roundMeta.hand_size) {
       throw new Error(`Hook rule: total bids (${totalBids}) cannot equal hand size (${roundMeta.hand_size})`)
     }
+
+    const allSucceeded = rawScores.every((s) => s.data?.success === true)
+    if (allSucceeded) {
+      throw new Error('Not every player can succeed. At least one must fail this round.')
+    }
   }
 
   const results = gameImpl.computeScore(roundMeta, rawScores)
