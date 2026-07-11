@@ -118,13 +118,13 @@ function SessionCard({ session, onDelete }: { session: SessionSummary; onDelete:
 
   return (
     <div className="relative overflow-hidden rounded-lg">
-      <div className="absolute inset-y-0 right-0 flex items-center">
+      <div className="absolute inset-y-0 right-0.5 flex items-center">
         <button
           onClick={handleDeleteClick}
-          className="bg-red-600 text-white w-24 h-full rounded-lg flex items-center justify-center gap-1 text-sm font-medium hover:bg-red-700 active:bg-red-800"
+          className="bg-red-600 text-white w-22 h-95/100 rounded-lg flex items-center justify-center hover:bg-red-700 active:bg-red-800"
+          title="Delete session"
         >
           <TrashIcon />
-          Delete
         </button>
       </div>
 
@@ -152,7 +152,7 @@ function SessionCard({ session, onDelete }: { session: SessionSummary; onDelete:
             <div className="flex items-center gap-2">
               <button
                 onClick={handleDeleteClick}
-                className="hidden sm:flex text-gray-400 hover:text-red-600 dark:hover:text-red-400 p-1 rounded transition-colors"
+                className="hidden sm:flex text-gray-400 hover:text-red-600 dark:hover:text-red-400 p-0.5 rounded transition-colors"
                 title="Delete session"
               >
                 <TrashIcon />
