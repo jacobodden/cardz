@@ -115,6 +115,20 @@ export async function removePlayer(_sessionId: number, playerId: number): Promis
   await db.players.delete(playerId)
 }
 
+export async function deleteSession(id: number): Promise<void> {
+  const rounds = await db.rounds.where('session_id').equals(id).toArray()
+  const roundIds = rounds.map((r) => r.id!).filter(Boolean)
+
+  await db.transaction('rw', db.sessions, db.players, db.rounds, db.scores, async () => {
+    if (roundIds.length > 0) {
+      await db.scores.where('round_id').anyOf(roundIds).delete()
+    }
+    await db.rounds.where('session_id').equals(id).delete()
+    await db.players.where('session_id').equals(id).delete()
+    await db.sessions.delete(id)
+  })
+}
+
 export async function startSession(sessionId: number, config?: Record<string, any>): Promise<void> {
   const session = await db.sessions.get(sessionId)
   if (!session) throw new Error('Session not found')

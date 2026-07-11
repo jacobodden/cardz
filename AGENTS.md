@@ -1,88 +1,61 @@
 Card game info can be found under @docs/games
 
 ## Tech stack
+
 - **Client**: Vite + React 19 + Tailwind CSS v4
-- **Server**: Express + SQLite (being phased out — see Architecture Decision below)
-- **Client-side DB**: Dexie.js + IndexedDB (replacing Express+SQLite for storage)
-- **Tailwind v4**: Configuration is done via CSS `@theme` directives (no `tailwind.config.*`). Custom dark mode variant is defined in `src/index.css`: `@custom-variant dark (&:where(.dark, .dark *));`. Theme preference is stored in `localStorage('theme')` and the `.dark` class is toggled on `<html>`.
+- **Storage**: Dexie.js + IndexedDB (local-only, no server, no sync, no sign-in)
+- **PWA**: `vite-plugin-pwa` with auto-updating service worker
+- **Hosting**: GitHub Pages at `/cardz/` base path
 - **Build**: `npm run build` (runs `tsc -b && vite build`)
 
-## Architecture Decision — Client-only Dexie/IndexedDB
+## PWA
 
-### Decision
-Move all data persistence from server-side Express + SQLite to local-only IndexedDB via Dexie.js. The server will be removed entirely (no sync, no multi-device, no multiplayer).
+Configured in `vite.config.ts` via `VitePWA` plugin. Manifest has static `theme_color` and `background_color`; the `<meta name="theme-color">` tag is updated dynamically at runtime by `Layout.tsx` when toggling dark/light mode.
 
-### Rationale
-- Multi-device / multiplayer is not a goal
-- Eliminates the server process, deployment complexity, CORS, and the client-server round-trip for every operation
-- Dexie's schema versioning, query builder, and `useLiveQuery` hook map cleanly onto the relational data model (sessions → players → rounds → scores)
-- Full offline capability with no infrastructure
+App icons managed via `@vite-pwa/assets-generator` (`npm run generate-pwa-assets`). Icons: `pwa-192x192.png`, `pwa-512x512.png`, `maskable-icon-512x512.png`.
 
-### Replaced components
-| Before | After |
-|--------|-------|
-| Express server + `better-sqlite3` | Removed entirely |
-| `src/api/client.ts` (fetch wrapper) | Replaced with Dexie table operations |
-| `server/src/routes/sessions.ts` (CRUD + game logic) | Moved to `src/db/` + `src/games/` |
-| `server/src/games/` (scoring logic) | Moved to `src/games/` (pure functions, no change needed) |
-| `server/src/db/schema.ts` (SQL schema) | Replaced with Dexie `db.version().stores()` |
+## Dark mode
+
+Custom variant defined in `src/index.css`:
+```css
+@custom-variant dark (&:where(.dark, .dark *));
+```
+Theme preference is stored in `localStorage('theme')` and the `.dark` class is toggled on `<html>`. The toggle lives in `src/components/Layout.tsx`, which also updates `<meta name="theme-color">` for the browser chrome.
 
 ## Database Schema (Dexie)
 
+Defined in `src/db/dexie-db.ts` — `CardzDB` extends `Dexie` with five tables:
+
 ```
 cardz DB (Dexie)
-├── games        │ id, slug, name, description, min_players, max_players, config_schema
-├── sessions     │ id, game_id, title, status, config_json, created_at
-├── players      │ id, session_id, name, order_index            │ index: session_id
-├── rounds       │ id, session_id, round_number, data_json       │ index: session_id
-└── scores       │ id, round_id, player_id, score, data_json     │ index: round_id
+├── games        │ ++id, &slug, name, description, min_players, max_players, config_schema
+├── sessions     │ ++id, game_id, title, status, config_json, created_at
+├── players      │ ++id, session_id, name, order_index            │ index: session_id
+├── rounds       │ ++id, session_id, round_number, data_json       │ index: session_id
+└── scores       │ ++id, round_id, player_id, score, data_json     │ index: round_id
 ```
 
-All numeric IDs auto-increment via Dexie's `++id` syntax.
+Seed data (game definitions) loaded in `src/db/seed.ts`.
 
-## Migration steps
+## Routing and pages
 
-### Phase 1 — Foundation &#10003;
-- [x] `npm install dexie dexie-react-hooks`
-- [x] Create `src/db/dexie-db.ts` — Dexie DB subclass with schema definition
-- [x] Create `src/db/seed.ts` — seed game definitions into the `games` table
-- [x] Copy scoring logic from `server/src/games/` to `src/games/` (pure functions, no DB deps)
+| Route | Component | File |
+|-------|-----------|------|
+| `/` | `HomePage` | `src/pages/HomePage.tsx` |
+| `/sessions/new` | `NewSessionPage` | `src/pages/NewSessionPage.tsx` |
+| `/sessions/:id` | `SessionPage` | `src/pages/SessionPage.tsx` |
 
-### Phase 2 — Data access layer &#10003;
-- [x] Create `src/db/sessions.ts` — Dexie-based CRUD helpers for sessions+players
-  - `listSessions()` — joins sessions with games, ordered by created_at DESC
-  - `getSession(id)` — returns session with game + players + total_rounds
-  - `createSession(game_id, title?)` — inserts session, returns new record
-  - `addPlayer(sessionId, name)` — inserts player with auto-incrementing order_index
-  - `removePlayer(sessionId, playerId)` — deletes player
-  - `startSession(sessionId, config)` — generates rounds via game impl, stores config, creates first round
-- [x] Create `src/db/rounds.ts` — Dexie-based round + score operations
-  - `getCurrentRound(sessionId)` — finds first unscored round, returns with schema fields
-  - `submitRound(sessionId, roundData)` — hook rule validation, score computation, score insertion, next round creation
-  - `getScoreboard(sessionId)` — builds per-player per-round score table
-- [x] Replace `api/client.ts` calls in all page components with Dexie operations
+All routes use `BrowserRouter` with `basename={import.meta.env.BASE_URL}` to support the `/cardz/` subpath on GitHub Pages.
 
-### Phase 3 — Component updates &#10003;
-- [x] Update `HomePage.tsx` — list sessions via Dexie instead of `api.listSessions()`
-- [x] Update `NewSessionPage.tsx` — create session + players via Dexie
-- [x] Update `SessionPage.tsx` — load scoreboard, get current round, submit round via Dexie
+## GitHub Pages deployment
 
-### Phase 4 — Server removal &#10003;
-- [x] Delete `server/` directory
-- [x] Remove server scripts from root `package.json` (rewrote to only `dev`, `build`, `lint` — all prefixed to client)
-- [x] Remove Vite proxy config (`/api` → `localhost:3001` removed from `vite.config.ts`)
-- [x] Remove unused `concurrently` dependency
-- [x] Clean up root `node_modules` / `package-lock.json`
-- [x] Verify `npm run build` and `npm run dev` work standalone
-
-### Phase 5 — Cleanup &#10003;
-- [x] Remove `api/client.ts` entirely
-- [x] Remove unused server dependencies from root `package.json` (rewrote to only `dev`, `build`, `lint` — all prefixed to client)
-- [x] Update `README.md` with current project description
-- [x] Run `npm run build` to verify clean build
+Workflow at `.github/workflows/deploy.yml` triggers on push to `main`. Uses `actions/upload-pages-artifact@v5` with `path: './dist'`. Requires Pages to be enabled on the repo (Settings → Pages → Source: GitHub Actions).
 
 ## Key conventions
+
 - Dexie schema strings follow the format: `'++id, field1, field2'` — `++id` means auto-increment primary key
 - All Dexie DB interactions go through the singleton `db` instance exported from `src/db/dexie-db.ts`
-- Game scoring logic remains as pure functions with no side effects (same as server implementation)
-- Use `useLiveQuery` from `dexie-react-hooks` instead of manual `useEffect` + fetch for reactive data loading
+- Game scoring logic lives in `src/games/` as pure functions with no side effects
+- Data access helpers live in `src/db/` (e.g. `sessions.ts`, `rounds.ts`)
+- Components use `useLiveQuery` from `dexie-react-hooks` instead of manual `useEffect` + fetch
+- Tailwind v4 uses CSS `@theme` directives — no `tailwind.config.*` file
