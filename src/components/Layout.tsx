@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Outlet, Link } from 'react-router-dom'
 
+const THEME_COLOR_LIGHT = '#863bff'
+const THEME_COLOR_DARK = '#111827'
+
 export default function Layout() {
   const [dark, setDark] = useState(() => {
     if (typeof localStorage !== 'undefined') {
@@ -13,6 +16,8 @@ export default function Layout() {
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark)
     localStorage.setItem('theme', dark ? 'dark' : 'light')
+    const meta = document.querySelector('meta[name="theme-color"]')
+    if (meta) meta.setAttribute('content', dark ? THEME_COLOR_DARK : THEME_COLOR_LIGHT)
   }, [dark])
 
   return (
