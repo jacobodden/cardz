@@ -35,29 +35,33 @@ export async function getCurrentRound(sessionId: number): Promise<CurrentRoundRe
   const session = await db.sessions.get(sessionId)
   if (!session) throw new Error('Session not found')
 
+  // A completed session has no editable round until undo reopens it.
+  if (session.status === 'completed') {
+    return { complete: true, round_number: 0, data_json: {}, fields: [] }
+  }
+
   const game = await db.games.get(session.game_id)
   if (!game) throw new Error('Game not found')
 
   const gameImpl = getGame(game.slug)
   if (!gameImpl) throw new Error('Game implementation not found')
 
-  const config = session.config_json ?? {}
-  const totalRounds = config.total_rounds ?? 0
-
   // Find unscored rounds
   const allRounds = await db.rounds
     .where('session_id').equals(sessionId)
     .sortBy('round_number')
 
-  // Get all round IDs that have scores
-  const allScores = await db.scores.toArray()
-  const scoredRoundIds = new Set(allScores.map((s) => s.round_id))
+  const roundIds = allRounds
+    .map((r) => r.id)
+    .filter((id): id is number => id !== undefined)
+
+  const sessionScores = roundIds.length
+    ? await db.scores.where('round_id').anyOf(roundIds).toArray()
+    : []
+  const scoredRoundIds = new Set(sessionScores.map((s) => s.round_id))
   const currentRound = allRounds.find((r) => !scoredRoundIds.has(r.id!))
 
   if (!currentRound) {
-    if (allRounds.length >= totalRounds) {
-      return { complete: true, round_number: 0, data_json: {}, fields: [] }
-    }
     return { complete: true, round_number: 0, data_json: {}, fields: [] }
   }
 
@@ -81,6 +85,7 @@ export async function submitRound(
 ): Promise<SubmitRoundResponse> {
   const session = await db.sessions.get(sessionId)
   if (!session) throw new Error('Session not found')
+  if (session.status !== 'active') throw new Error('Session is already complete')
 
   const gameRecord = await db.games.get(session.game_id)
   if (!gameRecord) throw new Error('Game not found')
@@ -97,8 +102,14 @@ export async function submitRound(
     .where('session_id').equals(sessionId)
     .sortBy('round_number')
 
-  const allScores = await db.scores.toArray()
-  const scoredRoundIds = new Set(allScores.map((s) => s.round_id))
+  const roundIds = allRounds
+    .map((r) => r.id)
+    .filter((id): id is number => id !== undefined)
+
+  const sessionScores = roundIds.length
+    ? await db.scores.where('round_id').anyOf(roundIds).toArray()
+    : []
+  const scoredRoundIds = new Set(sessionScores.map((s) => s.round_id))
   const currentRound = allRounds.find((r) => !scoredRoundIds.has(r.id!))
   if (!currentRound) throw new Error('No unscored round available')
 
@@ -144,6 +155,18 @@ export async function submitRound(
     }
   })
 
+  // Open-ended games never auto-complete; they always advance to the next
+  // round and wait for the player to press "Finish game".
+  if (gameImpl.roundMode === 'open') {
+    await db.rounds.add({
+      session_id: sessionId,
+      round_number: currentRound.round_number + 1,
+      data_json: {},
+    })
+
+    return { scores: results, complete: false }
+  }
+
   // Check if game is complete
   if (currentRound.round_number >= totalRounds) {
     await db.sessions.update(sessionId, { status: 'completed' })
@@ -175,9 +198,15 @@ export async function undoLastRound(sessionId: number): Promise<void> {
 
   if (allRounds.length === 0) throw new Error('No rounds to undo')
 
-  const allScores = await db.scores.toArray()
+  const roundIds = allRounds
+    .map((r) => r.id)
+    .filter((id): id is number => id !== undefined)
+
+  const sessionScores = roundIds.length
+    ? await db.scores.where('round_id').anyOf(roundIds).toArray()
+    : []
   const roundsWithScores = allRounds.filter((r) =>
-    allScores.some((s) => s.round_id === r.id)
+    sessionScores.some((s) => s.round_id === r.id)
   )
 
   if (roundsWithScores.length === 0) throw new Error('No scored rounds to undo')
@@ -205,45 +234,61 @@ export async function getScoreboard(sessionId: number): Promise<ScoreboardRespon
   const config = session.config_json ?? {}
   const totalRounds = config.total_rounds ?? 0
   const roundConfigs: { round_number: number }[] = config.round_configs ?? []
-  const maxRounds = Math.max(totalRounds, roundConfigs.length)
 
   const [players, rounds] = await Promise.all([
     db.players.where('session_id').equals(sessionId).sortBy('order_index'),
     db.rounds.where('session_id').equals(sessionId).sortBy('round_number'),
   ])
 
+  // Open games have no pre-generated round count, so the played rounds
+  // determine the width of each player's score array.
+  const maxRounds = Math.max(totalRounds, roundConfigs.length, rounds.length)
+
   const roundsMeta: RoundMetaInfo[] = rounds.map((r) => ({
     round_number: r.round_number,
     data_json: r.data_json ?? {},
   }))
 
-  // Build per-player per-round score arrays
-  const scoreboard: ScoreboardRow[] = await Promise.all(
-    players.map(async (p) => {
-      const scores: (number | null)[] = []
+  const roundIds = rounds
+    .map((r) => r.id)
+    .filter((id): id is number => id !== undefined)
 
-      for (let i = 1; i <= maxRounds; i++) {
-        const round = rounds.find((r) => r.round_number === i)
-        if (round) {
-          const scoreRecord = await db.scores
-            .where({ round_id: round.id!, player_id: p.id! })
-            .first()
-          scores.push(scoreRecord ? scoreRecord.score : null)
-        } else {
-          scores.push(null)
-        }
-      }
+  // One query for every score in the session instead of one per player/round.
+  const scores = roundIds.length
+    ? await db.scores.where('round_id').anyOf(roundIds).toArray()
+    : []
 
-      const total = scores.reduce<number>((sum, s) => sum + (s ?? 0), 0)
+  const scoreByRoundAndPlayer = new Map<string, number>()
+  for (const score of scores) {
+    scoreByRoundAndPlayer.set(`${score.round_id}:${score.player_id}`, score.score)
+  }
 
-      return {
-        player_id: p.id!,
-        name: p.name,
-        scores,
-        total,
-      }
-    })
-  )
+  const roundIdByNumber = new Map<number, number>()
+  for (const round of rounds) {
+    roundIdByNumber.set(round.round_number, round.id!)
+  }
+
+  const scoreboard: ScoreboardRow[] = players.map((player) => {
+    const playerScores: (number | null)[] = []
+
+    for (let roundNumber = 1; roundNumber <= maxRounds; roundNumber++) {
+      const roundId = roundIdByNumber.get(roundNumber)
+      const score =
+        roundId === undefined
+          ? undefined
+          : scoreByRoundAndPlayer.get(`${roundId}:${player.id}`)
+      playerScores.push(score ?? null)
+    }
+
+    const total = playerScores.reduce<number>((sum, s) => sum + (s ?? 0), 0)
+
+    return {
+      player_id: player.id!,
+      name: player.name,
+      scores: playerScores,
+      total,
+    }
+  })
 
   return { players: scoreboard, rounds_meta: roundsMeta }
 }

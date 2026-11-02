@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/dexie-db'
 import { createSession, addPlayer as addPlayerToSession, startSession } from '../db/sessions'
+import { getGame } from '../games'
 import type { Game } from '../db/dexie-db'
 import type { ConfigField } from '../games/types'
 
@@ -12,24 +14,16 @@ function calculatePeak(numPlayers: number, field?: ConfigField): number {
 
 export default function NewSessionPage() {
   const navigate = useNavigate()
-  const [games, setGames] = useState<Game[]>([])
+  const games = useLiveQuery(() => db.games.toArray(), [])
   const [selectedGame, setSelectedGame] = useState<Game | null>(null)
   const [title, setTitle] = useState('')
   const [config, setConfig] = useState<Record<string, number>>({})
   const [playerNames, setPlayerNames] = useState<string[]>(['', ''])
   const [firstDealerIndex, setFirstDealerIndex] = useState(0)
-  const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
 
   const lastAutoPeak = useRef<number | null>(null)
   const prevGameId = useRef<number | null>(null)
-
-  useEffect(() => {
-    db.games.toArray().then((games) => {
-      setGames(games)
-      setLoading(false)
-    })
-  }, [])
 
   useEffect(() => {
     if (!selectedGame) return
@@ -81,15 +75,23 @@ export default function NewSessionPage() {
   async function handleStart() {
     if (!selectedGame) return
     setCreating(true)
+    const gameImpl = getGame(selectedGame.slug)
+    const sessionConfig = gameImpl?.usesDealer
+      ? { ...config, first_dealer_index: firstDealerIndex }
+      : { ...config }
+
     const session = await createSession(selectedGame.id!, title || undefined)
     for (const name of playerNames.filter(Boolean)) {
       await addPlayerToSession(session.id, name)
     }
-    await startSession(session.id, { ...config, first_dealer_index: firstDealerIndex })
+    await startSession(session.id, sessionConfig)
     navigate(`/sessions/${session.id}`)
   }
 
-  if (loading) return <p className="text-gray-500 dark:text-gray-400">Loading games...</p>
+  if (!games) return <p className="text-gray-500 dark:text-gray-400">Loading games...</p>
+
+  const gameImpl = selectedGame ? getGame(selectedGame.slug) : null
+  const usesDealer = gameImpl?.usesDealer ?? false
 
   const validCount = playerNames.filter(Boolean).length
   const canStart =
@@ -109,6 +111,8 @@ export default function NewSessionPage() {
             <button
               key={g.id}
               onClick={() => setSelectedGame(g)}
+              data-testid="game-option"
+              data-game-slug={g.slug}
               className={`text-left p-5 rounded-lg border-2 transition active:scale-[0.98] ${
                 selectedGame?.id === g.id
                   ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30'
@@ -138,6 +142,8 @@ export default function NewSessionPage() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. Friday Night Game"
+                aria-label="Session Title"
+                data-testid="session-title"
                 className="w-full border border-gray-300 dark:border-gray-700 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
               />
             </div>
@@ -156,6 +162,9 @@ export default function NewSessionPage() {
                     onChange={(e) => updateConfig(field.key, Number(e.target.value))}
                     min={field.min}
                     max={field.max}
+                    inputMode="numeric"
+                    aria-label={field.label}
+                    data-testid={`config-${field.key}`}
                     className="w-full sm:w-24 border border-gray-300 dark:border-gray-700 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                   />
                   {autoValue !== null && (
@@ -185,6 +194,8 @@ export default function NewSessionPage() {
                     value={name}
                     onChange={(e) => updatePlayer(i, e.target.value)}
                     placeholder={`Player ${i + 1}`}
+                    aria-label={`Player ${i + 1} name`}
+                    data-testid="player-name-input"
                     className="flex-1 border border-gray-300 dark:border-gray-700 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                   />
                   {playerNames.length > 2 && (
@@ -201,6 +212,7 @@ export default function NewSessionPage() {
             {validCount < selectedGame.max_players && (
               <button
                 onClick={addPlayer}
+                data-testid="add-player"
                 className="mt-2 w-full sm:w-auto text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-2.5 px-4 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition active:scale-[0.98]"
               >
                 + Add player
@@ -208,7 +220,7 @@ export default function NewSessionPage() {
             )}
           </section>
 
-          {selectedGame.slug === 'up-and-down' && validCount > 0 && (
+          {usesDealer && validCount > 0 && (
             <section className="mb-8">
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">
                 First Dealer
@@ -216,6 +228,8 @@ export default function NewSessionPage() {
               <select
                 value={firstDealerIndex}
                 onChange={(e) => setFirstDealerIndex(Number(e.target.value))}
+                aria-label="First Dealer"
+                data-testid="first-dealer"
                 className="w-full sm:w-auto border border-gray-300 dark:border-gray-700 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
               >
                 {playerNames.map((name, i) => (
@@ -230,6 +244,7 @@ export default function NewSessionPage() {
           <button
             onClick={handleStart}
             disabled={!canStart || creating}
+            data-testid="start-game"
             className="w-full sm:w-auto bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium active:scale-[0.98] transition"
           >
             {creating ? 'Starting...' : 'Start Game'}

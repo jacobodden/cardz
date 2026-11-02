@@ -36,8 +36,17 @@ export interface ConfigField {
   description?: string
 }
 
+export type ScoreDirection = 'high' | 'low'
+export type RoundMode = 'fixed' | 'open'
+
 export interface CardGame {
   slug: string
+  /** Which total wins the game. */
+  scoreDirection: ScoreDirection
+  /** Fixed games pre-generate rounds; open games create them as they are played. */
+  roundMode?: RoundMode
+  /** Whether the game has a dealer that rotates each round. */
+  usesDealer?: boolean
   getRounds(playerCount: number, config?: Record<string, any>): RoundMeta[]
   getRoundSchema(round: RoundMeta): InputField[]
   computeScore(meta: RoundMeta, inputs: PlayerScoreInput[]): PlayerScoreResult[]

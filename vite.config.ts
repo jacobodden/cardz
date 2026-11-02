@@ -33,7 +33,9 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
         cleanupOutdatedCaches: true,
       },
-      devOptions: { enabled: true },
+      // Playwright runs the dev server; keep the service worker out of tests so
+      // assets are never served from a previous run's cache.
+      devOptions: { enabled: !process.env.PLAYWRIGHT },
     }),
   ],
 })
