@@ -2,6 +2,9 @@ import type { CardGame, RoundMeta, InputField, PlayerScoreInput, PlayerScoreResu
 
 export const payMe: CardGame = {
   slug: 'pay-me',
+  scoreDirection: 'low',
+  roundMode: 'fixed',
+  usesDealer: false,
 
   getConfigSchema(): ConfigField[] {
     return []

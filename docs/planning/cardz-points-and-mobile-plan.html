@@ -1,0 +1,1620 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cardz — Points Games &amp; Mobile Scoreboard Plan</title>
+  <style>
+    :root {
+      --bg: #f4f4f1;
+      --surface: #ffffff;
+      --surface-2: #f9fafb;
+      --text: #111827;
+      --muted: #6b7280;
+      --faint: #9ca3af;
+      --border: #e5e7eb;
+      --border-strong: #d1d5db;
+      --accent: #2563eb;
+      --accent-soft: #dbeafe;
+      --accent-text: #1e40af;
+      --green: #059669;
+      --green-soft: #d1fae5;
+      --green-text: #065f46;
+      --amber: #d97706;
+      --amber-soft: #fef3c7;
+      --amber-text: #92400e;
+      --red: #dc2626;
+      --red-soft: #fee2e2;
+      --red-text: #991b1b;
+      --shadow: 0 1px 2px rgba(0,0,0,.05), 0 8px 24px rgba(0,0,0,.06);
+      --phone-border: #1f2937;
+      --code-bg: #0f172a;
+      --code-text: #e2e8f0;
+    }
+    [data-theme="dark"] {
+      --bg: #0b0f17;
+      --surface: #111827;
+      --surface-2: #1f2937;
+      --text: #f3f4f6;
+      --muted: #9ca3af;
+      --faint: #6b7280;
+      --border: #1f2937;
+      --border-strong: #374151;
+      --accent: #60a5fa;
+      --accent-soft: rgba(37, 99, 235, .2);
+      --accent-text: #93c5fd;
+      --green: #34d399;
+      --green-soft: rgba(5, 150, 105, .2);
+      --green-text: #6ee7b7;
+      --amber: #fbbf24;
+      --amber-soft: rgba(217, 119, 6, .2);
+      --amber-text: #fcd34d;
+      --red: #f87171;
+      --red-soft: rgba(220, 38, 38, .2);
+      --red-text: #fca5a5;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+      --phone-border: #030712;
+      --code-bg: #020617;
+      --code-text: #e2e8f0;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+      padding: 2rem 1rem 5rem;
+      transition: background .2s, color .2s;
+    }
+    .container { max-width: 1180px; margin: 0 auto; }
+
+    .theme-toggle {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      z-index: 50;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 1.15rem;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+    }
+    .theme-toggle:hover { border-color: var(--border-strong); }
+
+    header.page-head { text-align: center; margin-bottom: 2.5rem; }
+    header.page-head .eyebrow {
+      display: inline-block;
+      font-size: .72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .09em;
+      color: var(--accent-text);
+      background: var(--accent-soft);
+      padding: .25rem .65rem;
+      border-radius: 999px;
+      margin-bottom: .85rem;
+    }
+    header.page-head h1 {
+      font-size: clamp(1.7rem, 4vw, 2.4rem);
+      font-weight: 750;
+      letter-spacing: -.03em;
+      line-height: 1.15;
+    }
+    header.page-head p { color: var(--muted); margin-top: .6rem; font-size: 1.02rem; }
+    header.page-head .meta { margin-top: .75rem; font-size: .82rem; color: var(--faint); }
+
+    nav.toc {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+      justify-content: center;
+      margin: 0 auto 2.5rem;
+      max-width: 900px;
+    }
+    nav.toc a {
+      font-size: .82rem;
+      text-decoration: none;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      padding: .35rem .7rem;
+      border-radius: 999px;
+    }
+    nav.toc a:hover { color: var(--accent); border-color: var(--accent); }
+
+    section { margin-bottom: 3rem; scroll-margin-top: 1rem; }
+    h2 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -.02em;
+      margin-bottom: .35rem;
+      padding-bottom: .55rem;
+      border-bottom: 1px solid var(--border);
+    }
+    h2 .num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.65rem;
+      height: 1.65rem;
+      margin-right: .5rem;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #fff;
+      font-size: .8rem;
+      vertical-align: .12em;
+    }
+    h3 { font-size: 1rem; font-weight: 700; margin: 1.5rem 0 .55rem; }
+    p { margin-bottom: .75rem; }
+    ul, ol { margin: 0 0 .9rem 1.25rem; }
+    li { margin-bottom: .3rem; }
+    strong { font-weight: 650; }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: .86em;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      padding: .1rem .3rem;
+      border-radius: 5px;
+    }
+    pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      padding: 1rem 1.1rem;
+      border-radius: 10px;
+      overflow-x: auto;
+      font-size: .82rem;
+      line-height: 1.55;
+      margin: .6rem 0 1rem;
+    }
+    pre code { background: none; border: 0; padding: 0; font-size: inherit; color: inherit; }
+
+    .callout {
+      border-left: 4px solid var(--accent);
+      background: var(--accent-soft);
+      padding: .8rem 1rem;
+      border-radius: 0 8px 8px 0;
+      margin: .8rem 0 1rem;
+      font-size: .92rem;
+    }
+    .callout.green { border-left-color: var(--green); background: var(--green-soft); }
+    .callout.amber { border-left-color: var(--amber); background: var(--amber-soft); }
+    .callout.red { border-left-color: var(--red); background: var(--red-soft); }
+
+    table.data {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .88rem;
+      margin: .6rem 0 1.2rem;
+      background: var(--surface);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 0 0 1px var(--border);
+    }
+    table.data th, table.data td {
+      text-align: left;
+      padding: .6rem .75rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    table.data th {
+      font-size: .72rem;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--muted);
+      background: var(--surface-2);
+      font-weight: 700;
+    }
+    table.data tr:last-child td { border-bottom: 0; }
+
+    .pill {
+      display: inline-block;
+      font-size: .68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      padding: .14rem .5rem;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+    .pill.high { background: var(--green-soft); color: var(--green-text); }
+    .pill.low { background: var(--amber-soft); color: var(--amber-text); }
+    .pill.open { background: var(--accent-soft); color: var(--accent-text); }
+    .pill.fixed { background: var(--surface-2); color: var(--muted); border: 1px solid var(--border); }
+
+    /* Mockup area */
+    .mockup-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      align-items: start;
+      margin: 1rem 0 1.5rem;
+    }
+    .mockup-item { display: flex; flex-direction: column; align-items: center; gap: .7rem; }
+    .mockup-caption { text-align: center; font-size: .82rem; color: var(--muted); max-width: 360px; }
+    .mockup-caption strong { color: var(--text); display: block; font-size: .88rem; }
+
+    .phone {
+      width: 100%;
+      max-width: 360px;
+      border: 7px solid var(--phone-border);
+      border-radius: 34px;
+      background: var(--bg);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .phone-screen {
+      background: var(--bg);
+      padding: 12px 12px 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 620px;
+    }
+    .app-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .2rem .2rem .7rem;
+    }
+    .app-bar .brand { font-weight: 750; font-size: 1rem; letter-spacing: -.02em; }
+    .app-bar .app-actions { display: flex; gap: .4rem; }
+    .app-bar .mini-btn {
+      width: 30px; height: 30px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border: 1px solid var(--border); border-radius: 8px;
+      background: var(--surface); color: var(--muted); font-size: .8rem;
+    }
+    .session-head { padding: .1rem .15rem .7rem; }
+    .session-head h4 { font-size: 1.12rem; font-weight: 750; letter-spacing: -.02em; line-height: 1.2; }
+    .session-head .game-name { font-size: .76rem; color: var(--muted); margin-top: .1rem; }
+
+    .round-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .5rem;
+      padding: .55rem .15rem .7rem;
+    }
+    .round-label { display: flex; align-items: baseline; gap: .4rem; min-width: 0; }
+    .round-label .round-num { font-size: .95rem; font-weight: 700; white-space: nowrap; }
+    .round-label .round-sub { font-size: .7rem; color: var(--muted); white-space: nowrap; }
+    .round-actions { display: flex; gap: .35rem; }
+    .tool-btn {
+      font-size: .7rem;
+      font-weight: 600;
+      padding: .35rem .55rem;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .tool-btn.danger { color: var(--red-text); border-color: var(--red-soft); background: var(--red-soft); }
+
+    .progress-track {
+      height: 5px;
+      border-radius: 999px;
+      background: var(--border);
+      overflow: hidden;
+      margin: 0 .15rem .85rem;
+    }
+    .progress-fill { height: 100%; width: 55%; background: var(--accent); border-radius: inherit; }
+
+    .round-settings {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: .6rem .7rem;
+      margin-bottom: .7rem;
+    }
+    .round-settings .settings-label {
+      font-size: .62rem; text-transform: uppercase; letter-spacing: .07em;
+      color: var(--faint); font-weight: 700; margin-bottom: .35rem;
+    }
+    .suit-row { display: flex; gap: .35rem; }
+    .suit-btn {
+      width: 38px; height: 38px; border-radius: 8px; border: 2px solid var(--border);
+      background: var(--surface-2); display: inline-flex; align-items: center; justify-content: center;
+      font-size: 1.05rem; color: var(--muted);
+    }
+    .suit-btn.active { border-color: var(--accent); background: var(--accent-soft); color: var(--text); }
+    .suit-btn.red { color: var(--red); }
+
+    .player-grid { display: grid; gap: .65rem; }
+    .player-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: .75rem .8rem .7rem;
+    }
+    .player-card.leader { border-color: var(--amber); box-shadow: 0 0 0 1px var(--amber) inset; }
+    .player-card.winner { border-color: var(--amber); background: linear-gradient(180deg, var(--amber-soft), var(--surface) 55%); }
+    .player-top { display: flex; align-items: flex-start; justify-content: space-between; gap: .5rem; }
+    .player-name { font-size: .86rem; font-weight: 700; line-height: 1.2; }
+    .player-total { display: flex; align-items: baseline; gap: .25rem; margin-top: .05rem; }
+    .player-total .total-num { font-size: 1.75rem; font-weight: 800; letter-spacing: -.03em; line-height: 1.1; }
+    .player-total .total-unit { font-size: .68rem; color: var(--muted); font-weight: 600; }
+    .leader-pill {
+      font-size: .6rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+      color: var(--amber-text); background: var(--amber-soft); padding: .12rem .4rem; border-radius: 999px;
+      white-space: nowrap;
+    }
+    .crown { font-size: 1rem; line-height: 1; }
+
+    .this-round {
+      margin-top: .55rem;
+      padding-top: .55rem;
+      border-top: 1px dashed var(--border);
+    }
+    .this-round-label {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: .66rem; text-transform: uppercase; letter-spacing: .06em;
+      color: var(--muted); font-weight: 700; margin-bottom: .3rem;
+    }
+    .this-round-label .round-tag { color: var(--faint); letter-spacing: 0; text-transform: none; font-weight: 600; }
+    .input-row { display: flex; align-items: center; gap: .5rem; }
+    .score-input {
+      flex: 1;
+      min-width: 0;
+      height: 44px;
+      border: 1px solid var(--border-strong);
+      border-radius: 9px;
+      background: var(--surface);
+      color: var(--text);
+      font-size: 1rem;
+      font-weight: 650;
+      padding: 0 .7rem;
+      outline: none;
+    }
+    .score-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .score-input::placeholder { color: var(--faint); font-weight: 400; }
+    .bid-row { display: flex; gap: .45rem; align-items: center; flex-wrap: wrap; }
+    .bid-row .score-input { flex: 0 1 78px; }
+    .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 9px; overflow: hidden; height: 44px; }
+    .seg button {
+      width: 44px; border: 0; background: var(--surface); color: var(--faint);
+      font-size: .9rem; font-weight: 700;
+    }
+    .seg button.no.on { background: var(--red-soft); color: var(--red-text); }
+    .seg button.yes.on { background: var(--green-soft); color: var(--green-text); }
+    .seg button + button { border-left: 1px solid var(--border); }
+
+    .recent-row { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-top: .55rem; }
+    .recent-chips { display: flex; gap: .3rem; flex-wrap: wrap; }
+    .chip {
+      font-size: .68rem;
+      color: var(--muted);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      padding: .12rem .4rem;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+    .chip b { color: var(--text); font-weight: 700; }
+    .expand-btn {
+      border: 0; background: none; color: var(--accent); font-size: .68rem; font-weight: 700;
+      padding: .2rem 0; white-space: nowrap;
+    }
+
+    .history-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: .3rem;
+      margin-top: .55rem;
+      padding-top: .55rem;
+      border-top: 1px dashed var(--border);
+    }
+    .history-cell {
+      text-align: center;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: .22rem .1rem;
+      font-size: .66rem;
+      color: var(--faint);
+      line-height: 1.25;
+    }
+    .history-cell b { display: block; color: var(--text); font-size: .74rem; }
+    .history-cell.current { border-style: dashed; border-color: var(--accent); color: var(--accent-text); background: var(--accent-soft); }
+
+    .submit-dock {
+      margin-top: auto;
+      position: sticky;
+      bottom: 0;
+      background: color-mix(in srgb, var(--surface) 92%, transparent);
+      backdrop-filter: blur(8px);
+      border-top: 1px solid var(--border);
+      padding: .65rem .15rem .75rem;
+      display: flex;
+      flex-direction: column;
+      gap: .35rem;
+    }
+    .submit-btn {
+      width: 100%;
+      height: 46px;
+      border: 0;
+      border-radius: 10px;
+      background: var(--accent);
+      color: #fff;
+      font-size: .88rem;
+      font-weight: 700;
+      letter-spacing: .01em;
+    }
+    .submit-btn:disabled { opacity: .5; }
+    .submit-hint { text-align: center; font-size: .65rem; color: var(--faint); }
+
+    .complete-banner {
+      background: linear-gradient(135deg, var(--green-soft), var(--surface));
+      border: 1px solid var(--green);
+      border-radius: 12px;
+      padding: .8rem .9rem;
+      margin-bottom: .7rem;
+    }
+    .complete-banner .banner-title { font-size: .95rem; font-weight: 750; color: var(--green-text); }
+    .complete-banner .banner-sub { font-size: .75rem; color: var(--muted); margin-top: .1rem; }
+    .final-line { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; margin-top: .45rem; }
+    .final-line .final-name { font-size: .82rem; font-weight: 650; }
+    .final-line .final-score { font-size: .82rem; font-weight: 750; }
+
+    .desktop-frame {
+      width: 100%;
+      border: 1px solid var(--border-strong);
+      border-radius: 14px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .desktop-chrome {
+      display: flex; align-items: center; gap: .35rem;
+      padding: .55rem .8rem;
+      background: var(--surface-2);
+      border-bottom: 1px solid var(--border);
+    }
+    .desktop-chrome .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--border-strong); }
+    .desktop-body { padding: 1rem; }
+    .desktop-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-bottom: .8rem; }
+    .desktop-head h4 { font-size: 1.1rem; font-weight: 750; letter-spacing: -.02em; }
+    .desktop-head p { font-size: .75rem; color: var(--muted); margin: 0; }
+    .desktop-grid { display: grid; grid-template-columns: 1fr; gap: .75rem; max-width: 640px; margin: 0 auto; }
+    .desktop-dock {
+      margin-top: .8rem;
+      display: flex; justify-content: flex-end; gap: .5rem;
+      padding-top: .75rem; border-top: 1px solid var(--border);
+    }
+    .desktop-dock .ghost-btn {
+      height: 40px; padding: 0 1rem; border-radius: 9px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--muted); font-size: .8rem; font-weight: 600;
+    }
+    .desktop-dock .submit-btn { width: auto; padding: 0 1.4rem; height: 40px; }
+
+    .checklist { list-style: none; margin-left: 0; }
+    .checklist li {
+      position: relative;
+      padding-left: 1.75rem;
+      margin-bottom: .5rem;
+    }
+    .checklist li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: .32rem;
+      width: 1rem;
+      height: 1rem;
+      border: 1.5px solid var(--border-strong);
+      border-radius: 4px;
+      background: var(--surface);
+    }
+    .checklist li.done::before {
+      content: "✓";
+      display: flex; align-items: center; justify-content: center;
+      background: var(--green); border-color: var(--green); color: #fff;
+      font-size: .65rem; font-weight: 800;
+    }
+
+    .two-col { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+    @media (min-width: 760px) { .two-col { grid-template-columns: 1fr 1fr; } }
+
+    .footer-note {
+      text-align: center;
+      font-size: .78rem;
+      color: var(--faint);
+      border-top: 1px solid var(--border);
+      padding-top: 1.25rem;
+      margin-top: 3rem;
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 1.25rem .75rem 4rem; }
+      .phone-screen { min-height: 0; }
+      .desktop-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <button class="theme-toggle" id="themeToggle" title="Toggle light/dark preview" aria-label="Toggle light/dark preview">☾</button>
+
+  <div class="container">
+    <header class="page-head">
+      <span class="eyebrow">Draft · Plan mode</span>
+      <h1>Points Games &amp; Mobile Scoreboard</h1>
+      <p>Two open-ended scorekeeping games, plus a card-first session screen that works on a phone.</p>
+      <p class="meta">Cardz · drafted Nov 2026 · for visual iteration in build mode</p>
+    </header>
+
+    <nav class="toc">
+      <a href="#summary">Summary</a>
+      <a href="#games">New games</a>
+      <a href="#engine">Engine changes</a>
+      <a href="#lifecycle">Round lifecycle</a>
+      <a href="#ui">Mobile UI</a>
+      <a href="#mockups">Mockups</a>
+      <a href="#implementation">Implementation</a>
+      <a href="#testing">Testing</a>
+      <a href="#design-history">Design history</a>
+      <a href="#risks">Risks</a>
+    </nav>
+
+    <section id="summary">
+      <h2><span class="num">1</span>Summary &amp; decisions</h2>
+      <p>This plan adds two generic point-keeping games and replaces the wide round table on the session page with a mobile-first card layout.</p>
+
+      <table class="data">
+        <thead>
+          <tr><th>Decision</th><th>Choice</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Round structure</td><td>Open-ended. Rounds continue until the user presses <strong>Finish game</strong>.</td></tr>
+          <tr><td>Negative points</td><td>Allowed. The points input has no minimum.</td></tr>
+          <tr><td>Layout</td><td>Card-first on every screen size. The wide round table is removed.</td></tr>
+          <tr><td>Round history</td><td>Each player card shows the current round input plus the last two scored rounds. For Up &amp; Down, each round chip includes that round’s trump suit. A per-card expand control reveals the full history as a wrapped grid — no horizontal scrolling.</td></tr>
+          <tr><td>Card columns</td><td>One column at every screen size, including desktop, to keep inputs thumb-friendly.</td></tr>
+          <tr><td>Game names</td><td><strong>High Score</strong> and <strong>Low Score</strong>.</td></tr>
+          <tr><td>Testing &amp; design history</td><td>Playwright e2e coverage plus committed visual snapshots. A dated screenshot gallery in <code>docs/design-history/</code> records how the UI evolves.</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout green">
+        <strong>What stays the same:</strong> Up &amp; Down and Pay Me keep their existing scoring rules, inputs, and auto-completion. The new card layout renders whatever player fields a game defines, so all four games share one session screen.
+      </div>
+    </section>
+
+    <section id="games">
+      <h2><span class="num">2</span>The two new games</h2>
+
+      <table class="data">
+        <thead>
+          <tr><th>Slug</th><th>Name</th><th>Win condition</th><th>Rounds</th><th>Per-player input</th><th>Players</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>high-score</code></td>
+            <td><strong>High Score</strong></td>
+            <td><span class="pill high">Highest wins</span></td>
+            <td><span class="pill open">Open-ended</span></td>
+            <td>Points (negative allowed)</td>
+            <td>2–10</td>
+          </tr>
+          <tr>
+            <td><code>low-score</code></td>
+            <td><strong>Low Score</strong></td>
+            <td><span class="pill low">Lowest wins</span></td>
+            <td><span class="pill open">Open-ended</span></td>
+            <td>Points (negative allowed)</td>
+            <td>2–10</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Picker copy</h3>
+      <ul>
+        <li><strong>High Score</strong> — “Keep score for any game where the highest total wins. Enter points each round, then finish whenever you like.”</li>
+        <li><strong>Low Score</strong> — “Keep score for any game where the lowest total wins. Enter points each round, then finish whenever you like.”</li>
+      </ul>
+
+      <h3>Implementation shape</h3>
+      <p>Both games are the same module with a different win direction. A small factory keeps them in sync:</p>
+      <pre><code>// src/games/points.ts
+function makePointsGame(
+  slug: string,
+  scoreDirection: 'high' | 'low',
+): CardGame {
+  return {
+    slug,
+    scoreDirection,
+    roundMode: 'open',
+    usesDealer: false,
+    getConfigSchema: () =&gt; [],
+    getRounds: () =&gt; [],            // open games create rounds as they go
+    getRoundSchema: () =&gt; [
+      { key: 'points', label: 'Points', type: 'number', scope: 'player' },
+    ],
+    computeScore: (_meta, inputs) =&gt; inputs.map((i) =&gt; {
+      const points = Number(i.data.points ?? 0)
+      return { player_id: i.player_id, score: points, data: { points } }
+    }),
+  }
+}
+
+export const highScore = makePointsGame('high-score', 'high')
+export const lowScore  = makePointsGame('low-score',  'low')</code></pre>
+
+      <div class="callout amber">
+        <strong>No config needed.</strong> Open-ended games do not need a round count at setup. The session starts at round 1 and the user decides when to stop.
+      </div>
+    </section>
+
+    <section id="engine">
+      <h2><span class="num">3</span>Engine &amp; data changes</h2>
+
+      <h3>3.1 Game capability flags</h3>
+      <p>Add three optional capabilities to <code>CardGame</code> so the UI stops hardcoding game slugs:</p>
+      <pre><code>// src/games/types.ts
+export interface CardGame {
+  slug: string
+  scoreDirection: 'high' | 'low'   // NEW — drives winner + completion copy
+  roundMode?: 'fixed' | 'open'     // NEW — defaults to 'fixed'
+  usesDealer?: boolean             // NEW — defaults to false
+  getRounds(playerCount: number, config?: Record&lt;string, any&gt;): RoundMeta[]
+  getRoundSchema(round: RoundMeta): InputField[]
+  computeScore(meta: RoundMeta, inputs: PlayerScoreInput[]): PlayerScoreResult[]
+  getConfigSchema(): ConfigField[]
+}</code></pre>
+      <ul>
+        <li><code>scoreDirection</code> replaces the current <code>slug === 'pay-me'</code> check in <code>findWinners</code> and the completion message.</li>
+        <li><code>roundMode: 'open'</code> tells session/round logic not to auto-complete and not to pre-generate <code>round_configs</code>.</li>
+        <li><code>usesDealer</code> stops generic games from showing a meaningless dealer name. Existing games set it explicitly (Up &amp; Down: true).</li>
+      </ul>
+
+      <h3>3.2 Session start</h3>
+      <p><code>startSession</code> branches on <code>roundMode</code>:</p>
+      <pre><code>if (gameImpl.roundMode === 'open') {
+  // no round_configs, no total_rounds
+  await db.sessions.update(sessionId, {
+    config_json: { ...config, total_rounds: 0, round_configs: [] },
+  })
+  await db.rounds.add({ session_id: sessionId, round_number: 1, data_json: {} })
+} else {
+  // existing fixed-round behaviour, unchanged
+}</code></pre>
+      <p>Dealer assignment only happens when <code>gameImpl.usesDealer</code> is true.</p>
+
+      <h3>3.3 Finish game</h3>
+      <p>New helper in <code>src/db/sessions.ts</code>:</p>
+      <pre><code>export async function finishSession(sessionId: number): Promise&lt;void&gt; {
+  // 1. Delete the trailing unscored round (if any).
+  // 2. Set session.status = 'completed'.
+}</code></pre>
+      <ul>
+        <li>Deleting the trailing unscored round keeps the final scoreboard clean — no empty “next round” column.</li>
+        <li><code>undoLastRound</code> already reopens a completed session and makes the last scored round unscored again, so undo-after-finish works without extra logic.</li>
+        <li>The Finish button is available for every active session, not just the new games. It is disabled until at least one round has been scored.</li>
+      </ul>
+
+      <h3>3.4 Round submission</h3>
+      <pre><code>// src/db/rounds.ts — after scores are inserted
+if (gameImpl.roundMode === 'open') {
+  await db.rounds.add({
+    session_id: sessionId,
+    round_number: currentRound.round_number + 1,
+    data_json: {},
+  })
+  return { scores: results, complete: false }
+}
+
+// fixed games: existing auto-complete / next-round logic</code></pre>
+      <p><code>getCurrentRound</code> returns <code>{ complete: true }</code> immediately when <code>session.status === 'completed'</code>.</p>
+
+      <h3>3.5 Scoreboard query</h3>
+      <ul>
+        <li><code>maxRounds</code> becomes <code>Math.max(totalRounds, roundConfigs.length, rounds.length)</code> so open games still build score arrays.</li>
+        <li>Load all scores for the session’s rounds in <strong>one query</strong> instead of one query per player per round. Open-ended games can grow long, so this keeps the screen fast.</li>
+      </ul>
+
+      <h3>3.6 Seeding for existing installs</h3>
+      <p><code>seedGames</code> currently returns early when the games table is non-empty, so existing users would never see the new games. Change it to insert only missing slugs:</p>
+      <pre><code>const existing = await db.games.toArray()
+const existingSlugs = new Set(existing.map((g) =&gt; g.slug))
+const missing = GAME_SEEDS.filter((g) =&gt; !existingSlugs.has(g.slug))
+if (missing.length) await db.games.bulkAdd(missing)</code></pre>
+      <div class="callout">
+        <strong>No Dexie schema bump needed.</strong> Win direction and round mode live in the game implementation registry, not in the database. The games table only gains two rows.
+      </div>
+    </section>
+
+    <section id="lifecycle">
+      <h2><span class="num">4</span>Open-ended round lifecycle</h2>
+      <p>Every open game keeps exactly one unscored “current” round in the database:</p>
+      <ol>
+        <li><strong>Start</strong> — round 1 is created with empty data.</li>
+        <li><strong>Submit</strong> — scores are written for the current round, then round N+1 is created automatically.</li>
+        <li><strong>Finish</strong> — the trailing unscored round is deleted and the session is marked completed.</li>
+        <li><strong>Undo</strong> — the last scored round’s scores are deleted, the session reopens, and that round becomes the current round again.</li>
+      </ol>
+
+      <table class="data">
+        <thead>
+          <tr><th>State</th><th>Rounds in DB</th><th>Session status</th><th>Screen shows</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Fresh</td><td>R1 (unscored)</td><td>active</td><td>Round 1 inputs</td></tr>
+          <tr><td>After 3 submits</td><td>R1–R3 scored, R4 unscored</td><td>active</td><td>Round 4 inputs, history R1–R3</td></tr>
+          <tr><td>Finished</td><td>R1–R3 scored (R4 deleted)</td><td>completed</td><td>Winner banner + final cards</td></tr>
+          <tr><td>Undo after finish</td><td>R1–R2 scored, R3 unscored</td><td>active</td><td>Round 3 inputs again</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout amber">
+        <strong>Edge case:</strong> finishing with zero scored rounds is blocked in the UI. Undo is available after completion so a mis-tap on Finish is recoverable.
+      </div>
+    </section>
+
+    <section id="ui">
+      <h2><span class="num">5</span>Mobile-first card UI</h2>
+
+      <h3>5.1 Screen anatomy</h3>
+      <ol>
+        <li><strong>Session header</strong> — title and game name.</li>
+        <li><strong>Round bar</strong> — “Round 7” (or “Round 7 of 11” for fixed games), plus <strong>Undo</strong> and <strong>Finish</strong> actions. Fixed games also get a thin progress bar.</li>
+        <li><strong>Round settings</strong> — only when the current round has round-scope fields (e.g. Up &amp; Down trump). Hidden for generic games.</li>
+        <li><strong>Player cards</strong> — one per player in a single column on every screen size, including desktop. The column is width-capped so inputs stay thumb-friendly.</li>
+        <li><strong>Sticky submit dock</strong> — one shared “Submit Round” button that stays reachable while entering scores.</li>
+      </ol>
+
+      <h3>5.2 Player card</h3>
+      <ul>
+        <li><strong>Name + total</strong> — total is the visual anchor (large, bold).</li>
+        <li><strong>This round</strong> — the game’s player-scope fields, rendered as large touch targets:
+          <ul>
+            <li>Generic points: one number input, <code>inputMode="numeric"</code>, no minimum.</li>
+            <li>Up &amp; Down: bid number + made/missed segmented buttons.</li>
+            <li>Pay Me: cards-left number input.</li>
+          </ul>
+        </li>
+        <li><strong>Recent rounds</strong> — the last two scored rounds as small chips, e.g. <code>R5 5</code> <code>R6 12</code>.</li>
+        <li><strong>Trump visibility</strong> — for Up &amp; Down, every round chip and expanded-history cell carries that round’s suit, e.g. <code>R2 ♥ 12</code>. The old table header showed trump per round; this keeps that information without the wide table.</li>
+        <li><strong>All rounds</strong> — expand toggle. Opens a wrapped grid of round chips for that player only. No horizontal scroll.</li>
+        <li><strong>Winner</strong> — crown and amber card treatment when the game is complete. During play, the leader gets a subtle “Leading” pill (optional; see visual notes).</li>
+      </ul>
+
+      <h3>5.3 Why this fixes the scrolling problem</h3>
+      <div class="two-col">
+        <div class="callout red">
+          <strong>Today:</strong> every round is a table column. An 11-round game is wider than a phone; a 20-round home game is much worse. The current round inputs also sit below the table, so users scroll sideways and vertically.
+        </div>
+        <div class="callout green">
+          <strong>Proposed:</strong> rounds become per-player history inside a card. The current round is always the input in the card. Only the expanded history grows, and it wraps into rows instead of extending sideways.
+        </div>
+      </div>
+
+      <h3>5.4 Interaction details</h3>
+      <ul>
+        <li><strong>Sticky submit:</strong> <code>position: sticky; bottom: 0</code> with a blurred surface, safe-area bottom padding, and the error message above the button. It disappears when the game is complete.</li>
+        <li><strong>Expand state:</strong> local to each card. Tapping “All rounds” toggles that player only; other cards stay compact.</li>
+        <li><strong>History order:</strong> recent chips read oldest → newest (R5 then R6). Expanded history is chronological (R1 → Rn) so the progression is easy to scan.</li>
+        <li><strong>Input sizing:</strong> 44px minimum height, 16px font to prevent iOS zoom-on-focus.</li>
+        <li><strong>Completed state:</strong> winner banner (“Game complete — Alice wins!”) plus final cards. Undo remains in the round bar so the game can be reopened.</li>
+        <li><strong>Fixed games:</strong> “Round 7 of 11” + progress bar. Open games: “Round 7 · 6 scored”.</li>
+        <li><strong>Empty points:</strong> treated as 0 for now, matching existing games. We can decide during visual iteration whether generic points should require an explicit value.</li>
+      </ul>
+    </section>
+
+    <section id="mockups">
+      <h2><span class="num">6</span>Static mockups</h2>
+      <p>These are HTML approximations of the intended React layout, not final styling. Use the theme button in the top-right to compare light and dark.</p>
+
+      <div class="mockup-row">
+        <!-- Mockup 1: active high score -->
+        <div class="mockup-item">
+          <div class="phone">
+            <div class="phone-screen">
+              <div class="app-bar">
+                <span class="brand">Cardz</span>
+                <div class="app-actions">
+                  <span class="mini-btn">☾</span>
+                  <span class="mini-btn">+</span>
+                </div>
+              </div>
+              <div class="session-head">
+                <h4>Friday Night Game</h4>
+                <div class="game-name">High Score · highest total wins</div>
+              </div>
+              <div class="round-bar">
+                <div class="round-label">
+                  <span class="round-num">Round 7</span>
+                  <span class="round-sub">6 scored</span>
+                </div>
+                <div class="round-actions">
+                  <span class="tool-btn">↶ Undo</span>
+                  <span class="tool-btn danger">Finish</span>
+                </div>
+              </div>
+
+              <div class="player-grid">
+                <div class="player-card leader">
+                  <div class="player-top">
+                    <div>
+                      <div class="player-name">Alice</div>
+                      <div class="player-total"><span class="total-num">42</span><span class="total-unit">pts</span></div>
+                    </div>
+                    <span class="leader-pill">Leading</span>
+                  </div>
+                  <div class="this-round">
+                    <div class="this-round-label"><span>This round</span><span class="round-tag">R7</span></div>
+                    <div class="input-row">
+                      <input class="score-input" value="8" inputmode="numeric" aria-label="Alice points this round">
+                    </div>
+                  </div>
+                  <div class="recent-row">
+                    <div class="recent-chips"><span class="chip">R5 <b>5</b></span><span class="chip">R6 <b>12</b></span></div>
+                    <button class="expand-btn">All rounds ›</button>
+                  </div>
+                </div>
+
+                <div class="player-card">
+                  <div class="player-top">
+                    <div>
+                      <div class="player-name">Bob</div>
+                      <div class="player-total"><span class="total-num">37</span><span class="total-unit">pts</span></div>
+                    </div>
+                  </div>
+                  <div class="this-round">
+                    <div class="this-round-label"><span>This round</span><span class="round-tag">R7</span></div>
+                    <div class="input-row">
+                      <input class="score-input" placeholder="0" inputmode="numeric" aria-label="Bob points this round">
+                    </div>
+                  </div>
+                  <div class="recent-row">
+                    <div class="recent-chips"><span class="chip">R5 <b>7</b></span><span class="chip">R6 <b>9</b></span></div>
+                    <button class="expand-btn">All rounds ›</button>
+                  </div>
+                </div>
+
+                <div class="player-card">
+                  <div class="player-top">
+                    <div>
+                      <div class="player-name">Carol</div>
+                      <div class="player-total"><span class="total-num">51</span><span class="total-unit">pts</span></div>
+                    </div>
+                  </div>
+                  <div class="this-round">
+                    <div class="this-round-label"><span>This round</span><span class="round-tag">R7</span></div>
+                    <div class="input-row">
+                      <input class="score-input" placeholder="0" inputmode="numeric" aria-label="Carol points this round">
+                    </div>
+                  </div>
+                  <div class="recent-row">
+                    <div class="recent-chips"><span class="chip">R5 <b>11</b></span><span class="chip">R6 <b>10</b></span></div>
+                    <button class="expand-btn">All rounds ›</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="submit-dock">
+                <button class="submit-btn">Submit Round 7</button>
+                <div class="submit-hint">One submit saves all player scores</div>
+              </div>
+            </div>
+          </div>
+          <div class="mockup-caption">
+            <strong>Active game — collapsed</strong>
+            Current round input lives inside each player card. Last two rounds stay visible; the submit button sticks to the bottom.
+          </div>
+        </div>
+
+        <!-- Mockup 2: expanded history -->
+        <div class="mockup-item">
+          <div class="phone">
+            <div class="phone-screen">
+              <div class="app-bar">
+                <span class="brand">Cardz</span>
+                <div class="app-actions">
+                  <span class="mini-btn">☾</span>
+                  <span class="mini-btn">+</span>
+                </div>
+              </div>
+              <div class="session-head">
+                <h4>Friday Night Game</h4>
+                <div class="game-name">High Score · highest total wins</div>
+              </div>
+              <div class="round-bar">
+                <div class="round-label">
+                  <span class="round-num">Round 7</span>
+                  <span class="round-sub">6 scored</span>
+                </div>
+                <div class="round-actions">
+                  <span class="tool-btn">↶ Undo</span>
+                  <span class="tool-btn danger">Finish</span>
+                </div>
+              </div>
+
+              <div class="player-grid">
+                <div class="player-card leader">
+                  <div class="player-top">
+                    <div>
+                      <div class="player-name">Alice</div>
+                      <div class="player-total"><span class="total-num">42</span><span class="total-unit">pts</span></div>
+                    </div>
+                    <span class="leader-pill">Leading</span>
+                  </div>
+                  <div class="this-round">
+                    <div class="this-round-label"><span>This round</span><span class="round-tag">R7</span></div>
+                    <div class="input-row">
+                      <input class="score-input" value="8" inputmode="numeric" aria-label="Alice points this round">
+                    </div>
+                  </div>
+                  <div class="recent-row">
+                    <div class="recent-chips"><span class="chip">R5 <b>5</b></span><span class="chip">R6 <b>12</b></span></div>
+                    <button class="expand-btn">Hide rounds ⌃</button>
+                  </div>
+                  <div class="history-grid">
+                    <div class="history-cell"><b>4</b>R1</div>
+                    <div class="history-cell"><b>6</b>R2</div>
+                    <div class="history-cell"><b>9</b>R3</div>
+                    <div class="history-cell"><b>2</b>R4</div>
+                    <div class="history-cell"><b>5</b>R5</div>
+                    <div class="history-cell"><b>12</b>R6</div>
+                    <div class="history-cell current"><b>—</b>R7</div>
+                  </div>
+                </div>
+
+                <div class="player-card">
+                  <div class="player-top">
+                    <div>
+                      <div class="player-name">Bob</div>
+                      <div class="player-total"><span class="total-num">37</span><span class="total-unit">pts</span></div>
+                    </div>
+                  </div>
+                  <div class="this-round">
+                    <div class="this-round-label"><span>This round</span><span class="round-tag">R7</span></div>
+                    <div class="input-row">
+                      <input class="score-input" placeholder="0" inputmode="numeric" aria-label="Bob points this round">
+                    </div>
+                  </div>
+                  <div class="recent-row">
+                    <div class="recent-chips"><span class="chip">R5 <b>7</b></span><span class="chip">R6 <b>9</b></span></div>
+                    <button class="expand-btn">All rounds ›</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="submit-dock">
+                <button class="submit-btn">Submit Round 7</button>
+                <div class="submit-hint">One submit saves all player scores</div>
+              </div>
+            </div>
+          </div>
+          <div class="mockup-caption">
+            <strong>Expanded history — one card</strong>
+            Tapping “All rounds” opens a wrapped grid for that player. The current round is shown as a dashed cell. Other cards stay compact.
+          </div>
+        </div>
+
+        <!-- Mockup 3: completed low score -->
+        <div class="mockup-item">
+          <div class="phone">
+            <div class="phone-screen">
+              <div class="app-bar">
+                <span class="brand">Cardz</span>
+                <div class="app-actions">
+                  <span class="mini-btn">☾</span>
+                  <span class="mini-btn">+</span>
+                </div>
+              </div>
+              <div class="session-head">
+                <h4>Sunday Rummy</h4>
+                <div class="game-name">Low Score · lowest total wins</div>
+              </div>
+              <div class="round-bar">
+                <div class="round-label">
+                  <span class="round-num">Game complete</span>
+                  <span class="round-sub">8 rounds</span>
+                </div>
+                <div class="round-actions">
+                  <span class="tool-btn">↶ Undo</span>
+                </div>
+              </div>
+
+              <div class="complete-banner">
+                <div class="banner-title">🏆 Alice wins!</div>
+                <div class="banner-sub">Lowest total after 8 rounds</div>
+                <div class="final-line"><span class="final-name">Alice</span><span class="final-score">42 pts</span></div>
+                <div class="final-line"><span class="final-name">Bob</span><span class="final-score">57 pts</span></div>
+                <div class="final-line"><span class="final-name">Carol</span><span class="final-score">61 pts</span></div>
+              </div>
+
+              <div class="player-grid">
+                <div class="player-card winner">
+                  <div class="player-top">
+                    <div>
+                      <div class="player-name">Alice <span class="crown">👑</span></div>
+                      <div class="player-total"><span class="total-num">42</span><span class="total-unit">pts</span></div>
+                    </div>
+                  </div>
+                  <div class="recent-row">
+                    <div class="recent-chips"><span class="chip">R7 <b>3</b></span><span class="chip">R8 <b>6</b></span></div>
+                    <button class="expand-btn">All rounds ›</button>
+                  </div>
+                </div>
+
+                <div class="player-card">
+                  <div class="player-top">
+                    <div>
+                      <div class="player-name">Bob</div>
+                      <div class="player-total"><span class="total-num">57</span><span class="total-unit">pts</span></div>
+                    </div>
+                  </div>
+                  <div class="recent-row">
+                    <div class="recent-chips"><span class="chip">R7 <b>8</b></span><span class="chip">R8 <b>4</b></span></div>
+                    <button class="expand-btn">All rounds ›</button>
+                  </div>
+                </div>
+
+                <div class="player-card">
+                  <div class="player-top">
+                    <div>
+                      <div class="player-name">Carol</div>
+                      <div class="player-total"><span class="total-num">61</span><span class="total-unit">pts</span></div>
+                    </div>
+                  </div>
+                  <div class="recent-row">
+                    <div class="recent-chips"><span class="chip">R7 <b>9</b></span><span class="chip">R8 <b>7</b></span></div>
+                    <button class="expand-btn">All rounds ›</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mockup-caption">
+            <strong>Completed game</strong>
+            The finish action removes the trailing unscored round, shows a winner banner, and keeps Undo available so the game can be reopened.
+          </div>
+        </div>
+
+        <!-- Mockup 4: up and down card -->
+        <div class="mockup-item">
+          <div class="phone">
+            <div class="phone-screen">
+              <div class="app-bar">
+                <span class="brand">Cardz</span>
+                <div class="app-actions">
+                  <span class="mini-btn">☾</span>
+                  <span class="mini-btn">+</span>
+                </div>
+              </div>
+              <div class="session-head">
+                <h4>River Night</h4>
+                <div class="game-name">Up &amp; Down The River · highest total wins</div>
+              </div>
+              <div class="round-bar">
+                <div class="round-label">
+                  <span class="round-num">Round 4 of 13</span>
+                  <span class="round-sub">Dealer: Bob</span>
+                </div>
+                <div class="round-actions">
+                  <span class="tool-btn">↶ Undo</span>
+                  <span class="tool-btn danger">Finish</span>
+                </div>
+              </div>
+              <div class="progress-track"><div class="progress-fill" style="width:31%"></div></div>
+
+              <div class="round-settings">
+                <div class="settings-label">Round settings</div>
+                <div class="suit-row">
+                  <span class="suit-btn">♠</span>
+                  <span class="suit-btn red active">♥</span>
+                  <span class="suit-btn">♣</span>
+                  <span class="suit-btn red">♦</span>
+                </div>
+              </div>
+
+              <div class="player-grid">
+                <div class="player-card">
+                  <div class="player-top">
+                    <div>
+                      <div class="player-name">Alice</div>
+                      <div class="player-total"><span class="total-num">30</span><span class="total-unit">pts</span></div>
+                    </div>
+                  </div>
+                  <div class="this-round">
+                    <div class="this-round-label"><span>This round</span><span class="round-tag">R4 · 4 cards</span></div>
+                    <div class="bid-row">
+                      <input class="score-input" value="2" inputmode="numeric" aria-label="Alice bid">
+                      <div class="seg">
+                        <button class="no">✗</button>
+                        <button class="yes on">✓</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="recent-row">
+                    <div class="recent-chips"><span class="chip">R2 <span style="color:var(--red)">♥</span> <b>12</b></span><span class="chip">R3 <span style="color:var(--text)">♠</span> <b>0</b></span></div>
+                    <button class="expand-btn">All rounds ›</button>
+                  </div>
+                </div>
+
+                <div class="player-card">
+                  <div class="player-top">
+                    <div>
+                      <div class="player-name">Bob</div>
+                      <div class="player-total"><span class="total-num">20</span><span class="total-unit">pts</span></div>
+                    </div>
+                  </div>
+                  <div class="this-round">
+                    <div class="this-round-label"><span>This round</span><span class="round-tag">R4 · 4 cards</span></div>
+                    <div class="bid-row">
+                      <input class="score-input" value="1" inputmode="numeric" aria-label="Bob bid">
+                      <div class="seg">
+                        <button class="no on">✗</button>
+                        <button class="yes">✓</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="recent-row">
+                    <div class="recent-chips"><span class="chip">R2 <span style="color:var(--red)">♥</span> <b>11</b></span><span class="chip">R3 <span style="color:var(--text)">♠</span> <b>0</b></span></div>
+                    <button class="expand-btn">All rounds ›</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="submit-dock">
+                <button class="submit-btn">Submit Round 4</button>
+                <div class="submit-hint">Hook rule checked automatically</div>
+              </div>
+            </div>
+          </div>
+          <div class="mockup-caption">
+            <strong>Existing game, same card shell</strong>
+            Up &amp; Down renders its bid + made/missed controls inside the card. Trump stays in a compact round-settings strip above the cards, and each round chip carries that round’s suit so the selection remains visible in history.
+          </div>
+        </div>
+      </div>
+
+      <h3>Desktop layout</h3>
+      <div class="desktop-frame">
+        <div class="desktop-chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+        <div class="desktop-body">
+          <div class="desktop-head">
+            <div>
+              <h4>Friday Night Game</h4>
+              <p>High Score · highest total wins</p>
+            </div>
+            <div class="round-actions">
+              <span class="tool-btn">↶ Undo</span>
+              <span class="tool-btn danger">Finish</span>
+            </div>
+          </div>
+          <div class="desktop-grid">
+            <div class="player-card leader">
+              <div class="player-top">
+                <div>
+                  <div class="player-name">Alice</div>
+                  <div class="player-total"><span class="total-num">42</span><span class="total-unit">pts</span></div>
+                </div>
+                <span class="leader-pill">Leading</span>
+              </div>
+              <div class="this-round">
+                <div class="this-round-label"><span>This round</span><span class="round-tag">R7</span></div>
+                <input class="score-input" value="8" inputmode="numeric" aria-label="Alice points">
+              </div>
+              <div class="recent-row">
+                <div class="recent-chips"><span class="chip">R5 <b>5</b></span><span class="chip">R6 <b>12</b></span></div>
+                <button class="expand-btn">All rounds ›</button>
+              </div>
+            </div>
+            <div class="player-card">
+              <div class="player-top">
+                <div>
+                  <div class="player-name">Bob</div>
+                  <div class="player-total"><span class="total-num">37</span><span class="total-unit">pts</span></div>
+                </div>
+              </div>
+              <div class="this-round">
+                <div class="this-round-label"><span>This round</span><span class="round-tag">R7</span></div>
+                <input class="score-input" placeholder="0" inputmode="numeric" aria-label="Bob points">
+              </div>
+              <div class="recent-row">
+                <div class="recent-chips"><span class="chip">R5 <b>7</b></span><span class="chip">R6 <b>9</b></span></div>
+                <button class="expand-btn">All rounds ›</button>
+              </div>
+            </div>
+            <div class="player-card">
+              <div class="player-top">
+                <div>
+                  <div class="player-name">Carol</div>
+                  <div class="player-total"><span class="total-num">51</span><span class="total-unit">pts</span></div>
+                </div>
+              </div>
+              <div class="this-round">
+                <div class="this-round-label"><span>This round</span><span class="round-tag">R7</span></div>
+                <input class="score-input" placeholder="0" inputmode="numeric" aria-label="Carol points">
+              </div>
+              <div class="recent-row">
+                <div class="recent-chips"><span class="chip">R5 <b>11</b></span><span class="chip">R6 <b>10</b></span></div>
+                <button class="expand-btn">All rounds ›</button>
+              </div>
+            </div>
+          </div>
+          <div class="desktop-dock">
+            <button class="ghost-btn">Cancel</button>
+            <button class="submit-btn">Submit Round 7</button>
+          </div>
+        </div>
+      </div>
+      <p class="mockup-caption" style="max-width:none;margin-top:.6rem">
+        Desktop keeps the same card components in a single, width-capped column so the layout stays thumb-friendly. No separate table view.
+      </p>
+    </section>
+
+    <section id="implementation">
+      <h2><span class="num">7</span>Implementation plan</h2>
+      <p>Suggested order. Each phase leaves the app buildable.</p>
+
+      <h3>Phase A — game engine &amp; data</h3>
+      <ul class="checklist">
+        <li>Add <code>scoreDirection</code>, <code>roundMode</code>, <code>usesDealer</code> to <code>CardGame</code>.</li>
+        <li>Set <code>scoreDirection</code> on Up &amp; Down (high) and Pay Me (low); set <code>usesDealer: true</code> on Up &amp; Down.</li>
+        <li>Create <code>src/games/points.ts</code> with the shared factory and export <code>highScore</code> / <code>lowScore</code>.</li>
+        <li>Register both in <code>src/games/index.ts</code>.</li>
+        <li>Add both game records to <code>src/db/seed.ts</code> and switch seeding to insert-missing-slugs.</li>
+        <li>Update <code>startSession</code> for open mode and dealer capability.</li>
+        <li>Add <code>finishSession</code>.</li>
+        <li>Update <code>getCurrentRound</code>, <code>submitRound</code>, and <code>getScoreboard</code> for open mode.</li>
+        <li>Optimise scoreboard score loading to one query.</li>
+      </ul>
+
+      <h3>Phase B — session page rewrite</h3>
+      <ul class="checklist">
+        <li>Replace the wide table with the card grid and sticky submit dock.</li>
+        <li>Extract <code>PlayerCard</code> (name, total, current inputs, recent chips, expandable history).</li>
+        <li>Render the card list in a single width-capped column at every screen size.</li>
+        <li>Include each round’s trump suit in Up &amp; Down history chips and expanded-history cells.</li>
+        <li>Move Undo / Finish into a persistent round bar.</li>
+        <li>Derive winner direction from <code>getGame(slug)?.scoreDirection</code>.</li>
+        <li>Keep existing round-scope settings and Up &amp; Down validation behaviour.</li>
+        <li>Add the completed-state banner and final standings summary.</li>
+        <li>Ensure 44px touch targets, <code>inputMode="numeric"</code>, and no horizontal overflow at 390px.</li>
+      </ul>
+
+      <h3>Phase C — new-session &amp; home polish</h3>
+      <ul class="checklist">
+        <li>Gate the First Dealer section on <code>usesDealer</code> instead of the Up &amp; Down slug.</li>
+        <li>Verify the game picker handles games with empty <code>config_schema</code>.</li>
+        <li>Optional: add <code>inputMode="numeric"</code> to numeric setup fields.</li>
+      </ul>
+
+      <h3>Phase D — Playwright &amp; design history</h3>
+      <ul class="checklist">
+        <li>Add <code>@playwright/test</code>, <code>playwright.config.ts</code>, mobile/desktop projects, and the package scripts.</li>
+        <li>Gate the PWA dev service worker behind <code>!process.env.PLAYWRIGHT</code> so tests are not cached.</li>
+        <li>Add accessible labels/roles to player cards, score inputs, expand controls, and submit/finish buttons.</li>
+        <li>Write <code>tests/helpers/fixtures.ts</code> and the e2e specs for points games, open-ended flow, existing games, mobile layout, and seeding.</li>
+        <li>Write <code>tests/visual/session.spec.ts</code> and generate the initial committed baselines.</li>
+        <li>Add <code>playwright.design.config.ts</code> and the design-history capture spec; generate the first dated gallery in <code>docs/design-history/</code>.</li>
+        <li>Add <code>.github/workflows/test.yml</code> and update <code>.gitignore</code>.</li>
+      </ul>
+
+      <h3>Phase E — verification</h3>
+      <ul class="checklist">
+        <li><code>npm run build</code> passes (TypeScript + Vite).</li>
+        <li><code>npm test</code> passes on both mobile and desktop projects.</li>
+        <li><code>npm run test:visual</code> matches the committed baselines.</li>
+        <li><code>npm run design:capture</code> produces a gallery that opens cleanly.</li>
+        <li>Manual mobile check at 390px and 768px.</li>
+        <li>Dark-mode check on the session page.</li>
+        <li>Existing-install seed check: new games appear without losing sessions.</li>
+      </ul>
+    </section>
+
+    <section id="testing">
+      <h2><span class="num">8</span>Testing &amp; design history with Playwright</h2>
+      <p>Playwright gives us two things at once: functional end-to-end coverage of the new game flows, and committed screenshots that act as both a regression guard and a browsable record of the design.</p>
+
+      <div class="callout green">
+        <strong>Two layers:</strong>
+        <ul style="margin-bottom:0">
+          <li><strong>Regression baselines</strong> — <code>toHaveScreenshot()</code> assertions in <code>tests/visual/</code>. CI fails on an unexpected visual diff.</li>
+          <li><strong>Design history</strong> — a dated screenshot gallery in <code>docs/design-history/</code>, captured intentionally at design milestones and committed.</li>
+        </ul>
+      </div>
+
+      <h3>8.1 Setup</h3>
+      <ul>
+        <li>Add <code>@playwright/test</code> as a dev dependency and install Chromium (<code>npx playwright install --with-deps chromium</code>).</li>
+        <li>Two projects: <strong>mobile-chrome</strong> (Pixel 7) and <strong>desktop-chrome</strong> (1280×800). Use <code>deviceScaleFactor: 1</code> so snapshots stay small and stable.</li>
+        <li>The <code>webServer</code> runs the Vite dev server on <code>127.0.0.1:4173</code>. The dev base path is <code>/</code> (production uses <code>/cardz/</code>), so <code>baseURL</code> is the root.</li>
+        <li>Set <code>PLAYWRIGHT=1</code> in the web-server environment and gate the PWA dev service worker with <code>devOptions: { enabled: !process.env.PLAYWRIGHT }</code>. This prevents the service worker from caching assets between test runs.</li>
+        <li>Disable animations in screenshots and allow a small <code>maxDiffPixelRatio</code> for anti-aliasing.</li>
+      </ul>
+
+      <pre><code>// playwright.config.ts
+import { defineConfig, devices } from '@playwright/test'
+
+export default defineConfig({
+  testDir: './tests',
+  testIgnore: '**/design-history/**',
+  fullyParallel: true,
+  retries: process.env.CI ? 2 : 0,
+  reporter: [['html', { open: 'never' }], ['list']],
+  use: {
+    baseURL: 'http://127.0.0.1:4173',
+    trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
+  },
+  projects: [
+    {
+      name: 'mobile-chrome',
+      use: { ...devices['Pixel 7'], deviceScaleFactor: 1 },
+    },
+    {
+      name: 'desktop-chrome',
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1280, height: 800 },
+        deviceScaleFactor: 1,
+      },
+    },
+  ],
+  webServer: {
+    command: 'npm run dev -- --host 127.0.0.1 --port 4173',
+    url: 'http://127.0.0.1:4173',
+    reuseExistingServer: !process.env.CI,
+    env: { PLAYWRIGHT: 'true' },
+  },
+  expect: {
+    toHaveScreenshot: {
+      maxDiffPixelRatio: 0.01,
+      animations: 'disabled',
+    },
+  },
+})</code></pre>
+
+      <p>Package scripts:</p>
+      <pre><code>{
+  "test": "playwright test",
+  "test:e2e": "playwright test tests/e2e",
+  "test:visual": "playwright test tests/visual",
+  "test:visual:update": "playwright test tests/visual --update-snapshots",
+  "test:ui": "playwright test --ui",
+  "design:capture": "playwright test --config playwright.design.config.ts"
+}</code></pre>
+
+      <p>Add <code>test-results/</code>, <code>playwright-report/</code>, <code>blob-report/</code>, and <code>playwright/.cache/</code> to <code>.gitignore</code>. Commit the visual baselines and the design-history gallery.</p>
+
+      <h3>8.2 Functional e2e coverage</h3>
+      <table class="data">
+        <thead>
+          <tr><th>Spec</th><th>Covers</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>tests/e2e/points-games.spec.ts</code></td>
+            <td>Create High Score / Low Score sessions, enter positive and negative points, verify totals, finish, verify winner direction, undo after finish, and confirm the finish button is disabled with zero scored rounds.</td>
+          </tr>
+          <tr>
+            <td><code>tests/e2e/open-ended.spec.ts</code></td>
+            <td>Submitting several rounds keeps creating the next round; the session never auto-completes; the trailing unscored round is removed on finish.</td>
+          </tr>
+          <tr>
+            <td><code>tests/e2e/existing-games.spec.ts</code></td>
+            <td>Up &amp; Down: trump, dealer, hook rule, “at least one failure”, and auto-completion (use peak = 1 to finish in one round). Pay Me: 11-round loop and lowest-total winner.</td>
+          </tr>
+          <tr>
+            <td><code>tests/e2e/mobile-layout.spec.ts</code></td>
+            <td>At a Pixel 7 viewport: no horizontal document overflow, cards stack, history expands into a wrapped grid, and the submit button stays reachable.</td>
+          </tr>
+          <tr>
+            <td><code>tests/e2e/seed.spec.ts</code></td>
+            <td>Both new games appear in the picker on a fresh context. Optional: delete the new game rows through IndexedDB, reload, and assert they are re-seeded without touching sessions.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>8.3 Visual regression snapshots</h3>
+      <p><code>tests/visual/session.spec.ts</code> builds a deterministic session through the UI, then asserts screenshots:</p>
+      <ul>
+        <li><strong>Active High Score, collapsed</strong> — mobile and desktop.</li>
+        <li><strong>Expanded player history</strong> — mobile.</li>
+        <li><strong>Completed Low Score</strong> — mobile, including the winner banner.</li>
+        <li><strong>Active Up &amp; Down</strong> — mobile, showing trump, bid, and made/missed controls.</li>
+        <li><strong>Dark mode</strong> — one representative mobile screen.</li>
+      </ul>
+
+      <pre><code>await expect(page).toHaveScreenshot('high-score-active-mobile.png')</code></pre>
+
+      <ul>
+        <li>Capture the <strong>viewport</strong>, not <code>fullPage</code>, so the sticky submit dock renders predictably. Keep visual fixtures to three players so the active and completed screens fit in one viewport.</li>
+        <li>Baselines live in <code>tests/visual/session.spec.ts-snapshots/</code> and are committed.</li>
+        <li>Intentional visual changes: run <code>npm run test:visual:update</code>, review the new images, and commit them. Git history then shows exactly when a visual changed.</li>
+        <li>Keep baselines generated on Linux (the dev machine and CI both use it) so font rendering stays consistent.</li>
+        <li>Determinism: fixed player names and scores, <code>localStorage.theme</code> set before load, animations disabled, no dates on the session screen, and <code>deviceScaleFactor: 1</code>.</li>
+      </ul>
+
+      <h3 id="design-history">8.4 Design history gallery</h3>
+      <p>The visual regression baselines are machine-oriented. For a human-readable history, a separate capture spec writes a dated gallery:</p>
+      <pre><code>docs/design-history/
+├── index.html                 # timeline, newest first
+└── 2026-11-01/
+    ├── high-score-active-mobile-light.jpg
+    ├── high-score-active-desktop-light.jpg
+    ├── high-score-expanded-mobile-light.jpg
+    ├── low-score-complete-mobile-light.jpg
+    ├── up-and-down-active-mobile-light.jpg
+    └── ...dark variants</code></pre>
+      <ul>
+        <li><code>tests/design-history/capture.spec.ts</code> uses a separate <code>playwright.design.config.ts</code> so it is excluded from the normal test run. The design config reuses the same <code>use</code>/<code>webServer</code> settings and points <code>testDir</code> at <code>./tests/design-history</code>.</li>
+        <li><code>npm run design:capture</code> captures the key screens at mobile + desktop and light + dark, writes them into <code>docs/design-history/&lt;YYYY-MM-DD&gt;/</code> as JPEGs (quality ~85 to keep the repo small), and regenerates <code>docs/design-history/index.html</code>.</li>
+        <li>Run it manually when a design milestone lands, review the gallery, and commit the new dated folder plus the updated index. It is not part of CI, so it does not churn on every test run.</li>
+        <li>The index is a simple static page: date headings, a grid of thumbnails, and links to full-size images. It can be opened directly from the repo or published later.</li>
+      </ul>
+
+      <div class="callout">
+        <strong>Why both?</strong> Baselines answer “did the UI change unexpectedly?” The gallery answers “what did the UI look like last month?” Playwright is the engine for both, so there is no second screenshot tool to maintain.
+      </div>
+
+      <h3>8.5 Deterministic fixtures &amp; accessible selectors</h3>
+      <ul>
+        <li><code>tests/helpers/fixtures.ts</code> exposes <code>createSession()</code>, <code>submitRound()</code>, <code>finishGame()</code>, <code>expandHistory()</code>, and <code>setTheme()</code>. Each Playwright test gets a fresh browser context and therefore a fresh IndexedDB, so no cleanup is needed.</li>
+        <li>Prefer accessible selectors over CSS classes:
+          <ul>
+            <li>Player card: <code>&lt;article aria-label={player.name}&gt;</code> → <code>getByRole('article', { name: 'Alice' })</code>.</li>
+            <li>Points input: <code>aria-label={`${player.name} points for round ${roundNumber}`}</code>.</li>
+            <li>Expand button: <code>aria-expanded</code> and <code>aria-controls</code>.</li>
+            <li>Submit: text <code>Submit Round N</code>. Finish: text <code>Finish game</code>.</li>
+          </ul>
+        </li>
+        <li>These labels also improve screen-reader support, so the test investment pays for itself.</li>
+        <li>For the Finish confirmation, keep the existing <code>confirm()</code> dialog and accept it in Playwright via <code>page.on('dialog', d =&gt; d.accept())</code>. If we later replace it with an inline modal, update the fixture helper.</li>
+      </ul>
+
+      <h3>8.6 CI</h3>
+      <p>Add <code>.github/workflows/test.yml</code> for pull requests and pushes to <code>main</code>:</p>
+      <pre><code>name: Test
+on:
+  pull_request:
+  push:
+    branches: ['main']
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: lts/*
+          cache: 'npm'
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - run: npm test
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7</code></pre>
+      <ul>
+        <li>Keep the Pages deploy workflow as-is; protect <code>main</code> with a required “Test” check so a failing run blocks the merge and therefore the deploy.</li>
+        <li>The uploaded report on failure contains expected/actual/diff images, which is useful for reviewing visual changes without checking out the branch.</li>
+        <li>If desired later, move the test job into <code>deploy.yml</code> and add <code>needs: test</code> to the deploy job for a hard gate.</li>
+      </ul>
+
+      <h3>8.7 Test scenarios</h3>
+      <table class="data">
+        <thead>
+          <tr><th>Scenario</th><th>Expected</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>High Score, 3 players, 5 rounds, then Finish</td>
+            <td>Totals accumulate; highest total wins; trailing empty round removed; winner banner appears.</td>
+          </tr>
+          <tr>
+            <td>Low Score, negative points in a round</td>
+            <td>Negative values are accepted and included in the total; lowest total wins.</td>
+          </tr>
+          <tr>
+            <td>Finish, then Undo</td>
+            <td>Session reopens on the last scored round; scores for that round are cleared; can submit again.</td>
+          </tr>
+          <tr>
+            <td>Finish with zero scored rounds</td>
+            <td>Finish button is disabled.</td>
+          </tr>
+          <tr>
+            <td>Open-ended game after several submits</td>
+            <td>Next round is created automatically; session stays active until Finish is pressed.</td>
+          </tr>
+          <tr>
+            <td>Up &amp; Down full game (peak = 1)</td>
+            <td>Trump, dealer, hook rule, “at least one failure” rule, and auto-completion still work. Cards show bid + made/missed.</td>
+          </tr>
+          <tr>
+            <td>Pay Me full game</td>
+            <td>Cards-left input still works; lowest total wins; 11 rounds auto-complete.</td>
+          </tr>
+          <tr>
+            <td>Existing install with sessions</td>
+            <td>Reload adds High Score and Low Score; existing sessions and games are untouched.</td>
+          </tr>
+          <tr>
+            <td>390px viewport, 10 players, 20 rounds</td>
+            <td>No horizontal scrolling. Cards stack; history expands into a wrapped grid; submit stays reachable.</td>
+          </tr>
+          <tr>
+            <td>Visual snapshot run</td>
+            <td>All committed baselines match; an intentional design change is reviewed via <code>--update-snapshots</code>.</td>
+          </tr>
+          <tr>
+            <td>Design history capture</td>
+            <td><code>npm run design:capture</code> writes a dated folder and regenerates the index; the gallery opens in a browser.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="risks">
+      <h2><span class="num">9</span>Risks &amp; edge cases</h2>
+      <ul>
+        <li><strong>Seed migration:</strong> insert only missing slugs. Never wipe or overwrite existing game rows, sessions, or players.</li>
+        <li><strong>Open-mode completion:</strong> <code>total_rounds: 0</code> must not make the scoreboard empty. Use <code>rounds.length</code> in the max-rounds calculation.</li>
+        <li><strong>Trailing unscored round:</strong> Finish deletes it; Undo relies on the last scored round becoming unscored again. Verify both directions.</li>
+        <li><strong>Winner direction:</strong> remove the Pay Me slug check so Low Score behaves identically.</li>
+        <li><strong>Dealer leakage:</strong> generic games should not show a dealer. Gate assignment on <code>usesDealer</code>.</li>
+        <li><strong>Up &amp; Down rules:</strong> the hook rule and “not everyone can succeed” checks remain in <code>submitRound</code> for now. They only apply to that slug, so generic games are unaffected.</li>
+        <li><strong>Long games:</strong> open-ended sessions can accumulate many rounds. The one-query scoreboard load and wrapped history grid keep the UI usable.</li>
+        <li><strong>Empty points:</strong> currently interpreted as 0. If that feels risky during testing, add explicit “required” validation for the points field.</li>
+        <li><strong>Visual snapshot flakiness:</strong> generate baselines on Linux, pin the Playwright version, disable animations, use a small <code>maxDiffPixelRatio</code>, and keep dynamic content (dates, live timers) out of the captured screens. If a snapshot fails, inspect the expected/actual/diff images in the HTML report before updating.</li>
+        <li><strong>Design-history repo size:</strong> capture only the key screens, use JPEG quality ~85, and run the capture manually at milestones. Baselines and gallery images are committed; test reports and traces are not.</li>
+        <li><strong>CI runtime:</strong> Playwright adds browser install and test time. Start with Chromium only and two projects; add WebKit/Firefox later only if a real device issue demands it.</li>
+      </ul>
+    </section>
+
+    <section id="iteration">
+      <h2><span class="num">10</span>Visual iteration notes</h2>
+      <p>Once we switch to build mode, these are the things worth trying on a real phone before locking the design:</p>
+      <ul>
+        <li><strong>Card density:</strong> decided — one card per row at every screen size. The list is width-capped on desktop rather than switching to multiple columns.</li>
+        <li><strong>Leader treatment:</strong> subtle “Leading” pill vs. no in-progress highlight. The mockups show the pill; it can be removed if it feels noisy.</li>
+        <li><strong>History expansion:</strong> per-card toggle (shown) vs. a single global “Show all rounds” control. Per-card keeps the screen short.</li>
+        <li><strong>Submit dock:</strong> sticky bottom bar vs. a normal button at the end. Sticky is better for 6+ players but takes vertical space.</li>
+        <li><strong>Finish placement:</strong> round-bar action (shown) vs. a secondary button in the submit dock. Round bar keeps the primary action singular.</li>
+        <li><strong>Recent rounds:</strong> last two (shown) vs. last three. Two keeps cards compact; three gives more context.</li>
+        <li><strong>Completed screen:</strong> banner + cards (shown) vs. a dedicated final leaderboard sorted by rank. A sorted leaderboard may be a nicer end state.</li>
+        <li><strong>Points input:</strong> plain number input vs. number input with quick +/- steppers for common values.</li>
+      </ul>
+
+      <div class="callout green">
+        <strong>Next step:</strong> switch to build mode. I’ll implement Phase A first so both new games are playable, then iterate the card visuals against the mockups on a real viewport. Once the visuals settle, Phase D locks in the Playwright e2e suite, the visual baselines, and the first design-history capture.
+      </div>
+    </section>
+
+    <div class="footer-note">
+      Cardz plan · static HTML mockup · open in a browser and use the ☾/☀ button to preview dark mode.
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var root = document.documentElement;
+      var btn = document.getElementById('themeToggle');
+      var stored = localStorage.getItem('cardz-plan-theme');
+      if (stored) root.setAttribute('data-theme', stored);
+      function sync() {
+        btn.textContent = root.getAttribute('data-theme') === 'dark' ? '☀' : '☾';
+      }
+      sync();
+      btn.addEventListener('click', function () {
+        var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        root.setAttribute('data-theme', next);
+        localStorage.setItem('cardz-plan-theme', next);
+        sync();
+      });
+    })();
+  </script>
+</body>
+</html>

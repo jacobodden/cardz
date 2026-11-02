@@ -4,6 +4,9 @@ const SUITS = ['♠', '♥', '♣', '♦']
 
 export const upAndDown: CardGame = {
   slug: 'up-and-down',
+  scoreDirection: 'high',
+  roundMode: 'fixed',
+  usesDealer: true,
 
   getRounds(playerCount: number, config?: Record<string, any>): RoundMeta[] {
     const defaultPeak = Math.floor(51 / playerCount)

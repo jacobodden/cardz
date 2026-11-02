@@ -143,18 +143,34 @@ export async function startSession(sessionId: number, config?: Record<string, an
   const players = await db.players.where('session_id').equals(sessionId).sortBy('order_index')
   if (players.length === 0) throw new Error('Need at least one player')
 
+  if (gameImpl.roundMode === 'open') {
+    await db.sessions.update(sessionId, {
+      config_json: { ...config, total_rounds: 0, round_configs: [] },
+    })
+
+    await db.rounds.add({
+      session_id: sessionId,
+      round_number: 1,
+      data_json: {},
+    })
+    return
+  }
+
   const allRounds = gameImpl.getRounds(players.length, config)
-
+  const usesDealer = gameImpl.usesDealer ?? false
   const firstDealerIndex = config?.first_dealer_index ?? 0
-  const roundConfigs = allRounds.map((r, i) => {
-    const dealerIdx = (firstDealerIndex + i) % players.length
-    return {
-      round_number: r.round_number,
-      hand_size: r.hand_size,
-      data: { ...r.data, dealer_player_id: players[dealerIdx].id! },
-    }
-  })
 
+  const roundConfigs = allRounds.map((round, index) => ({
+    round_number: round.round_number,
+    hand_size: round.hand_size,
+    data: usesDealer
+      ? {
+          ...round.data,
+          dealer_player_id:
+            players[(firstDealerIndex + index) % players.length].id!,
+        }
+      : { ...round.data },
+  }))
 
   const mergedConfig = { ...config, total_rounds: allRounds.length, round_configs: roundConfigs }
 
@@ -165,5 +181,41 @@ export async function startSession(sessionId: number, config?: Record<string, an
     session_id: sessionId,
     round_number: 1,
     data_json: roundConfigs[0].data,
+  })
+}
+
+export async function finishSession(sessionId: number): Promise<void> {
+  const session = await db.sessions.get(sessionId)
+  if (!session) throw new Error('Session not found')
+  if (session.status !== 'active') throw new Error('Session is not active')
+
+  const rounds = await db.rounds
+    .where('session_id').equals(sessionId)
+    .sortBy('round_number')
+
+  const roundIds = rounds
+    .map((round) => round.id)
+    .filter((id): id is number => id !== undefined)
+
+  const scores = roundIds.length
+    ? await db.scores.where('round_id').anyOf(roundIds).toArray()
+    : []
+
+  const scoredRoundIds = new Set(scores.map((score) => score.round_id))
+  if (scoredRoundIds.size === 0) {
+    throw new Error('Score at least one round before finishing')
+  }
+
+  // Remove the trailing unscored round so the final scoreboard only shows
+  // rounds that were actually played.
+  const unscoredRounds = rounds.filter(
+    (round) => !scoredRoundIds.has(round.id!)
+  )
+
+  await db.transaction('rw', db.rounds, db.sessions, async () => {
+    for (const round of unscoredRounds) {
+      await db.rounds.delete(round.id!)
+    }
+    await db.sessions.update(sessionId, { status: 'completed' })
   })
 }
