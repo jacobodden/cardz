@@ -108,6 +108,37 @@ describe('sessions', () => {
     expect(list[0]).toMatchObject({ title: 'Later', game_name: 'High Score', game_slug: 'high-score' })
   })
 
+  it('lists players in seat order and the current leader', async () => {
+    const { sessionId, playerIds } = await startGame('high-score', ['Ann', 'Bob', 'Cat'])
+    let [summary] = await listSessions()
+    expect(summary.id).toBe(sessionId)
+    expect(summary.players).toEqual(['Ann', 'Bob', 'Cat'])
+    expect(summary.standing).toBeNull()
+
+    await submitRound(sessionId, pointsRound(playerIds, [3, 9, -2]))
+    ;[summary] = await listSessions()
+    expect(summary.standing).toEqual({ names: ['Bob'], total: 9 })
+  })
+
+  it('picks the lowest total for low-score games and reports ties', async () => {
+    const { sessionId, playerIds } = await startGame('low-score', ['Ann', 'Bob', 'Cat'])
+    await submitRound(sessionId, pointsRound(playerIds, [4, 2, 2]))
+    await finishSession(sessionId)
+    const [summary] = await listSessions()
+    expect(summary.status).toBe('completed')
+    expect(summary.standing).toEqual({ names: ['Bob', 'Cat'], total: 2 })
+  })
+
+  it('keeps standings separate per session', async () => {
+    const a = await startGame('high-score', ['Ann', 'Bob'])
+    const b = await startGame('high-score', ['Cat', 'Dan'])
+    await submitRound(a.sessionId, pointsRound(a.playerIds, [1, 5]))
+    await submitRound(b.sessionId, pointsRound(b.playerIds, [7, 2]))
+    const byId = new Map((await listSessions()).map((s) => [s.id, s]))
+    expect(byId.get(a.sessionId)?.standing).toEqual({ names: ['Bob'], total: 5 })
+    expect(byId.get(b.sessionId)?.standing).toEqual({ names: ['Cat'], total: 7 })
+  })
+
   it('refuses to start without players', async () => {
     const s = await createSession(await gameId('pay-me'))
     await expect(startSession(s.id)).rejects.toThrow('Need at least one player')

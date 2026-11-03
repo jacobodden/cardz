@@ -23,6 +23,42 @@ test('home page (empty)', async ({ page }) => {
   await expect(page).toHaveScreenshot('home-empty.png')
 })
 
+test('home page with active and finished games', async ({ page }) => {
+  // Pin the clock so card dates and month headings don't drift.
+  await page.clock.setFixedTime(new Date('2026-11-03T12:00:00'))
+
+  await createSession(page, {
+    gameSlug: 'low-score',
+    title: 'Sunday Rummy',
+    players,
+  })
+  await submitPointsRound(page, 1, [
+    { player: 'Alice', points: 5 },
+    { player: 'Bob', points: 8 },
+    { player: 'Carol', points: 3 },
+  ])
+  await finishGame(page)
+
+  await createSession(page, {
+    gameSlug: 'up-and-down',
+    title: 'Friday Night Game',
+    players,
+  })
+  await submitUpAndDownRound(page, 1, {
+    trump: '♠',
+    bids: [
+      { player: 'Alice', bid: 1, success: true },
+      { player: 'Bob', bid: 1, success: false },
+      { player: 'Carol', bid: 0, success: false },
+    ],
+  })
+
+  await page.goto('/')
+  await expect(page.getByTestId('session-card')).toHaveCount(2)
+  await resetScroll(page)
+  await expect(page).toHaveScreenshot('home-sessions.png')
+})
+
 test('new session picker', async ({ page }) => {
   await page.goto('/sessions/new')
   await expect(page.getByTestId('game-option')).toHaveCount(4)
