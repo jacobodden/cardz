@@ -1,6 +1,7 @@
-import type { CardGame, RoundMeta, InputField, PlayerScoreInput, PlayerScoreResult, ConfigField } from './types'
+import type { CardGame, RoundMeta, InputField, PlayerScoreInput, PlayerScoreResult, ConfigField, RoundInfoChip } from './types'
 
 const SUITS = ['♠', '♥', '♣', '♦']
+const RED_SUITS = new Set(['♥', '♦'])
 const MAX_PEAK = 10
 
 /** Largest hand every player can be dealt from one deck (one card turned for trump). */
@@ -93,6 +94,24 @@ export const upAndDown: CardGame = {
         scope: 'player',
       },
     ]
+  },
+
+  getRoundInfo(meta: RoundMeta, { players }): RoundInfoChip[] {
+    const chips: RoundInfoChip[] = []
+    const dealer = players.find((p) => p.id === meta.data.dealer_player_id)
+    if (dealer) chips.push({ key: 'dealer', label: 'Dealer', value: dealer.name })
+
+    const trump = meta.data.trump
+    if (typeof trump === 'string' && trump) {
+      chips.push({
+        key: 'trump',
+        label: 'Trump',
+        value: trump,
+        history: true,
+        ...(RED_SUITS.has(trump) ? { tone: 'red' as const } : {}),
+      })
+    }
+    return chips
   },
 
   computeScore(_meta: RoundMeta, inputs: PlayerScoreInput[]): PlayerScoreResult[] {

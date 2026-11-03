@@ -157,12 +157,38 @@ test('Pay Me: create a session and submit a round', async ({ page }) => {
     players: ['Alice', 'Bob'],
   })
 
+  const wild = page.locator('[data-testid="round-info-chip"][data-chip="wild"]')
+  await expect(wild).toHaveText('Wilds3s')
+
   await submitPayMeRound(page, 1, [
     { player: 'Alice', value: 15 },
     { player: 'Bob', value: 8 },
   ])
 
   await expectPlayerTotal(page, 'Alice', 15)
+  await expect(wild).toHaveText('Wilds4s')
+})
+
+test('Up & Down: the dealer chip follows the rotation', async ({ page }) => {
+  await createSession(page, {
+    gameSlug: 'up-and-down',
+    players: ['Alice', 'Bob', 'Carol'],
+    firstDealerIndex: 1,
+  })
+
+  const dealer = page.locator('[data-testid="round-info-chip"][data-chip="dealer"]')
+  await expect(dealer).toHaveText('DealerBob')
+
+  await submitUpAndDownRound(page, 1, {
+    trump: '♠',
+    bids: [
+      { player: 'Alice', bid: 1, success: true },
+      { player: 'Bob', bid: 1, success: false },
+      { player: 'Carol', bid: 0, success: false },
+    ],
+  })
+
+  await expect(dealer).toHaveText('DealerCarol')
 })
 
 test('High Score: open-ended rounds, negative points, and finish', async ({

@@ -36,6 +36,22 @@ export interface ConfigField {
   description?: string
 }
 
+/** A labelled fact about a round (trump, dealer, wild card...) shown as a chip. */
+export interface RoundInfoChip {
+  key: string
+  label: string
+  value: string
+  /** Colour hint, e.g. red for hearts and diamonds. */
+  tone?: 'red'
+  /** Also show this chip in each player's round history, not just the current round. */
+  history?: boolean
+}
+
+export interface RoundInfoContext {
+  /** Players in the session, to resolve ids stored in round data (e.g. the dealer). */
+  players: { id: number; name: string }[]
+}
+
 export type ScoreDirection = 'high' | 'low'
 export type RoundMode = 'fixed' | 'open'
 
@@ -70,6 +86,13 @@ export interface CardGame {
    * typing (to disable Submit), and `submitRound` calls it again before saving.
    */
   validateRound?(meta: RoundMeta, inputs: PlayerScoreInput[]): string | null
+  /**
+   * Facts about a round to show as chips: the current round's chips appear
+   * above the score inputs, and chips marked `history` also appear in each
+   * player's round history. `meta.data` is the round's stored data, so
+   * values entered while scoring (e.g. trump) show once the round is saved.
+   */
+  getRoundInfo?(meta: RoundMeta, context: RoundInfoContext): RoundInfoChip[]
 }
 
 /** Config defaults for `game` at `playerCount`, falling back to the schema. */
