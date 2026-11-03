@@ -2,6 +2,107 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/*
+ * Semantic color tokens. Components use these utilities (bg-surface, text-ink,
+ * border-line, ...) instead of raw palette colors, so a theme only has to set
+ * the variables below. A palette is keyed by data-palette on <html>, with the
+ * .dark class picking its dark half. Felt is the default.
+ */
+@theme inline {
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-felt: var(--felt);
+  --color-on-felt: var(--on-felt);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-lead-bg: var(--lead-bg);
+  --color-lead-border: var(--lead-border);
+  --color-lead-label: var(--lead-label);
+  --color-win-bg: var(--win-bg);
+  --color-win-fg: var(--win-fg);
+  --color-warn: var(--warn);
+  --color-red-suit: var(--red-suit);
+  --color-danger: var(--danger);
+  --color-danger-solid: var(--danger-solid);
+  --color-on-danger: var(--on-danger);
+  --color-yes-bg: var(--yes-bg);
+  --color-yes-fg: var(--yes-fg);
+  --color-no-bg: var(--no-bg);
+  --color-no-fg: var(--no-fg);
+}
+
+:root,
+:root[data-palette="felt"] {
+  color-scheme: light;
+  --page: #eef3ef;
+  --surface: #ffffff;
+  --surface-2: #f3f7f4;
+  --line: #d5e0d8;
+  --line-strong: #b9c8be;
+  --ink: #12211a;
+  --muted: #536359;
+  --felt: #1e6b4e;
+  --on-felt: #ffffff;
+  --accent: #1e6b4e;
+  --on-accent: #ffffff;
+  --accent-ink: #1e6b4e;
+  --accent-soft: #e1f0e6;
+  --lead-bg: #fbefd5;
+  --lead-border: #e9c36b;
+  --lead-label: #7a4d00;
+  --win-bg: #fbefd5;
+  --win-fg: #7a4d00;
+  --warn: #7a4d00;
+  --red-suit: #c0352b;
+  --danger: #b3261e;
+  --danger-solid: #b3261e;
+  --on-danger: #ffffff;
+  --yes-bg: #ddf0e2;
+  --yes-fg: #1d6b3a;
+  --no-bg: #f9dedb;
+  --no-fg: #a12a20;
+}
+
+:root.dark,
+:root.dark[data-palette="felt"] {
+  color-scheme: dark;
+  --page: #0d1813;
+  --surface: #15241d;
+  --surface-2: #1c2f26;
+  --line: #233a2f;
+  --line-strong: #34503f;
+  --ink: #e8f0ea;
+  --muted: #9fb3a7;
+  --felt: #174a36;
+  --on-felt: #e8f0ea;
+  --accent: #6fd3a2;
+  --on-accent: #0d1813;
+  --accent-ink: #6fd3a2;
+  --accent-soft: #1b3a2c;
+  --lead-bg: #3a2f17;
+  --lead-border: #8a6a22;
+  --lead-label: #f2c76a;
+  --win-bg: #3a2f17;
+  --win-fg: #f2c76a;
+  --warn: #f2c76a;
+  --red-suit: #ff7a6e;
+  --danger: #ff8a7e;
+  --danger-solid: #b3261e;
+  --on-danger: #ffffff;
+  --yes-bg: #1e3a27;
+  --yes-fg: #7fd69a;
+  --no-bg: #43201d;
+  --no-fg: #ff9a8f;
+}
+
 html {
   touch-action: manipulation;
+  background-color: var(--page);
 }
