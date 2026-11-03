@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { db } from '../../src/db/dexie-db'
-import { seedGames } from '../../src/db/seed'
+import { gameRow, seedGames } from '../../src/db/seed'
+import { getAllGames } from '../../src/games'
+import { upAndDown } from '../../src/games/upanddown'
 import {
   addPlayer,
   createSession,
@@ -44,6 +46,42 @@ describe('seedGames', () => {
     await seedGames(db)
     expect(await db.games.count()).toBe(4)
     expect(await db.games.where('slug').equals('pay-me').count()).toBe(1)
+  })
+
+  it('derives every row from the game modules', async () => {
+    for (const game of getAllGames()) {
+      const row = await db.games.where('slug').equals(game.slug).first()
+      expect(row).toMatchObject(gameRow(game))
+    }
+  })
+
+  it('updates stale definitions in place, keeping the id', async () => {
+    const before = await db.games.where('slug').equals('up-and-down').first()
+    await db.games.update(before!.id!, {
+      name: 'Old name',
+      max_players: 5,
+      config_schema: [],
+    })
+
+    await seedGames(db)
+
+    const after = await db.games.where('slug').equals('up-and-down').first()
+    expect(after?.id).toBe(before!.id)
+    expect(after).toMatchObject(gameRow(upAndDown))
+    expect(await db.games.count()).toBe(4)
+  })
+
+  it('leaves rows for games no longer in code alone', async () => {
+    await db.games.add({
+      slug: 'retired',
+      name: 'Retired',
+      description: '',
+      min_players: 2,
+      max_players: 4,
+      config_schema: [],
+    })
+    await seedGames(db)
+    expect(await db.games.where('slug').equals('retired').count()).toBe(1)
   })
 })
 
@@ -141,6 +179,15 @@ describe('submitRound', () => {
       submitRound(sessionId, udRound(playerIds, [1, 1, 0], [true, false, false])),
     ).rejects.toThrow(/Hook rule/)
     expect(await db.scores.count()).toBe(3)
+  })
+
+  it('does not save round data for a rejected round', async () => {
+    const { sessionId, playerIds } = await startGame('up-and-down', ['A', 'B', 'C'], { peak: 3 })
+    await expect(
+      submitRound(sessionId, udRound(playerIds, [1, 0, 0], [true, false, false], '♦')),
+    ).rejects.toThrow(/Hook rule/)
+    const round1 = await db.rounds.where({ session_id: sessionId, round_number: 1 }).first()
+    expect(round1?.data_json.trump).toBeUndefined()
   })
 
   it('requires at least one Up & Down player to fail', async () => {

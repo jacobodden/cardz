@@ -36,7 +36,7 @@ cardz DB (Dexie)
 └── scores       │ ++id, round_id, player_id, score, data_json     │ index: round_id
 ```
 
-Seed data (game definitions) loaded in `src/db/seed.ts`.
+Game definitions (name, description, player limits, config schema) live in the game modules under `src/games/`. `src/db/seed.ts` upserts them into the `games` table by slug on every load, so code changes reach installed copies.
 
 ## Routing and pages
 
