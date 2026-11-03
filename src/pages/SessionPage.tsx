@@ -10,6 +10,7 @@ import {
 } from '../db/rounds'
 import type { RoundMetaInfo, ScoreboardRow } from '../db/rounds'
 import { getGame } from '../games'
+import { topByTotal } from '../games/standings'
 import type { InputField, PlayerScoreInput, ScoreDirection } from '../games/types'
 
 const SUIT_SYMBOLS = new Set(['♠', '♥', '♣', '♦'])
@@ -60,10 +61,7 @@ function collectScores(
 }
 
 function findWinners(rows: ScoreboardRow[], direction: ScoreDirection): Set<number> {
-  if (rows.length === 0) return new Set()
-  const totals = rows.map((r) => r.total)
-  const target = direction === 'low' ? Math.min(...totals) : Math.max(...totals)
-  return new Set(rows.filter((r) => r.total === target).map((r) => r.player_id))
+  return new Set(topByTotal(rows, direction).map((r) => r.player_id))
 }
 
 export default function SessionPage() {

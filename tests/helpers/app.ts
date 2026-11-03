@@ -73,6 +73,11 @@ export function playerCard(page: Page, playerName: string) {
   )
 }
 
+/** A session card on the home page, found by its displayed title. */
+export function sessionCard(page: Page, title: string) {
+  return page.locator(`[data-testid="session-card"][data-session-title="${title}"]`)
+}
+
 /** @deprecated Use playerCard(). */
 export function playerRow(page: Page, playerName: string) {
   return playerCard(page, playerName)

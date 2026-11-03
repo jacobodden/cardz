@@ -6,6 +6,7 @@ import {
   expandHistory,
   finishGame,
   playerCard,
+  sessionCard,
   setTheme,
   submitPayMeRound,
   submitPointsRound,
@@ -270,6 +271,76 @@ test('Home: deleting a session updates the list from the database', async ({
   await page.getByTitle('Delete session').last().dispatchEvent('click')
 
   await expect(page.getByText('No game sessions yet.')).toBeVisible()
+})
+
+test('Home: cards show title, game, players and leader or winner', async ({
+  page,
+}) => {
+  await createSession(page, {
+    gameSlug: 'high-score',
+    title: 'Friday Night Game',
+    players: ['Alice', 'Bob'],
+  })
+  await submitPointsRound(page, 1, [
+    { player: 'Alice', points: 4 },
+    { player: 'Bob', points: 9 },
+  ])
+
+  await page.goto('/')
+  const card = sessionCard(page, 'Friday Night Game')
+  await expect(card.getByRole('heading', { name: 'Friday Night Game' })).toBeVisible()
+  await expect(card.getByTestId('session-game')).toHaveText('High Score')
+  await expect(card.getByTestId('session-players')).toHaveText('Alice, Bob')
+  await expect(card.getByTestId('session-standing')).toHaveText('Bob leads · 9 pts')
+
+  await card.getByRole('link').click()
+  await finishGame(page)
+  await page.goto('/')
+  await expect(card.getByTestId('session-standing')).toHaveText('🏆 Bob wins · 9 pts')
+})
+
+test('Home: in-progress games sit above finished ones, filterable by game', async ({
+  page,
+}) => {
+  await createSession(page, {
+    gameSlug: 'low-score',
+    title: 'Finished Rummy',
+    players: ['Alice', 'Bob'],
+  })
+  await submitPointsRound(page, 1, [
+    { player: 'Alice', points: 3 },
+    { player: 'Bob', points: 5 },
+  ])
+  await finishGame(page)
+
+  await createSession(page, {
+    gameSlug: 'high-score',
+    title: 'Live Points',
+    players: ['Alice', 'Bob'],
+  })
+
+  await page.goto('/')
+  const sections = page.getByTestId('session-section')
+  await expect(sections).toHaveCount(2)
+  await expect(sections.first().getByRole('heading', { level: 2 })).toHaveText('In progress')
+  await expect(sections.first()).toContainText('Live Points')
+  await expect(sections.last()).toContainText('Finished Rummy')
+
+  const chips = page.getByTestId('game-filter')
+  await expect(chips).toHaveText(['All', 'High Score', 'Low Score'])
+
+  await page.locator('[data-testid="game-filter"][data-game-slug="low-score"]').click()
+  await expect(page).toHaveURL(/\?game=low-score$/)
+  await expect(page.getByTestId('session-card')).toHaveCount(1)
+  await expect(sessionCard(page, 'Finished Rummy')).toBeVisible()
+
+  // The filter survives opening a game and going back.
+  await sessionCard(page, 'Finished Rummy').getByRole('link').click()
+  await page.goBack()
+  await expect(page.getByTestId('session-card')).toHaveCount(1)
+
+  await page.getByRole('button', { name: 'All' }).click()
+  await expect(page.getByTestId('session-card')).toHaveCount(2)
 })
 
 test('Session: unknown id shows not found instead of loading forever', async ({
