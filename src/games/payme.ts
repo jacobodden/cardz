@@ -2,6 +2,10 @@ import type { CardGame, RoundMeta, InputField, PlayerScoreInput, PlayerScoreResu
 
 export const payMe: CardGame = {
   slug: 'pay-me',
+  name: 'Pay Me',
+  description: 'Contract Rummy game. Lowest score after 11 rounds wins.',
+  minPlayers: 2,
+  maxPlayers: 6,
   scoreDirection: 'low',
   roundMode: 'fixed',
   usesDealer: false,

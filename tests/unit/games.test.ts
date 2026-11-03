@@ -3,7 +3,7 @@ import { getAllGames, getGame } from '../../src/games'
 import { upAndDown } from '../../src/games/upanddown'
 import { payMe } from '../../src/games/payme'
 import { highScore, lowScore } from '../../src/games/points'
-import type { RoundMeta } from '../../src/games/types'
+import { getDefaultConfig, type RoundMeta } from '../../src/games/types'
 
 const meta = (hand_size = 0): RoundMeta => ({ round_number: 1, hand_size, data: {} })
 
@@ -19,6 +19,29 @@ describe('registry', () => {
 
   it('returns undefined for unknown slugs', () => {
     expect(getGame('nope')).toBeUndefined()
+  })
+
+  it('gives every game a name, description and sane player limits', () => {
+    for (const game of getAllGames()) {
+      expect(game.name).not.toBe('')
+      expect(game.description).not.toBe('')
+      expect(game.minPlayers).toBeGreaterThanOrEqual(1)
+      expect(game.maxPlayers).toBeGreaterThanOrEqual(game.minPlayers)
+    }
+  })
+})
+
+describe('getDefaultConfig', () => {
+  it('falls back to schema defaults for games without the hook', () => {
+    expect(getDefaultConfig(payMe, 4)).toEqual({})
+    expect(getDefaultConfig(highScore, 4)).toEqual({})
+  })
+
+  it('caps the Up & Down peak by player count and the schema max', () => {
+    expect(getDefaultConfig(upAndDown, 0)).toEqual({ peak: 10 })
+    expect(getDefaultConfig(upAndDown, 3)).toEqual({ peak: 10 }) // 51/3 = 17, capped at 10
+    expect(getDefaultConfig(upAndDown, 6)).toEqual({ peak: 8 })
+    expect(getDefaultConfig(upAndDown, 7)).toEqual({ peak: 7 })
   })
 })
 
@@ -65,6 +88,42 @@ describe('Up & Down', () => {
     const fields = upAndDown.getRoundSchema(meta(6))
     expect(fields.find((f) => f.key === 'bid')).toMatchObject({ min: 0, max: 6, scope: 'player' })
     expect(fields.find((f) => f.key === 'trump')).toMatchObject({ scope: 'round', required: true })
+  })
+
+  describe('validateRound', () => {
+    const bids = (...b: (number | undefined)[]) =>
+      b.map((bid, i) => ({ player_id: i + 1, data: bid === undefined ? {} : { bid } }))
+
+    it('rejects bids that total the hand size (hook rule)', () => {
+      expect(upAndDown.validateRound!(meta(3), bids(1, 1, 1))).toMatch(
+        /Hook rule: total bids \(3\) cannot equal hand size \(3\)/,
+      )
+    })
+
+    it('accepts bids over or under the hand size', () => {
+      expect(upAndDown.validateRound!(meta(3), bids(1, 1, 0))).toBeNull()
+      expect(upAndDown.validateRound!(meta(3), bids(2, 1, 1))).toBeNull()
+    })
+
+    it('counts partial input, including numeric strings', () => {
+      expect(upAndDown.validateRound!(meta(2), bids(2, undefined))).toMatch(/Hook rule/)
+      expect(
+        upAndDown.validateRound!(meta(2), [{ player_id: 1, data: { bid: '2' } }]),
+      ).toMatch(/Hook rule/)
+    })
+
+    it('ignores the hook rule when there is no hand size', () => {
+      expect(upAndDown.validateRound!(meta(0), bids(0, 0))).toBeNull()
+    })
+
+    it('requires at least one player to fail', () => {
+      const made = (...m: (boolean | undefined)[]) =>
+        m.map((success, i) => ({ player_id: i + 1, data: { bid: 0, success } }))
+      expect(upAndDown.validateRound!(meta(5), made(true, true, true))).toMatch(/At least one must fail/)
+      expect(upAndDown.validateRound!(meta(5), made(true, false, true))).toBeNull()
+      // Not answered yet: not a violation
+      expect(upAndDown.validateRound!(meta(5), made(true, undefined, true))).toBeNull()
+    })
   })
 
   it('exposes the peak config with a default of 10', () => {
