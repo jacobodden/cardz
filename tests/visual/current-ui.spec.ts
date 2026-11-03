@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import {
   createSession,
   finishGame,
@@ -17,13 +17,14 @@ test.beforeEach(async ({ page }) => {
 test('home page (empty)', async ({ page }) => {
   await page.goto('/')
   await expect(
-    page.getByRole('heading', { name: 'Game Sessions' })
+    page.getByRole('heading', { name: 'Games' })
   ).toBeVisible()
   await resetScroll(page)
   await expect(page).toHaveScreenshot('home-empty.png')
 })
 
-test('home page with active and finished games', async ({ page }) => {
+/** One finished Low Score game and one Up & Down game in progress. */
+async function seedHomeSessions(page: Page) {
   // Pin the clock so card dates and month headings don't drift.
   await page.clock.setFixedTime(new Date('2026-11-03T12:00:00'))
 
@@ -56,7 +57,17 @@ test('home page with active and finished games', async ({ page }) => {
   await page.goto('/')
   await expect(page.getByTestId('session-card')).toHaveCount(2)
   await resetScroll(page)
+}
+
+test('home page with active and finished games', async ({ page }) => {
+  await seedHomeSessions(page)
   await expect(page).toHaveScreenshot('home-sessions.png')
+})
+
+test('home page in dark mode', async ({ page }) => {
+  await setTheme(page, 'dark')
+  await seedHomeSessions(page)
+  await expect(page).toHaveScreenshot('home-sessions-dark.png')
 })
 
 test('new session picker', async ({ page }) => {

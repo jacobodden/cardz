@@ -21,6 +21,10 @@ export interface SessionSummary {
   players: string[]
   /** Leader (active) or winner (completed); null until a round is scored. */
   standing: SessionStanding | null
+  /** Rounds with scores entered. */
+  rounds_scored: number
+  /** Planned rounds for fixed games; null for open-ended ones. */
+  total_rounds: number | null
 }
 
 export interface SessionDetail {
@@ -58,8 +62,10 @@ export async function listSessions(): Promise<SessionSummary[]> {
   const gameMap = new Map<number, Game>(games.map((g) => [g.id!, g]))
 
   const totals = new Map<number, number>()
+  const scoreCounts = new Map<number, number>()
   for (const score of scores) {
     totals.set(score.player_id, (totals.get(score.player_id) ?? 0) + score.score)
+    scoreCounts.set(score.player_id, (scoreCounts.get(score.player_id) ?? 0) + 1)
   }
 
   const playersBySession = new Map<number, typeof players>()
@@ -78,6 +84,9 @@ export async function listSessions(): Promise<SessionSummary[]> {
       .filter((p) => totals.has(p.id!))
       .map((p) => ({ name: p.name, total: totals.get(p.id!)! }))
     const top = topByTotal(rows, direction)
+    // Each scored round gives every seated player one score.
+    const roundsScored = Math.max(0, ...seated.map((p) => scoreCounts.get(p.id!) ?? 0))
+    const totalRounds = s.config_json?.total_rounds
 
     return {
       id: s.id!,
@@ -89,6 +98,8 @@ export async function listSessions(): Promise<SessionSummary[]> {
       game_slug: game?.slug ?? null,
       players: seated.map((p) => p.name),
       standing: top.length > 0 ? { names: top.map((r) => r.name), total: top[0].total } : null,
+      rounds_scored: roundsScored,
+      total_rounds: typeof totalRounds === 'number' && totalRounds > 0 ? totalRounds : null,
     }
   })
 }

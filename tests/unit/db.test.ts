@@ -139,6 +139,21 @@ describe('sessions', () => {
     expect(byId.get(b.sessionId)?.standing).toEqual({ names: ['Cat'], total: 7 })
   })
 
+  it('counts scored rounds against the plan for fixed games only', async () => {
+    const fixed = await startGame('pay-me', ['Ann', 'Bob'])
+    const open = await startGame('high-score', ['Cat', 'Dan'])
+    let byId = new Map((await listSessions()).map((s) => [s.id, s]))
+    expect(byId.get(fixed.sessionId)).toMatchObject({ rounds_scored: 0, total_rounds: 11 })
+    expect(byId.get(open.sessionId)).toMatchObject({ rounds_scored: 0, total_rounds: null })
+
+    await submitRound(fixed.sessionId, payMeRound(fixed.playerIds, [0, 12]))
+    await submitRound(fixed.sessionId, payMeRound(fixed.playerIds, [5, 0]))
+    await submitRound(open.sessionId, pointsRound(open.playerIds, [1, 2]))
+    byId = new Map((await listSessions()).map((s) => [s.id, s]))
+    expect(byId.get(fixed.sessionId)).toMatchObject({ rounds_scored: 2, total_rounds: 11 })
+    expect(byId.get(open.sessionId)).toMatchObject({ rounds_scored: 1, total_rounds: null })
+  })
+
   it('refuses to start without players', async () => {
     const s = await createSession(await gameId('pay-me'))
     await expect(startSession(s.id)).rejects.toThrow('Need at least one player')

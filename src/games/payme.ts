@@ -14,6 +14,7 @@ export const payMe: CardGame = {
   minPlayers: 2,
   maxPlayers: 6,
   scoreDirection: 'low',
+  cardFace: { rank: '5', suit: '♥' },
   roundMode: 'fixed',
   usesDealer: false,
 

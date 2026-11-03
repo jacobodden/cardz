@@ -1,9 +1,10 @@
-import type { CardGame } from './types'
+import type { CardFace, CardGame } from './types'
 
 function makePointsGame(
   slug: string,
   name: string,
-  scoreDirection: 'high' | 'low'
+  scoreDirection: 'high' | 'low',
+  cardFace: CardFace
 ): CardGame {
   return {
     slug,
@@ -12,6 +13,7 @@ function makePointsGame(
     minPlayers: 2,
     maxPlayers: 10,
     scoreDirection,
+    cardFace,
     roundMode: 'open',
     usesDealer: false,
 
@@ -45,5 +47,5 @@ function makePointsGame(
   }
 }
 
-export const highScore = makePointsGame('high-score', 'High Score', 'high')
-export const lowScore = makePointsGame('low-score', 'Low Score', 'low')
+export const highScore = makePointsGame('high-score', 'High Score', 'high', { rank: 'A', suit: '♦' })
+export const lowScore = makePointsGame('low-score', 'Low Score', 'low', { rank: '2', suit: '♣' })

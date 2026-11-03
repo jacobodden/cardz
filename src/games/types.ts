@@ -52,6 +52,14 @@ export interface RoundInfoContext {
   players: { id: number; name: string }[]
 }
 
+export type Suit = '♠' | '♥' | '♣' | '♦'
+
+/** A playing card that stands for the game in lists, e.g. K♠. */
+export interface CardFace {
+  rank: string
+  suit: Suit
+}
+
 export type ScoreDirection = 'high' | 'low'
 export type RoundMode = 'fixed' | 'open'
 
@@ -65,6 +73,8 @@ export interface CardGame {
   maxPlayers: number
   /** Which total wins the game. */
   scoreDirection: ScoreDirection
+  /** The card shown for this game on the home screen. */
+  cardFace: CardFace
   /** Fixed games pre-generate rounds; open games create them as they are played. */
   roundMode?: RoundMode
   /** Whether the game has a dealer that rotates each round. */
