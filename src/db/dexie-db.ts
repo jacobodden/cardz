@@ -64,4 +64,5 @@ export class CardzDB extends Dexie {
 
 export const db = new CardzDB()
 
-seedGames(db)
+// Exported so callers (and tests) can wait for the initial seed to finish.
+export const dbReady = seedGames(db)
