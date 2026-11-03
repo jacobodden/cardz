@@ -83,58 +83,59 @@ export async function submitRound(
   sessionId: number,
   roundData: { round_data?: Record<string, any>; scores: { player_id: number; data: Record<string, any> }[] }
 ): Promise<SubmitRoundResponse> {
-  const session = await db.sessions.get(sessionId)
-  if (!session) throw new Error('Session not found')
-  if (session.status !== 'active') throw new Error('Session is already complete')
+  // One transaction so live queries never observe a half-submitted round
+  // (scores written but next round not yet created, etc.).
+  return db.transaction('rw', [db.sessions, db.games, db.rounds, db.scores], async () => {
+    const session = await db.sessions.get(sessionId)
+    if (!session) throw new Error('Session not found')
+    if (session.status !== 'active') throw new Error('Session is already complete')
 
-  const gameRecord = await db.games.get(session.game_id)
-  if (!gameRecord) throw new Error('Game not found')
+    const gameRecord = await db.games.get(session.game_id)
+    if (!gameRecord) throw new Error('Game not found')
 
-  const gameImpl = getGame(gameRecord.slug)
-  if (!gameImpl) throw new Error('Game implementation not found')
+    const gameImpl = getGame(gameRecord.slug)
+    if (!gameImpl) throw new Error('Game implementation not found')
 
-  const config = session.config_json ?? {}
-  const totalRounds = config.total_rounds ?? 0
-  const roundConfigs: { round_number: number; hand_size: number; data: Record<string, any> }[] = config.round_configs ?? []
+    const config = session.config_json ?? {}
+    const totalRounds = config.total_rounds ?? 0
+    const roundConfigs: { round_number: number; hand_size: number; data: Record<string, any> }[] = config.round_configs ?? []
 
-  // Find current unscored round
-  const allRounds = await db.rounds
-    .where('session_id').equals(sessionId)
-    .sortBy('round_number')
+    // Find current unscored round
+    const allRounds = await db.rounds
+      .where('session_id').equals(sessionId)
+      .sortBy('round_number')
 
-  const roundIds = allRounds
-    .map((r) => r.id)
-    .filter((id): id is number => id !== undefined)
+    const roundIds = allRounds
+      .map((r) => r.id)
+      .filter((id): id is number => id !== undefined)
 
-  const sessionScores = roundIds.length
-    ? await db.scores.where('round_id').anyOf(roundIds).toArray()
-    : []
-  const scoredRoundIds = new Set(sessionScores.map((s) => s.round_id))
-  const currentRound = allRounds.find((r) => !scoredRoundIds.has(r.id!))
-  if (!currentRound) throw new Error('No unscored round available')
+    const sessionScores = roundIds.length
+      ? await db.scores.where('round_id').anyOf(roundIds).toArray()
+      : []
+    const scoredRoundIds = new Set(sessionScores.map((s) => s.round_id))
+    const currentRound = allRounds.find((r) => !scoredRoundIds.has(r.id!))
+    if (!currentRound) throw new Error('No unscored round available')
 
-  const { round_data, scores: rawScores } = roundData
+    const { round_data, scores: rawScores } = roundData
 
-  const currentData = { ...currentRound.data_json, ...round_data }
-  const roundMeta = {
-    round_number: currentRound.round_number,
-    hand_size: currentData.handSize ?? 0,
-    data: currentData,
-  }
+    const currentData = { ...currentRound.data_json, ...round_data }
+    const roundMeta = {
+      round_number: currentRound.round_number,
+      hand_size: currentData.handSize ?? 0,
+      data: currentData,
+    }
 
-  // Validate before writing anything so a rejected round leaves no trace.
-  const invalid = gameImpl.validateRound?.(roundMeta, rawScores)
-  if (invalid) throw new Error(invalid)
+    // Validate before writing anything so a rejected round leaves no trace.
+    const invalid = gameImpl.validateRound?.(roundMeta, rawScores)
+    if (invalid) throw new Error(invalid)
 
-  // Merge round_data into the round's data_json
-  if (round_data) {
-    await db.rounds.update(currentRound.id!, { data_json: currentData })
-  }
+    // Merge round_data into the round's data_json
+    if (round_data) {
+      await db.rounds.update(currentRound.id!, { data_json: currentData })
+    }
 
-  const results = gameImpl.computeScore(roundMeta, rawScores)
+    const results = gameImpl.computeScore(roundMeta, rawScores)
 
-  // Insert scores in a transaction
-  await db.transaction('rw', db.scores, async () => {
     for (const r of results) {
       await db.scores.add({
         round_id: currentRound.id!,
@@ -143,39 +144,39 @@ export async function submitRound(
         data_json: r.data,
       })
     }
-  })
 
-  // Open-ended games never auto-complete; they always advance to the next
-  // round and wait for the player to press "Finish game".
-  if (gameImpl.roundMode === 'open') {
-    await db.rounds.add({
-      session_id: sessionId,
-      round_number: currentRound.round_number + 1,
-      data_json: {},
-    })
+    // Open-ended games never auto-complete; they always advance to the next
+    // round and wait for the player to press "Finish game".
+    if (gameImpl.roundMode === 'open') {
+      await db.rounds.add({
+        session_id: sessionId,
+        round_number: currentRound.round_number + 1,
+        data_json: {},
+      })
+
+      return { scores: results, complete: false }
+    }
+
+    // Check if game is complete
+    if (currentRound.round_number >= totalRounds) {
+      await db.sessions.update(sessionId, { status: 'completed' })
+      return { scores: results, complete: true }
+    }
+
+    // Generate next round
+    const nextRoundConfig = roundConfigs.find(
+      (rc) => rc.round_number === currentRound.round_number + 1
+    )
+    if (nextRoundConfig) {
+      await db.rounds.add({
+        session_id: sessionId,
+        round_number: nextRoundConfig.round_number,
+        data_json: nextRoundConfig.data,
+      })
+    }
 
     return { scores: results, complete: false }
-  }
-
-  // Check if game is complete
-  if (currentRound.round_number >= totalRounds) {
-    await db.sessions.update(sessionId, { status: 'completed' })
-    return { scores: results, complete: true }
-  }
-
-  // Generate next round
-  const nextRoundConfig = roundConfigs.find(
-    (rc) => rc.round_number === currentRound.round_number + 1
-  )
-  if (nextRoundConfig) {
-    await db.rounds.add({
-      session_id: sessionId,
-      round_number: nextRoundConfig.round_number,
-      data_json: nextRoundConfig.data,
-    })
-  }
-
-  return { scores: results, complete: false }
+  })
 }
 
 export async function undoLastRound(sessionId: number): Promise<void> {
