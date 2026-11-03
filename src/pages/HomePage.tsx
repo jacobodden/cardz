@@ -72,15 +72,15 @@ export default function HomePage() {
     await deleteSession(id)
   }
 
-  if (!sessions) return <p className="text-gray-500 dark:text-gray-400">Loading...</p>
+  if (!sessions) return <p className="text-muted">Loading...</p>
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Game Sessions</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-ink">Game Sessions</h1>
         <Link
           to="/sessions/new"
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-800 text-sm"
+          className="bg-accent text-on-accent px-4 py-2 rounded-lg hover:opacity-90 text-sm"
         >
           + New Game
         </Link>
@@ -88,10 +88,10 @@ export default function HomePage() {
 
       {sessions.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-500 dark:text-gray-400 mb-4">No game sessions yet.</p>
+          <p className="text-muted mb-4">No game sessions yet.</p>
           <Link
             to="/sessions/new"
-            className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline"
+            className="text-accent-ink hover:opacity-80 underline"
           >
             Start a new game
           </Link>
@@ -118,7 +118,7 @@ export default function HomePage() {
               <section key={section.key} aria-labelledby={`section-${section.key}`} data-testid="session-section">
                 <h2
                   id={`section-${section.key}`}
-                  className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-3"
+                  className="text-sm font-semibold uppercase tracking-wide text-muted mb-3"
                 >
                   {section.heading}
                 </h2>
@@ -156,8 +156,8 @@ function FilterChip({
       data-game-slug={slug ?? ''}
       className={`text-sm px-3 py-1.5 rounded-full border transition ${
         active
-          ? 'bg-blue-600 border-blue-600 text-white'
-          : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-100 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800'
+          ? 'bg-accent border-accent text-on-accent'
+          : 'bg-surface border-line text-ink hover:bg-surface-2'
       }`}
     >
       {label}
@@ -255,7 +255,7 @@ function SessionCard({ session, onDelete }: { session: SessionSummary; onDelete:
       <div className="absolute inset-y-0 right-0.5 flex items-center">
         <button
           onClick={handleDeleteClick}
-          className="bg-red-600 text-white w-22 h-95/100 rounded-lg flex items-center justify-center hover:bg-red-700 active:bg-red-800"
+          className="bg-danger-solid text-on-danger w-22 h-95/100 rounded-lg flex items-center justify-center hover:opacity-90 active:opacity-80"
           title="Delete session"
         >
           <TrashIcon />
@@ -264,7 +264,7 @@ function SessionCard({ session, onDelete }: { session: SessionSummary; onDelete:
 
       <div
         ref={cardRef}
-        className="relative z-10 transition-transform duration-200 ease-out bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800"
+        className="relative z-10 transition-transform duration-200 ease-out bg-surface rounded-lg border border-line"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -277,13 +277,13 @@ function SessionCard({ session, onDelete }: { session: SessionSummary; onDelete:
               closeSwipe()
             }
           }}
-          className="block p-4 sm:p-5 hover:shadow-md transition active:bg-gray-50 dark:active:bg-gray-800 rounded-lg"
+          className="block p-4 sm:p-5 hover:shadow-md transition active:bg-surface-2 rounded-lg"
         >
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">{title}</h3>
+              <h3 className="font-semibold text-ink truncate">{title}</h3>
               {subtitle && (
-                <p className="text-sm text-gray-500 dark:text-gray-400 truncate" data-testid="session-game">
+                <p className="text-sm text-muted truncate" data-testid="session-game">
                   {subtitle}
                 </p>
               )}
@@ -291,16 +291,16 @@ function SessionCard({ session, onDelete }: { session: SessionSummary; onDelete:
             <div className="flex items-center gap-2 shrink-0">
               <button
                 onClick={handleDeleteClick}
-                className="hidden sm:flex text-gray-400 hover:text-red-600 dark:hover:text-red-400 p-0.5 rounded transition-colors"
+                className="hidden sm:flex text-muted hover:text-danger p-0.5 rounded transition-colors"
                 title="Delete session"
               >
                 <TrashIcon />
               </button>
-              <span className="text-xs text-gray-500 dark:text-gray-400">{formatDate(session.created_at)}</span>
+              <span className="text-xs text-muted">{formatDate(session.created_at)}</span>
             </div>
           </div>
           {session.players.length > 0 && (
-            <p className="text-sm text-gray-600 dark:text-gray-300 mt-2 truncate" data-testid="session-players">
+            <p className="text-sm text-muted mt-2 truncate" data-testid="session-players">
               {session.players.join(', ')}
             </p>
           )}
@@ -308,8 +308,8 @@ function SessionCard({ session, onDelete }: { session: SessionSummary; onDelete:
             <p
               className={`text-sm mt-1 font-medium ${
                 session.status === 'active'
-                  ? 'text-green-700 dark:text-green-400'
-                  : 'text-amber-700 dark:text-amber-400'
+                  ? 'text-accent-ink'
+                  : 'text-win-fg'
               }`}
               data-testid="session-standing"
             >

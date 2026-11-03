@@ -22,8 +22,8 @@ function ReloadPrompt() {
   if (!offlineReady && !needRefresh) return null
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 rounded-lg border border-gray-300 bg-white p-4 shadow-lg dark:border-gray-600 dark:bg-gray-800">
-      <p className="mb-2 text-sm text-gray-700 dark:text-gray-200">
+    <div className="fixed bottom-4 right-4 z-50 rounded-lg border border-line-strong bg-surface p-4 shadow-lg">
+      <p className="mb-2 text-sm text-ink">
         {offlineReady
           ? 'App ready to work offline'
           : 'New content available, click reload to update.'}
@@ -32,14 +32,14 @@ function ReloadPrompt() {
         {needRefresh && (
           <button
             onClick={() => updateServiceWorker(true)}
-            className="rounded bg-[#863bff] px-3 py-1 text-sm text-white hover:bg-[#6f2ed6]"
+            className="rounded bg-accent px-3 py-1 text-sm text-on-accent hover:opacity-90"
           >
             Reload
           </button>
         )}
         <button
           onClick={close}
-          className="rounded border border-gray-300 px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+          className="rounded border border-line-strong px-3 py-1 text-sm text-muted hover:bg-surface-2"
         >
           Close
         </button>

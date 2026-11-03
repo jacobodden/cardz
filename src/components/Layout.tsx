@@ -1,9 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Outlet, Link } from 'react-router-dom'
 
-const THEME_COLOR_LIGHT = '#863bff'
-const THEME_COLOR_DARK = '#111827'
-
 export default function Layout() {
   const [dark, setDark] = useState(() => {
     if (typeof localStorage !== 'undefined') {
@@ -16,20 +13,22 @@ export default function Layout() {
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark)
     localStorage.setItem('theme', dark ? 'dark' : 'light')
+    // Match the browser chrome to the header, whatever the palette says it is.
     const meta = document.querySelector('meta[name="theme-color"]')
-    if (meta) meta.setAttribute('content', dark ? THEME_COLOR_DARK : THEME_COLOR_LIGHT)
+    const surface = getComputedStyle(document.documentElement).getPropertyValue('--surface').trim()
+    if (meta && surface) meta.setAttribute('content', surface)
   }, [dark])
 
   const toggleLabel = dark ? 'Switch to light mode' : 'Switch to dark mode'
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
+    <div className="min-h-screen bg-page text-ink">
+      <header className="bg-surface border-b border-line">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1.5 sm:py-2 flex items-center justify-between">
           <Link
             to="/"
             aria-label="Cardz home"
-            className="-ml-1 w-11 h-11 flex items-center justify-center rounded-lg transition hover:bg-gray-100 dark:hover:bg-gray-800 active:scale-[0.95]"
+            className="-ml-1 w-11 h-11 flex items-center justify-center rounded-lg transition hover:bg-surface-2 active:scale-[0.95]"
           >
             <img
               src={`${import.meta.env.BASE_URL}pwa-64x64.png`}
@@ -42,7 +41,7 @@ export default function Layout() {
           <button
             onClick={() => setDark(!dark)}
             data-testid="theme-toggle"
-            className="-mr-1 w-11 h-11 flex items-center justify-center rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition active:scale-[0.95]"
+            className="-mr-1 w-11 h-11 flex items-center justify-center rounded-lg text-muted hover:bg-surface-2 transition active:scale-[0.95]"
             title={toggleLabel}
             aria-label={toggleLabel}
           >

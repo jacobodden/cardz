@@ -93,7 +93,7 @@ export default function NewSessionPage() {
     navigate(`/sessions/${session.id}`)
   }
 
-  if (!games) return <p className="text-gray-500 dark:text-gray-400">Loading games...</p>
+  if (!games) return <p className="text-muted">Loading games...</p>
 
   // Only games whose defaults depend on player count get a "calculated" hint.
   const playerCountDefaults = gameImpl?.getDefaultConfig && validCount >= 1 ? defaults : null
@@ -104,11 +104,11 @@ export default function NewSessionPage() {
 
   return (
     <div className="max-w-xl">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">New Game</h1>
+      <h1 className="text-2xl font-bold text-ink mb-6">New Game</h1>
 
       {/* Game selector */}
       <section className="mb-8">
-        <h2 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Select Game</h2>
+        <h2 className="text-sm font-medium text-ink mb-3">Select Game</h2>
         <div className="grid gap-3 sm:grid-cols-2">
           {games.map((g) => (
             <button
@@ -118,13 +118,13 @@ export default function NewSessionPage() {
               data-game-slug={g.slug}
               className={`text-left p-5 rounded-lg border-2 transition active:scale-[0.98] ${
                 selectedGame?.id === g.id
-                  ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30'
-                  : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600'
+                  ? 'border-accent-ink bg-accent-soft'
+                  : 'border-line bg-surface hover:border-line-strong'
               }`}
             >
-              <h3 className="font-semibold text-gray-900 dark:text-gray-100">{g.name}</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{g.description}</p>
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+              <h3 className="font-semibold text-ink">{g.name}</h3>
+              <p className="text-sm text-muted mt-1">{g.description}</p>
+              <p className="text-xs text-muted mt-2">
                 {g.min_players}-{g.max_players} players
               </p>
             </button>
@@ -137,7 +137,7 @@ export default function NewSessionPage() {
           {/* Session title & game config */}
           <section className="mb-8 space-y-4">
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">
+              <label className="text-sm font-medium text-ink block mb-1">
                 Session Title
               </label>
               <input
@@ -148,7 +148,7 @@ export default function NewSessionPage() {
                 placeholder="e.g. Friday Night Game"
                 aria-label="Session Title"
                 data-testid="session-title"
-                className="w-full border border-gray-300 dark:border-gray-700 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                className="w-full border border-line-strong rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent-ink bg-surface text-ink"
               />
             </div>
             {selectedGame.config_schema.map((field) => {
@@ -156,7 +156,7 @@ export default function NewSessionPage() {
               const isManuallyEdited = autoValue !== null && config[field.key] !== autoValue
               return (
                 <div key={field.key}>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">
+                  <label className="text-sm font-medium text-ink block mb-1">
                     {field.label}
                   </label>
                   <input
@@ -168,15 +168,15 @@ export default function NewSessionPage() {
                     inputMode="numeric"
                     aria-label={field.label}
                     data-testid={`config-${field.key}`}
-                    className="w-full sm:w-24 border border-gray-300 dark:border-gray-700 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                    className="w-full sm:w-24 border border-line-strong rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent-ink bg-surface text-ink"
                   />
                   {autoValue !== null && (
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-muted mt-1">
                       {isManuallyEdited ? 'Suggested' : 'Calculated'}: {autoValue} for {validCount} player{validCount > 1 ? 's' : ''}
                     </p>
                   )}
                   {autoValue === null && field.description && (
-                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{field.description}</p>
+                    <p className="text-xs text-muted mt-1">{field.description}</p>
                   )}
                 </div>
               )
@@ -185,13 +185,13 @@ export default function NewSessionPage() {
 
           {/* Players */}
           <section className="mb-8">
-            <h2 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+            <h2 className="text-sm font-medium text-ink mb-3">
               Players ({validCount}/{selectedGame.min_players}–{selectedGame.max_players})
             </h2>
             <div className="space-y-2">
               {playerNames.map((name, i) => (
                 <div key={i} className="flex items-center gap-2">
-                  <span className="text-sm text-gray-400 dark:text-gray-500 w-6 shrink-0">{i + 1}.</span>
+                  <span className="text-sm text-muted w-6 shrink-0">{i + 1}.</span>
                   <input
                     type="text"
                     value={name}
@@ -199,12 +199,12 @@ export default function NewSessionPage() {
                     placeholder={`Player ${i + 1}`}
                     aria-label={`Player ${i + 1} name`}
                     data-testid="player-name-input"
-                    className="flex-1 border border-gray-300 dark:border-gray-700 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                    className="flex-1 border border-line-strong rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent-ink bg-surface text-ink"
                   />
                   {playerNames.length > 2 && (
                     <button
                       onClick={() => removePlayer(i)}
-                      className="w-10 h-10 flex items-center justify-center text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-xl rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition active:scale-[0.95]"
+                      className="w-10 h-10 flex items-center justify-center text-danger hover:opacity-80 text-xl rounded-lg hover:bg-no-bg transition active:scale-[0.95]"
                     >
                       ×
                     </button>
@@ -216,7 +216,7 @@ export default function NewSessionPage() {
               <button
                 onClick={addPlayer}
                 data-testid="add-player"
-                className="mt-2 w-full sm:w-auto text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-2.5 px-4 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition active:scale-[0.98]"
+                className="mt-2 w-full sm:w-auto text-sm text-accent-ink hover:opacity-80 py-2.5 px-4 rounded-lg hover:bg-accent-soft transition active:scale-[0.98]"
               >
                 + Add player
               </button>
@@ -225,7 +225,7 @@ export default function NewSessionPage() {
 
           {usesDealer && validCount > 0 && (
             <section className="mb-8">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">
+              <label className="text-sm font-medium text-ink block mb-1">
                 First Dealer
               </label>
               <select
@@ -233,7 +233,7 @@ export default function NewSessionPage() {
                 onChange={(e) => setFirstDealerIndex(Number(e.target.value))}
                 aria-label="First Dealer"
                 data-testid="first-dealer"
-                className="w-full sm:w-auto border border-gray-300 dark:border-gray-700 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                className="w-full sm:w-auto border border-line-strong rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent-ink bg-surface text-ink"
               >
                 {playerNames.map((name, i) => (
                   <option key={i} value={i}>
@@ -248,7 +248,7 @@ export default function NewSessionPage() {
             onClick={handleStart}
             disabled={!canStart || creating}
             data-testid="start-game"
-            className="w-full sm:w-auto bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium active:scale-[0.98] transition"
+            className="w-full sm:w-auto bg-accent text-on-accent px-6 py-3 rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium active:scale-[0.98] transition"
           >
             {creating ? 'Starting...' : 'Start Game'}
           </button>

@@ -16,18 +16,18 @@ import type { InputField, PlayerScoreInput, RoundInfoChip, ScoreDirection } from
 const SUIT_SYMBOLS = new Set(['♠', '♥', '♣', '♦'])
 
 const CHIP_TONES: Record<NonNullable<RoundInfoChip['tone']>, string> = {
-  red: 'text-red-600 dark:text-red-400',
+  red: 'text-red-suit',
 }
 
 function chipTone(chip: RoundInfoChip): string {
-  return chip.tone ? CHIP_TONES[chip.tone] : 'text-gray-900 dark:text-gray-100'
+  return chip.tone ? CHIP_TONES[chip.tone] : 'text-ink'
 }
 
 const SUIT_COLORS: Record<string, string> = {
-  '♠': 'text-gray-900 dark:text-gray-100',
-  '♥': 'text-red-600 dark:text-red-400',
-  '♣': 'text-gray-900 dark:text-gray-100',
-  '♦': 'text-red-600 dark:text-red-400',
+  '♠': 'text-ink',
+  '♥': 'text-red-suit',
+  '♣': 'text-ink',
+  '♦': 'text-red-suit',
 }
 
 type FieldValue = string | number | boolean
@@ -185,8 +185,8 @@ export default function SessionPage() {
     return roundInfo(roundNum, meta?.data_json).filter((chip) => chip.history)
   }
 
-  if (data === undefined) return <p className="text-gray-500 dark:text-gray-400">Loading...</p>
-  if (!session) return <p className="text-gray-500 dark:text-gray-400">Game not found.</p>
+  if (data === undefined) return <p className="text-muted">Loading...</p>
+  if (!session) return <p className="text-muted">Game not found.</p>
 
   const roundFields = round?.fields?.filter((f) => f.scope === 'round') ?? []
   const playerFields = round?.fields?.filter((f) => f.scope !== 'round') ?? []
@@ -244,11 +244,11 @@ export default function SessionPage() {
   return (
     <div className="mx-auto max-w-xl pb-2">
       <header className="mb-3">
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
+        <h1 className="text-2xl font-bold tracking-tight text-ink">
           {session.title || session.game?.name || 'Game'}
         </h1>
         {session.game && (
-          <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+          <p className="mt-0.5 text-sm text-muted">
             {session.game.name} · {direction === 'low' ? 'lowest' : 'highest'} total wins
           </p>
         )}
@@ -259,11 +259,11 @@ export default function SessionPage() {
         <div className="min-w-0">
           <div
             data-testid="round-number"
-            className="truncate text-base font-bold text-gray-900 dark:text-gray-100"
+            className="truncate text-base font-bold text-ink"
           >
             {roundLabel}
           </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">{roundSub}</div>
+          <div className="text-xs text-muted">{roundSub}</div>
         </div>
         <div className="flex shrink-0 gap-1.5">
           {hasScoredRounds && (
@@ -272,7 +272,7 @@ export default function SessionPage() {
               disabled={undoing}
               data-testid="undo-round"
               title="Undo last round"
-              className="flex h-10 items-center gap-1 rounded-lg border border-gray-300 px-3 text-sm font-medium text-gray-600 transition hover:bg-gray-100 active:scale-[0.98] disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+              className="flex h-10 items-center gap-1 rounded-lg border border-line-strong px-3 text-sm font-medium text-muted transition hover:bg-surface-2 active:scale-[0.98] disabled:opacity-50"
             >
               {undoing ? '…' : '↶ Undo'}
             </button>
@@ -283,7 +283,7 @@ export default function SessionPage() {
               disabled={!hasScoredRounds || finishing}
               data-testid="finish-game"
               title="Finish game"
-              className="flex h-10 items-center rounded-lg border border-red-200 bg-red-50 px-3 text-sm font-semibold text-red-700 transition hover:bg-red-100 active:scale-[0.98] disabled:opacity-40 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300 dark:hover:bg-red-900/40"
+              className="flex h-10 items-center rounded-lg border border-no-fg/30 bg-no-bg px-3 text-sm font-semibold text-no-fg transition hover:opacity-90 active:scale-[0.98] disabled:opacity-40"
             >
               {finishing ? '…' : 'Finish'}
             </button>
@@ -298,9 +298,9 @@ export default function SessionPage() {
               key={chip.key}
               data-testid="round-info-chip"
               data-chip={chip.key}
-              className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs dark:border-gray-700 dark:bg-gray-900"
+              className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-2.5 py-1 text-xs"
             >
-              <span className="text-gray-500 dark:text-gray-400">{chip.label}</span>
+              <span className="text-muted">{chip.label}</span>
               <b className={`font-semibold ${chipTone(chip)}`}>{chip.value}</b>
             </span>
           ))}
@@ -308,27 +308,27 @@ export default function SessionPage() {
       )}
 
       {totalRounds > 0 && (
-        <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800">
+        <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-line">
           <div
-            className="h-full rounded-full bg-blue-600 transition-all dark:bg-blue-500"
+            className="h-full rounded-full bg-accent transition-all"
             style={{ width: `${progressPct}%` }}
           />
         </div>
       )}
 
       {error && !active && (
-        <p className="mb-3 text-sm text-red-600 dark:text-red-400">{error}</p>
+        <p className="mb-3 text-sm text-danger">{error}</p>
       )}
 
       {isComplete && (
-        <section className="mb-3 rounded-xl border border-green-300 bg-gradient-to-b from-green-50 to-white p-4 dark:border-green-900/60 dark:from-green-950/40 dark:to-gray-900">
-          <p className="text-base font-bold text-green-700 dark:text-green-300">
+        <section className="mb-3 rounded-xl border border-accent-ink/40 bg-gradient-to-b from-accent-soft to-surface p-4">
+          <p className="text-base font-bold text-accent-ink">
             🏆{' '}
             {winnerNames.length > 1
               ? `${winnerNames.join(' & ')} tie!`
               : `${winnerNames[0] ?? 'Winner'} wins!`}
           </p>
-          <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+          <p className="mt-0.5 text-xs text-muted">
             {direction === 'low' ? 'Lowest' : 'Highest'} total after {scoredCount}{' '}
             round{scoredCount === 1 ? '' : 's'}
           </p>
@@ -338,10 +338,10 @@ export default function SessionPage() {
                 key={p.player_id}
                 className="flex items-baseline justify-between gap-3"
               >
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                <span className="text-sm font-medium text-ink">
                   {p.name}
                 </span>
-                <span className="text-sm font-bold text-gray-900 dark:text-gray-100">
+                <span className="text-sm font-bold text-ink">
                   {p.total} pts
                 </span>
               </div>
@@ -352,8 +352,8 @@ export default function SessionPage() {
 
       <div data-testid={isComplete ? undefined : 'current-round'}>
         {active && roundFields.length > 0 && (
-          <section className="mb-3 rounded-xl border border-gray-200 bg-white p-3 dark:border-gray-800 dark:bg-gray-900">
-            <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+          <section className="mb-3 rounded-xl border border-line bg-surface p-3">
+            <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted">
               Round settings
             </p>
             <div className="flex flex-wrap items-center gap-3">
@@ -402,14 +402,14 @@ export default function SessionPage() {
       </div>
 
       {active && round && (
-        <div className="sticky bottom-0 z-10 -mx-4 mt-4 border-t border-gray-200 bg-white/90 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur dark:border-gray-800 dark:bg-gray-950/90">
+        <div className="sticky bottom-0 z-10 -mx-4 mt-4 border-t border-line bg-surface/90 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur">
           {error ? (
-            <p className="mb-2 text-sm text-red-600 dark:text-red-400">{error}</p>
+            <p className="mb-2 text-sm text-danger">{error}</p>
           ) : (
             ruleViolation && (
               <p
                 data-testid="round-rule-violation"
-                className="mb-2 text-sm text-amber-700 dark:text-amber-400"
+                className="mb-2 text-sm text-warn"
               >
                 {ruleViolation}
               </p>
@@ -424,11 +424,11 @@ export default function SessionPage() {
               successMissing
             }
             data-testid="submit-round"
-            className="h-12 w-full rounded-xl bg-blue-600 text-sm font-bold text-white transition hover:bg-blue-700 active:scale-[0.99] disabled:opacity-50 dark:hover:bg-blue-800"
+            className="h-12 w-full rounded-xl bg-accent text-sm font-bold text-on-accent transition hover:opacity-90 active:scale-[0.99] disabled:opacity-50"
           >
             {submitting ? 'Saving...' : `Submit Round ${round.round_number}`}
           </button>
-          <p className="mt-1 text-center text-[11px] text-gray-400 dark:text-gray-500">
+          <p className="mt-1 text-center text-[11px] text-muted">
             One submit saves all player scores
           </p>
         </div>
@@ -476,49 +476,49 @@ function PlayerCard({
   const recent = scoredEntries.slice(-2)
 
   const cardTone = isWinner
-    ? 'border-amber-400 bg-gradient-to-b from-amber-50 to-white dark:border-amber-500/60 dark:from-amber-950/30 dark:to-gray-900'
+    ? 'border-lead-border bg-gradient-to-b from-lead-bg to-surface'
     : active && isLeader && hasScoredRounds
-      ? 'border-amber-300 ring-1 ring-amber-200 dark:border-amber-500/50 dark:ring-amber-500/20'
-      : 'border-gray-200 dark:border-gray-800'
+      ? 'border-lead-border ring-1 ring-lead-border/50'
+      : 'border-line'
 
   return (
     <article
       data-testid="player-card"
       data-player-name={row.name}
-      className={`rounded-xl border bg-white p-3.5 shadow-sm dark:bg-gray-900 ${cardTone}`}
+      className={`rounded-xl border bg-surface p-3.5 shadow-sm ${cardTone}`}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <div className="flex items-center gap-1 text-sm font-bold text-gray-900 dark:text-gray-100">
+          <div className="flex items-center gap-1 text-sm font-bold text-ink">
             <span className="truncate">{row.name}</span>
             {isWinner && <span aria-label="Winner">👑</span>}
           </div>
           <div className="mt-0.5 flex items-baseline gap-1">
             <span
               data-testid="player-total"
-              className="text-3xl font-extrabold leading-none tracking-tight text-gray-900 dark:text-gray-100"
+              className="text-3xl font-extrabold leading-none tracking-tight text-ink"
             >
               {row.total}
             </span>
-            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+            <span className="text-xs font-semibold text-muted">
               pts
             </span>
           </div>
         </div>
         {active && isLeader && hasScoredRounds && (
-          <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+          <span className="shrink-0 rounded-full bg-lead-bg px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-lead-label">
             Leading
           </span>
         )}
       </div>
 
       {active && roundNumber !== null && (
-        <div className="mt-3 border-t border-dashed border-gray-200 pt-2.5 dark:border-gray-700">
+        <div className="mt-3 border-t border-dashed border-line pt-2.5">
           <div className="mb-1.5 flex items-center justify-between gap-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-muted">
               This round
             </span>
-            <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">
+            <span className="text-[11px] font-semibold text-muted">
               R{roundNumber}
               {handSize > 0 ? ` · ${handSize} card${handSize === 1 ? '' : 's'}` : ''}
             </span>
@@ -546,7 +546,7 @@ function PlayerCard({
                 <span
                   key={entry.roundNumber}
                   data-testid="recent-round-chip"
-                  className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-[11px] text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
+                  className="inline-flex items-center gap-1 rounded-md border border-line bg-surface-2 px-1.5 py-0.5 text-[11px] text-muted"
                 >
                   <span>R{entry.roundNumber}</span>
                   {info.map((chip) => (
@@ -554,7 +554,7 @@ function PlayerCard({
                       {chip.value}
                     </span>
                   ))}
-                  <b className="font-bold text-gray-900 dark:text-gray-100">
+                  <b className="font-bold text-ink">
                     {entry.score}
                   </b>
                 </span>
@@ -566,7 +566,7 @@ function PlayerCard({
             onClick={onToggle}
             aria-expanded={expanded}
             aria-label={`${expanded ? 'Hide' : 'Show'} all rounds for ${row.name}`}
-            className="shrink-0 py-1 text-[11px] font-bold text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+            className="shrink-0 py-1 text-[11px] font-bold text-accent-ink hover:opacity-80"
           >
             {expanded ? 'Hide rounds ⌃' : 'All rounds ›'}
           </button>
@@ -576,7 +576,7 @@ function PlayerCard({
       {expanded && row.scores.length > 0 && (
         <div
           data-testid="round-history"
-          className="mt-2.5 grid grid-cols-4 gap-1.5 border-t border-dashed border-gray-200 pt-2.5 sm:grid-cols-6 dark:border-gray-700"
+          className="mt-2.5 grid grid-cols-4 gap-1.5 border-t border-dashed border-line pt-2.5 sm:grid-cols-6"
         >
           {row.scores.map((score, index) => {
             const historyRound = index + 1
@@ -587,8 +587,8 @@ function PlayerCard({
                 key={historyRound}
                 className={`rounded-md border px-1 py-1 text-center leading-tight ${
                   isCurrent
-                    ? 'border-dashed border-blue-400 bg-blue-50 text-blue-700 dark:border-blue-500/70 dark:bg-blue-950/40 dark:text-blue-300'
-                    : 'border-gray-200 bg-gray-50 text-gray-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-500'
+                    ? 'border-dashed border-accent-ink bg-accent-soft text-accent-ink'
+                    : 'border-line bg-surface-2 text-muted'
                 }`}
               >
                 <span className="block text-[10px]">R{historyRound}</span>
@@ -597,7 +597,7 @@ function PlayerCard({
                     {chip.value}
                   </span>
                 ))}
-                <span className="block text-xs font-bold text-gray-900 dark:text-gray-100">
+                <span className="block text-xs font-bold text-ink">
                   {score ?? '—'}
                 </span>
               </div>
@@ -623,10 +623,10 @@ function CardFieldInput({
   if (field.type === 'boolean') {
     return (
       <div className="flex items-center gap-2">
-        <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+        <span className="text-xs font-medium text-muted">
           {field.label}
         </span>
-        <div className="inline-flex h-11 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="inline-flex h-11 overflow-hidden rounded-lg border border-line">
           <button
             type="button"
             onClick={() => onChange(false)}
@@ -634,8 +634,8 @@ function CardFieldInput({
             aria-pressed={value === false}
             className={`w-11 text-base font-bold transition active:scale-[0.97] ${
               value === false
-                ? 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300'
-                : 'bg-white text-gray-400 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-500 dark:hover:bg-gray-700'
+                ? 'bg-no-bg text-no-fg'
+                : 'bg-surface text-muted hover:bg-surface-2'
             }`}
           >
             ✗
@@ -645,10 +645,10 @@ function CardFieldInput({
             onClick={() => onChange(true)}
             aria-label={`${playerName} ${field.label} yes`}
             aria-pressed={value === true}
-            className={`w-11 border-l border-gray-200 text-base font-bold transition active:scale-[0.97] dark:border-gray-700 ${
+            className={`w-11 border-l border-line text-base font-bold transition active:scale-[0.97] ${
               value === true
-                ? 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300'
-                : 'bg-white text-gray-400 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-500 dark:hover:bg-gray-700'
+                ? 'bg-yes-bg text-yes-fg'
+                : 'bg-surface text-muted hover:bg-surface-2'
             }`}
           >
             ✓
@@ -661,14 +661,14 @@ function CardFieldInput({
   if (field.type === 'select' && field.options) {
     return (
       <label className="flex min-w-0 flex-1 items-center gap-2">
-        <span className="shrink-0 text-xs font-medium text-gray-500 dark:text-gray-400">
+        <span className="shrink-0 text-xs font-medium text-muted">
           {field.label}
         </span>
         <select
           value={(value ?? '') as string | number}
           onChange={(e) => onChange(e.target.value)}
           aria-label={`${playerName} ${field.label}`}
-          className="h-11 min-w-0 flex-1 rounded-lg border border-gray-300 bg-white px-3 text-base text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:ring-blue-400"
+          className="h-11 min-w-0 flex-1 rounded-lg border border-line-strong bg-surface px-3 text-base text-ink focus:outline-none focus:ring-2 focus:ring-accent-ink"
         >
           <option value="" disabled>
             Select...
@@ -688,7 +688,7 @@ function CardFieldInput({
 
   return (
     <label className="flex min-w-0 flex-1 items-center gap-2">
-      <span className="shrink-0 text-xs font-medium text-gray-500 dark:text-gray-400">
+      <span className="shrink-0 text-xs font-medium text-muted">
         {field.label}
       </span>
       <input
@@ -703,7 +703,7 @@ function CardFieldInput({
         placeholder="0"
         inputMode={allowsNegative ? 'decimal' : 'numeric'}
         aria-label={`${playerName} ${field.label}`}
-        className="h-11 min-w-0 flex-1 rounded-lg border border-gray-300 bg-white px-3 text-base font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:ring-blue-400"
+        className="h-11 min-w-0 flex-1 rounded-lg border border-line-strong bg-surface px-3 text-base font-semibold text-ink focus:outline-none focus:ring-2 focus:ring-accent-ink"
       />
       {allowsNegative && (
         <button
@@ -713,7 +713,7 @@ function CardFieldInput({
             onChange(String(-numericValue))
           }}
           aria-label={`${playerName} ${field.label} toggle sign`}
-          className="h-11 w-11 shrink-0 rounded-lg border border-gray-200 bg-gray-50 text-base font-bold text-gray-600 transition hover:bg-gray-100 active:scale-[0.97] dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+          className="h-11 w-11 shrink-0 rounded-lg border border-line bg-surface-2 text-base font-bold text-muted transition hover:bg-surface-2 active:scale-[0.97]"
         >
           ±
         </button>
@@ -737,7 +737,7 @@ function RoundFieldInput({
     if (isSuitField) {
       return (
         <div>
-          <p className="mb-1.5 text-xs font-medium text-gray-500 dark:text-gray-400">
+          <p className="mb-1.5 text-xs font-medium text-muted">
             {field.label}
           </p>
           <div className="flex gap-1.5">
@@ -750,9 +750,9 @@ function RoundFieldInput({
                 aria-pressed={value === opt}
                 className={`flex h-11 w-11 items-center justify-center rounded-lg border-2 text-xl transition active:scale-[0.95] ${
                   value === opt
-                    ? 'border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-900/30'
-                    : 'border-gray-200 bg-white hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600'
-                } ${SUIT_COLORS[opt] ?? 'text-gray-500 dark:text-gray-400'}`}
+                    ? 'border-accent-ink bg-accent-soft'
+                    : 'border-line bg-surface hover:border-line-strong'
+                } ${SUIT_COLORS[opt] ?? 'text-muted'}`}
               >
                 {opt}
               </button>
@@ -763,13 +763,13 @@ function RoundFieldInput({
     }
 
     return (
-      <label className="flex flex-wrap items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
+      <label className="flex flex-wrap items-center gap-1.5 text-sm text-muted">
         <span>{field.label}</span>
         <select
           value={value ?? ''}
           onChange={(e) => onChange(e.target.value)}
           aria-label={field.label}
-          className="h-11 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:ring-blue-400"
+          className="h-11 rounded-lg border border-line-strong bg-surface px-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent-ink"
         >
           <option value="" disabled>
             Select...
@@ -785,7 +785,7 @@ function RoundFieldInput({
   }
 
   return (
-    <label className="flex flex-wrap items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
+    <label className="flex flex-wrap items-center gap-1.5 text-sm text-muted">
       <span>{field.label}</span>
       <input
         type="number"
@@ -795,7 +795,7 @@ function RoundFieldInput({
         onChange={(e) => onChange(Number(e.target.value))}
         inputMode="numeric"
         aria-label={field.label}
-        className="h-11 w-20 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:ring-blue-400"
+        className="h-11 w-20 rounded-lg border border-line-strong bg-surface px-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent-ink"
       />
     </label>
   )
