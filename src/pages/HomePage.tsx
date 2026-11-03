@@ -1,26 +1,18 @@
-import { useEffect, useState, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { listSessions, deleteSession } from '../db/sessions'
 import type { SessionSummary } from '../db/sessions'
 
 export default function HomePage() {
-  const [sessions, setSessions] = useState<SessionSummary[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    listSessions().then((sessions) => {
-      setSessions(sessions)
-      setLoading(false)
-    })
-  }, [])
+  const sessions = useLiveQuery(listSessions, [])
 
   const handleDelete = async (id: number) => {
     if (!confirm('Delete this game session? This cannot be undone.')) return
     await deleteSession(id)
-    setSessions((prev) => prev.filter((s) => s.id !== id))
   }
 
-  if (loading) return <p className="text-gray-500 dark:text-gray-400">Loading...</p>
+  if (!sessions) return <p className="text-gray-500 dark:text-gray-400">Loading...</p>
 
   return (
     <div>

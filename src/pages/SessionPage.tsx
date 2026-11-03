@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { finishSession, getSession } from '../db/sessions'
 import {
   getCurrentRound,
@@ -7,8 +8,7 @@ import {
   submitRound,
   undoLastRound,
 } from '../db/rounds'
-import type { SessionDetail } from '../db/sessions'
-import type { CurrentRoundResult, RoundMetaInfo, ScoreboardRow } from '../db/rounds'
+import type { RoundMetaInfo, ScoreboardRow } from '../db/rounds'
 import { getGame } from '../games'
 import type { InputField, PlayerScoreInput, ScoreDirection } from '../games/types'
 
@@ -69,10 +69,6 @@ function findWinners(rows: ScoreboardRow[], direction: ScoreDirection): Set<numb
 export default function SessionPage() {
   const { id } = useParams<{ id: string }>()
   const sessionId = Number(id)
-  const [session, setSession] = useState<SessionDetail | null>(null)
-  const [round, setRound] = useState<CurrentRoundResult | null>(null)
-  const [players, setPlayers] = useState<ScoreboardRow[]>([])
-  const [roundsMeta, setRoundsMeta] = useState<RoundMetaInfo[]>([])
   const [roundData, setRoundData] = useState<Record<string, string | number>>({})
   const [playerData, setPlayerData] = useState<Record<number, Record<string, string | number | boolean>>>({})
   const [expandedPlayers, setExpandedPlayers] = useState<Record<number, boolean>>({})
@@ -81,26 +77,23 @@ export default function SessionPage() {
   const [finishing, setFinishing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const load = useCallback(async () => {
-    const [s, sb] = await Promise.all([
-      getSession(sessionId),
+  // Re-runs whenever any table it reads changes, so submit/undo/finish
+  // don't need to reload by hand. `undefined` while loading; `null` when
+  // the session doesn't exist.
+  const data = useLiveQuery(async () => {
+    const session = await getSession(sessionId).catch(() => null)
+    if (!session) return null
+    const [scoreboard, round] = await Promise.all([
       getScoreboard(sessionId),
+      getCurrentRound(sessionId).catch(() => null),
     ])
-    setSession(s)
-    setPlayers(sb.players)
-    setRoundsMeta(sb.rounds_meta)
-
-    try {
-      const r = await getCurrentRound(sessionId)
-      setRound(r)
-    } catch {
-      setRound(null)
-    }
+    return { session, round, players: scoreboard.players, roundsMeta: scoreboard.rounds_meta }
   }, [sessionId])
 
-  useEffect(() => {
-    load()
-  }, [load])
+  const session = data?.session ?? null
+  const round = data?.round ?? null
+  const players = useMemo(() => data?.players ?? [], [data])
+  const roundsMeta = data?.roundsMeta ?? []
 
   async function handleSubmit() {
     if (!round) return
@@ -115,7 +108,6 @@ export default function SessionPage() {
 
       setRoundData({})
       setPlayerData({})
-      await load()
     } catch (err: any) {
       setError(err.message)
     }
@@ -130,7 +122,6 @@ export default function SessionPage() {
       await undoLastRound(sessionId)
       setPlayerData({})
       setRoundData({})
-      await load()
     } catch (err: any) {
       setError(err.message)
     }
@@ -142,7 +133,6 @@ export default function SessionPage() {
     setError(null)
     try {
       await finishSession(sessionId)
-      await load()
     } catch (err: any) {
       setError(err.message)
     }
@@ -198,7 +188,8 @@ export default function SessionPage() {
     return dealerId ? (playerMap[dealerId] ?? null) : null
   }
 
-  if (!session) return <p className="text-gray-500 dark:text-gray-400">Loading...</p>
+  if (data === undefined) return <p className="text-gray-500 dark:text-gray-400">Loading...</p>
+  if (!session) return <p className="text-gray-500 dark:text-gray-400">Game not found.</p>
 
   const roundFields = round?.fields?.filter((f) => f.scope === 'round') ?? []
   const playerFields = round?.fields?.filter((f) => f.scope !== 'round') ?? []
