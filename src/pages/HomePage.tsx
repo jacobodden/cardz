@@ -1,11 +1,71 @@
-import { useState, useRef } from 'react'
-import { Link } from 'react-router-dom'
+import { useMemo, useState, useRef } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { listSessions, deleteSession } from '../db/sessions'
 import type { SessionSummary } from '../db/sessions'
 
+interface Section {
+  key: string
+  heading: string
+  sessions: SessionSummary[]
+}
+
+/** Active games first, then finished games grouped by the month they started. */
+function groupSessions(sessions: SessionSummary[]): Section[] {
+  const sections: Section[] = []
+  const active = sessions.filter((s) => s.status === 'active')
+  if (active.length > 0) {
+    sections.push({ key: 'active', heading: 'In progress', sessions: active })
+  }
+
+  // `sessions` is newest first, so months come out newest first too.
+  const months = new Map<string, Section>()
+  for (const s of sessions) {
+    if (s.status === 'active') continue
+    const date = new Date(s.created_at)
+    const key = `${date.getFullYear()}-${date.getMonth()}`
+    let section = months.get(key)
+    if (!section) {
+      section = {
+        key,
+        heading: date.toLocaleDateString(undefined, { month: 'long', year: 'numeric' }),
+        sessions: [],
+      }
+      months.set(key, section)
+      sections.push(section)
+    }
+    section.sessions.push(s)
+  }
+  return sections
+}
+
+/** One chip per game that has at least one session, in name order. */
+function gameFilters(sessions: SessionSummary[]): { slug: string; name: string }[] {
+  const games = new Map<string, string>()
+  for (const s of sessions) {
+    if (s.game_slug) games.set(s.game_slug, s.game_name ?? s.game_slug)
+  }
+  return [...games].map(([slug, name]) => ({ slug, name })).sort((a, b) => a.name.localeCompare(b.name))
+}
+
 export default function HomePage() {
   const sessions = useLiveQuery(listSessions, [])
+  // Kept in the URL so the filter survives opening a game and coming back.
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const filters = useMemo(() => gameFilters(sessions ?? []), [sessions])
+  // Ignore a filter for a game with no sessions left (e.g. after deleting).
+  const requested = searchParams.get('game')
+  const selected = filters.some((f) => f.slug === requested) ? requested : null
+
+  const sections = useMemo(
+    () => groupSessions((sessions ?? []).filter((s) => !selected || s.game_slug === selected)),
+    [sessions, selected],
+  )
+
+  const selectGame = (slug: string | null) => {
+    setSearchParams(slug ? { game: slug } : {}, { replace: true })
+  }
 
   const handleDelete = async (id: number) => {
     if (!confirm('Delete this game session? This cannot be undone.')) return
@@ -37,14 +97,91 @@ export default function HomePage() {
           </Link>
         </div>
       ) : (
-        <div className="grid gap-4">
-          {sessions.map((s) => (
-            <SessionCard key={s.id} session={s} onDelete={handleDelete} />
-          ))}
-        </div>
+        <>
+          {filters.length > 1 && (
+            <div className="flex flex-wrap gap-2 mb-6" role="group" aria-label="Filter by game">
+              <FilterChip label="All" active={selected === null} onClick={() => selectGame(null)} />
+              {filters.map((f) => (
+                <FilterChip
+                  key={f.slug}
+                  label={f.name}
+                  slug={f.slug}
+                  active={selected === f.slug}
+                  onClick={() => selectGame(f.slug)}
+                />
+              ))}
+            </div>
+          )}
+
+          <div className="space-y-8">
+            {sections.map((section) => (
+              <section key={section.key} aria-labelledby={`section-${section.key}`} data-testid="session-section">
+                <h2
+                  id={`section-${section.key}`}
+                  className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-3"
+                >
+                  {section.heading}
+                </h2>
+                <div className="grid gap-4">
+                  {section.sessions.map((s) => (
+                    <SessionCard key={s.id} session={s} onDelete={handleDelete} />
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+        </>
       )}
     </div>
   )
+}
+
+function FilterChip({
+  label,
+  slug,
+  active,
+  onClick,
+}: {
+  label: string
+  slug?: string
+  active: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      data-testid="game-filter"
+      data-game-slug={slug ?? ''}
+      className={`text-sm px-3 py-1.5 rounded-full border transition ${
+        active
+          ? 'bg-blue-600 border-blue-600 text-white'
+          : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-100 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800'
+      }`}
+    >
+      {label}
+    </button>
+  )
+}
+
+function formatDate(iso: string): string {
+  const date = new Date(iso)
+  const sameYear = date.getFullYear() === new Date().getFullYear()
+  return date.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    ...(sameYear ? {} : { year: 'numeric' }),
+  })
+}
+
+function standingText(session: SessionSummary): string | null {
+  const { standing } = session
+  if (!standing) return null
+  const names = standing.names.join(' & ')
+  const tie = standing.names.length > 1
+  const verb = session.status === 'active' ? (tie ? 'lead' : 'leads') : tie ? 'tie' : 'wins'
+  return `${names} ${verb} · ${standing.total} pts`
 }
 
 function TrashIcon() {
@@ -102,6 +239,11 @@ function SessionCard({ session, onDelete }: { session: SessionSummary; onDelete:
     updateTransform(0, true)
   }
 
+  // Lead with the custom title; the game name becomes the subtitle.
+  const title = session.title || session.game_name || `Session #${session.id}`
+  const subtitle = session.title ? session.game_name : null
+  const standing = standingText(session)
+
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
@@ -109,7 +251,7 @@ function SessionCard({ session, onDelete }: { session: SessionSummary; onDelete:
   }
 
   return (
-    <div className="relative overflow-hidden rounded-lg">
+    <div className="relative overflow-hidden rounded-lg" data-testid="session-card" data-session-title={title}>
       <div className="absolute inset-y-0 right-0.5 flex items-center">
         <button
           onClick={handleDeleteClick}
@@ -137,11 +279,16 @@ function SessionCard({ session, onDelete }: { session: SessionSummary; onDelete:
           }}
           className="block p-4 sm:p-5 hover:shadow-md transition active:bg-gray-50 dark:active:bg-gray-800 rounded-lg"
         >
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-gray-900 dark:text-gray-100">
-              {session.game_name || session.title || `Session #${session.id}`}
-            </h2>
-            <div className="flex items-center gap-2">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">{title}</h3>
+              {subtitle && (
+                <p className="text-sm text-gray-500 dark:text-gray-400 truncate" data-testid="session-game">
+                  {subtitle}
+                </p>
+              )}
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
               <button
                 onClick={handleDeleteClick}
                 className="hidden sm:flex text-gray-400 hover:text-red-600 dark:hover:text-red-400 p-0.5 rounded transition-colors"
@@ -149,20 +296,27 @@ function SessionCard({ session, onDelete }: { session: SessionSummary; onDelete:
               >
                 <TrashIcon />
               </button>
-              <span
-                className={`text-xs px-2 py-1 rounded-full ${
-                  session.status === 'active'
-                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                    : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-                }`}
-              >
-                {session.status}
-              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">{formatDate(session.created_at)}</span>
             </div>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            {new Date(session.created_at).toLocaleDateString()}
-          </p>
+          {session.players.length > 0 && (
+            <p className="text-sm text-gray-600 dark:text-gray-300 mt-2 truncate" data-testid="session-players">
+              {session.players.join(', ')}
+            </p>
+          )}
+          {standing && (
+            <p
+              className={`text-sm mt-1 font-medium ${
+                session.status === 'active'
+                  ? 'text-green-700 dark:text-green-400'
+                  : 'text-amber-700 dark:text-amber-400'
+              }`}
+              data-testid="session-standing"
+            >
+              {session.status === 'active' ? '' : '🏆 '}
+              {standing}
+            </p>
+          )}
         </Link>
       </div>
     </div>

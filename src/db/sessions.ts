@@ -1,6 +1,13 @@
 import { db } from './dexie-db'
 import { getGame } from '../games'
+import { topByTotal } from '../games/standings'
 import type { Game } from './dexie-db'
+
+export interface SessionStanding {
+  /** Names of the player(s) with the best total; more than one on a tie. */
+  names: string[]
+  total: number
+}
 
 export interface SessionSummary {
   id: number
@@ -10,6 +17,10 @@ export interface SessionSummary {
   created_at: string
   game_name: string | null
   game_slug: string | null
+  /** Player names in seat order. */
+  players: string[]
+  /** Leader (active) or winner (completed); null until a round is scored. */
+  standing: SessionStanding | null
 }
 
 export interface SessionDetail {
@@ -36,19 +47,50 @@ function now(): string {
 }
 
 export async function listSessions(): Promise<SessionSummary[]> {
-  const sessions = await db.sessions.orderBy('created_at').reverse().toArray()
-  const games = await db.games.toArray()
+  // The home list shows every session, so read each table once instead of
+  // querying per session.
+  const [sessions, games, players, scores] = await Promise.all([
+    db.sessions.orderBy('created_at').reverse().toArray(),
+    db.games.toArray(),
+    db.players.orderBy('order_index').toArray(),
+    db.scores.toArray(),
+  ])
   const gameMap = new Map<number, Game>(games.map((g) => [g.id!, g]))
 
-  return sessions.map((s) => ({
-    id: s.id!,
-    game_id: s.game_id,
-    title: s.title,
-    status: s.status,
-    created_at: s.created_at,
-    game_name: gameMap.get(s.game_id)?.name ?? null,
-    game_slug: gameMap.get(s.game_id)?.slug ?? null,
-  }))
+  const totals = new Map<number, number>()
+  for (const score of scores) {
+    totals.set(score.player_id, (totals.get(score.player_id) ?? 0) + score.score)
+  }
+
+  const playersBySession = new Map<number, typeof players>()
+  for (const player of players) {
+    const list = playersBySession.get(player.session_id) ?? []
+    list.push(player)
+    playersBySession.set(player.session_id, list)
+  }
+
+  return sessions.map((s) => {
+    const game = gameMap.get(s.game_id)
+    const seated = playersBySession.get(s.id!) ?? []
+    const direction = (game && getGame(game.slug)?.scoreDirection) ?? 'high'
+
+    const rows = seated
+      .filter((p) => totals.has(p.id!))
+      .map((p) => ({ name: p.name, total: totals.get(p.id!)! }))
+    const top = topByTotal(rows, direction)
+
+    return {
+      id: s.id!,
+      game_id: s.game_id,
+      title: s.title,
+      status: s.status,
+      created_at: s.created_at,
+      game_name: game?.name ?? null,
+      game_slug: game?.slug ?? null,
+      players: seated.map((p) => p.name),
+      standing: top.length > 0 ? { names: top.map((r) => r.name), total: top[0].total } : null,
+    }
+  })
 }
 
 export async function getSession(id: number): Promise<SessionDetail> {
