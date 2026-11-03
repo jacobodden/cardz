@@ -36,6 +36,13 @@
   --color-yes-fg: var(--yes-fg);
   --color-no-bg: var(--no-bg);
   --color-no-fg: var(--no-fg);
+  --color-card-face: var(--card-face);
+  --color-card-edge: var(--card-edge);
+  --color-card-black: var(--card-black);
+  --color-card-red: var(--card-red);
+  --color-avatar-1: var(--avatar-1);
+  --color-avatar-2: var(--avatar-2);
+  --color-avatar-3: var(--avatar-3);
 }
 
 :root,
@@ -68,6 +75,13 @@
   --yes-fg: #1d6b3a;
   --no-bg: #f9dedb;
   --no-fg: #a12a20;
+  --card-face: #ffffff;
+  --card-edge: #cbd5ce;
+  --card-black: #12211a;
+  --card-red: #c0352b;
+  --avatar-1: #d4e9dc;
+  --avatar-2: #f6dcd8;
+  --avatar-3: #dce3f5;
 }
 
 :root.dark,
@@ -100,6 +114,14 @@
   --yes-fg: #7fd69a;
   --no-bg: #43201d;
   --no-fg: #ff9a8f;
+  /* Playing cards stay light in dark mode, like real cards on the table. */
+  --card-face: #f4f1ea;
+  --card-edge: #f4f1ea;
+  --card-black: #1a1a1a;
+  --card-red: #c0352b;
+  --avatar-1: #24503b;
+  --avatar-2: #5a2b27;
+  --avatar-3: #2b3a5e;
 }
 
 html {

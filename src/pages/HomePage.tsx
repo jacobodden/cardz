@@ -3,6 +3,9 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { listSessions, deleteSession } from '../db/sessions'
 import type { SessionSummary } from '../db/sessions'
+import { getGame } from '../games'
+import type { CardFace } from '../games/types'
+import FeltHero from '../components/FeltHero'
 
 interface Section {
   key: string
@@ -72,34 +75,50 @@ export default function HomePage() {
     await deleteSession(id)
   }
 
-  if (!sessions) return <p className="text-muted">Loading...</p>
+  const activeCount = sessions?.filter((s) => s.status === 'active').length ?? 0
+  const finishedCount = (sessions?.length ?? 0) - activeCount
+  const summary = [
+    activeCount > 0 && `${activeCount} in progress`,
+    finishedCount > 0 && `${finishedCount} finished`,
+  ]
+    .filter(Boolean)
+    .join(' · ')
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-ink">Game Sessions</h1>
-        <Link
-          to="/sessions/new"
-          className="bg-accent text-on-accent px-4 py-2 rounded-lg hover:opacity-90 text-sm"
-        >
-          + New Game
-        </Link>
-      </div>
-
-      {sessions.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-muted mb-4">No game sessions yet.</p>
+    <>
+      <FeltHero>
+        <div className="flex items-end justify-between gap-4 pt-1 pb-5">
+          <div className="min-w-0">
+            <h1 className="text-[32px] leading-tight font-extrabold tracking-tight">Games</h1>
+            {summary && (
+              <p className="mt-0.5 text-sm text-on-felt/85" data-testid="home-summary">
+                {summary}
+              </p>
+            )}
+          </div>
           <Link
             to="/sessions/new"
-            className="text-accent-ink hover:opacity-80 underline"
+            className="shrink-0 flex items-center gap-1.5 h-11 px-[18px] rounded-full bg-on-felt text-felt text-[15px] font-bold transition hover:opacity-90 active:scale-[0.97]"
           >
+            <PlusIcon />
+            New game
+          </Link>
+        </div>
+      </FeltHero>
+
+      {!sessions ? (
+        <p className="text-muted">Loading...</p>
+      ) : sessions.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-muted mb-4">No game sessions yet.</p>
+          <Link to="/sessions/new" className="text-accent-ink font-semibold underline">
             Start a new game
           </Link>
         </div>
       ) : (
         <>
           {filters.length > 1 && (
-            <div className="flex flex-wrap gap-2 mb-6" role="group" aria-label="Filter by game">
+            <div className="flex flex-wrap gap-2 mb-5" role="group" aria-label="Filter by game">
               <FilterChip label="All" active={selected === null} onClick={() => selectGame(null)} />
               {filters.map((f) => (
                 <FilterChip
@@ -113,26 +132,31 @@ export default function HomePage() {
             </div>
           )}
 
-          <div className="space-y-8">
+          <div className="space-y-6">
             {sections.map((section) => (
               <section key={section.key} aria-labelledby={`section-${section.key}`} data-testid="session-section">
-                <h2
-                  id={`section-${section.key}`}
-                  className="text-sm font-semibold uppercase tracking-wide text-muted mb-3"
-                >
+                <h2 id={`section-${section.key}`} className="text-[13px] font-bold text-muted mb-2">
                   {section.heading}
                 </h2>
-                <div className="grid gap-4">
-                  {section.sessions.map((s) => (
-                    <SessionCard key={s.id} session={s} onDelete={handleDelete} />
-                  ))}
-                </div>
+                {section.key === 'active' ? (
+                  <div className="grid gap-3">
+                    {section.sessions.map((s) => (
+                      <SessionCard key={s.id} session={s} onDelete={handleDelete} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-line bg-surface overflow-hidden divide-y divide-line">
+                    {section.sessions.map((s) => (
+                      <SessionCard key={s.id} session={s} onDelete={handleDelete} />
+                    ))}
+                  </div>
+                )}
               </section>
             ))}
           </div>
         </>
       )}
-    </div>
+    </>
   )
 }
 
@@ -154,10 +178,8 @@ function FilterChip({
       aria-pressed={active}
       data-testid="game-filter"
       data-game-slug={slug ?? ''}
-      className={`text-sm px-3 py-1.5 rounded-full border transition ${
-        active
-          ? 'bg-accent border-accent text-on-accent'
-          : 'bg-surface border-line text-ink hover:bg-surface-2'
+      className={`h-11 px-3.5 rounded-xl border text-sm font-semibold transition active:scale-[0.97] ${
+        active ? 'bg-accent border-accent text-on-accent' : 'bg-surface border-line text-ink hover:bg-surface-2'
       }`}
     >
       {label}
@@ -175,13 +197,75 @@ function formatDate(iso: string): string {
   })
 }
 
-function standingText(session: SessionSummary): string | null {
+function leaderText(session: SessionSummary): string | null {
   const { standing } = session
   if (!standing) return null
-  const names = standing.names.join(' & ')
-  const tie = standing.names.length > 1
-  const verb = session.status === 'active' ? (tie ? 'lead' : 'leads') : tie ? 'tie' : 'wins'
-  return `${names} ${verb} · ${standing.total} pts`
+  const verb = standing.names.length > 1 ? 'lead' : 'leads'
+  return `${standing.names.join(' & ')} ${verb} · ${standing.total} pts`
+}
+
+function roundText(session: SessionSummary): string {
+  const total = session.total_rounds
+  const current = total ? Math.min(session.rounds_scored + 1, total) : session.rounds_scored + 1
+  return total ? `Round ${current} of ${total}` : `Round ${current}`
+}
+
+/** First letters, widened to two where players share one (Alice, Andy -> Al, An). */
+function initials(names: string[]): string[] {
+  const first = names.map((n) => n.trim().charAt(0).toUpperCase())
+  return names.map((n, i) =>
+    first.filter((f) => f === first[i]).length > 1 ? n.trim().slice(0, 2) : first[i]
+  )
+}
+
+const AVATAR_TONES = ['bg-avatar-1', 'bg-avatar-2', 'bg-avatar-3']
+const MAX_AVATARS = 4
+
+function PlayerAvatars({ names }: { names: string[] }) {
+  const letters = initials(names)
+  const shown = letters.slice(0, MAX_AVATARS)
+  const extra = names.length - shown.length
+  return (
+    <div role="img" aria-label={`Players: ${names.join(', ')}`} data-testid="session-players" className="flex">
+      {shown.map((letter, i) => (
+        <span
+          key={i}
+          className={`-mr-1.5 w-6 h-6 rounded-full border-2 border-surface ${AVATAR_TONES[i % AVATAR_TONES.length]} text-ink text-[11px] font-extrabold flex items-center justify-center`}
+        >
+          {letter}
+        </span>
+      ))}
+      {extra > 0 && (
+        <span className="-mr-1.5 w-6 h-6 rounded-full border-2 border-surface bg-surface-2 text-muted text-[10px] font-bold flex items-center justify-center">
+          +{extra}
+        </span>
+      )}
+    </div>
+  )
+}
+
+const RED_SUITS = new Set(['♥', '♦'])
+
+function CardTile({ face }: { face: CardFace }) {
+  const color = RED_SUITS.has(face.suit) ? 'text-card-red' : 'text-card-black'
+  return (
+    <div
+      aria-hidden="true"
+      className={`w-10 h-[54px] shrink-0 rounded-md bg-card-face border border-card-edge flex flex-col justify-between px-[5px] py-[3px] font-extrabold ${color}`}
+    >
+      <span className="text-xs leading-none">{face.rank}</span>
+      <span className="text-lg leading-none self-center">{face.suit}</span>
+      <span className="text-xs leading-none self-end rotate-180">{face.rank}</span>
+    </div>
+  )
+}
+
+function PlusIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  )
 }
 
 function TrashIcon() {
@@ -191,6 +275,8 @@ function TrashIcon() {
     </svg>
   )
 }
+
+const SWIPE_OPEN = -96
 
 function SessionCard({ session, onDelete }: { session: SessionSummary; onDelete: (id: number) => void }) {
   const [open, setOpen] = useState(false)
@@ -213,19 +299,19 @@ function SessionCard({ session, onDelete }: { session: SessionSummary; onDelete:
     const delta = e.touches[0].clientX - touchStartRef.current
     let next: number
     if (open) {
-      next = delta < 0 ? -96 : Math.min(delta - 96, 0)
+      next = delta < 0 ? SWIPE_OPEN : Math.min(delta + SWIPE_OPEN, 0)
     } else {
-      next = delta < 0 ? Math.max(delta, -96) : 0
+      next = delta < 0 ? Math.max(delta, SWIPE_OPEN) : 0
     }
     swipeRef.current = next
     updateTransform(next, false)
   }
 
   const handleTouchEnd = () => {
-    if (swipeRef.current < -48) {
+    if (swipeRef.current < SWIPE_OPEN / 2) {
       setOpen(true)
-      swipeRef.current = -96
-      updateTransform(-96, true)
+      swipeRef.current = SWIPE_OPEN
+      updateTransform(SWIPE_OPEN, true)
     } else {
       setOpen(false)
       swipeRef.current = 0
@@ -239,10 +325,11 @@ function SessionCard({ session, onDelete }: { session: SessionSummary; onDelete:
     updateTransform(0, true)
   }
 
+  const active = session.status === 'active'
   // Lead with the custom title; the game name becomes the subtitle.
   const title = session.title || session.game_name || `Session #${session.id}`
-  const subtitle = session.title ? session.game_name : null
-  const standing = standingText(session)
+  const gameName = session.title ? session.game_name : null
+  const face = (session.game_slug && getGame(session.game_slug)?.cardFace) || null
 
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -250,12 +337,34 @@ function SessionCard({ session, onDelete }: { session: SessionSummary; onDelete:
     onDelete(session.id)
   }
 
+  const inlineDelete = (
+    <button
+      onClick={handleDeleteClick}
+      className="hidden sm:flex shrink-0 w-11 h-11 items-center justify-center rounded-lg text-muted hover:text-danger hover:bg-surface-2 transition-colors"
+      title="Delete session"
+    >
+      <TrashIcon />
+    </button>
+  )
+
+  const subtitle = (extra: string) => (
+    <p className="text-[13px] text-muted truncate">
+      {gameName && <span data-testid="session-game">{gameName}</span>}
+      {gameName && ' · '}
+      {extra}
+    </p>
+  )
+
   return (
-    <div className="relative overflow-hidden rounded-lg" data-testid="session-card" data-session-title={title}>
-      <div className="absolute inset-y-0 right-0.5 flex items-center">
+    <div
+      className={`relative overflow-hidden ${active ? 'rounded-2xl' : ''}`}
+      data-testid="session-card"
+      data-session-title={title}
+    >
+      <div className={`absolute inset-y-0 right-0 flex items-stretch ${active ? 'p-0.5' : ''}`}>
         <button
           onClick={handleDeleteClick}
-          className="bg-danger-solid text-on-danger w-22 h-95/100 rounded-lg flex items-center justify-center hover:opacity-90 active:opacity-80"
+          className={`bg-danger-solid text-on-danger w-24 flex items-center justify-center hover:opacity-90 active:opacity-80 ${active ? 'rounded-2xl' : ''}`}
           title="Delete session"
         >
           <TrashIcon />
@@ -264,7 +373,9 @@ function SessionCard({ session, onDelete }: { session: SessionSummary; onDelete:
 
       <div
         ref={cardRef}
-        className="relative z-10 transition-transform duration-200 ease-out bg-surface rounded-lg border border-line"
+        className={`relative z-10 transition-transform duration-200 ease-out bg-surface ${
+          active ? 'rounded-2xl border border-line shadow-sm' : ''
+        }`}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -277,45 +388,46 @@ function SessionCard({ session, onDelete }: { session: SessionSummary; onDelete:
               closeSwipe()
             }
           }}
-          className="block p-4 sm:p-5 hover:shadow-md transition active:bg-surface-2 rounded-lg"
+          className={
+            active
+              ? 'flex items-center gap-3 p-3 rounded-2xl transition active:bg-surface-2'
+              : 'flex items-center gap-3 min-h-14 px-3.5 py-2 transition active:bg-surface-2'
+          }
         >
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <h3 className="font-semibold text-ink truncate">{title}</h3>
-              {subtitle && (
-                <p className="text-sm text-muted truncate" data-testid="session-game">
-                  {subtitle}
-                </p>
+          {active ? (
+            <>
+              {face && <CardTile face={face} />}
+              <div className="flex-1 min-w-0">
+                <h3 className="text-[17px] font-bold truncate">{title}</h3>
+                {subtitle(roundText(session))}
+                <div className="mt-1.5 flex items-center justify-between gap-2">
+                  {session.players.length > 0 && <PlayerAvatars names={session.players} />}
+                  {session.standing && (
+                    <span className="text-[13px] font-bold text-accent-ink truncate" data-testid="session-standing">
+                      {leaderText(session)}
+                    </span>
+                  )}
+                </div>
+              </div>
+              {inlineDelete}
+            </>
+          ) : (
+            <>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-[15px] font-semibold truncate">{title}</h3>
+                {subtitle(formatDate(session.created_at))}
+              </div>
+              {session.standing && (
+                <span
+                  className="shrink-0 max-w-[45%] truncate text-[13px] font-bold px-2.5 py-1 rounded-full bg-win-bg text-win-fg"
+                  data-testid="session-standing"
+                >
+                  <span className="sr-only">Winner: </span>
+                  {session.standing.names.join(' & ')} · {session.standing.total}
+                </span>
               )}
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                onClick={handleDeleteClick}
-                className="hidden sm:flex text-muted hover:text-danger p-0.5 rounded transition-colors"
-                title="Delete session"
-              >
-                <TrashIcon />
-              </button>
-              <span className="text-xs text-muted">{formatDate(session.created_at)}</span>
-            </div>
-          </div>
-          {session.players.length > 0 && (
-            <p className="text-sm text-muted mt-2 truncate" data-testid="session-players">
-              {session.players.join(', ')}
-            </p>
-          )}
-          {standing && (
-            <p
-              className={`text-sm mt-1 font-medium ${
-                session.status === 'active'
-                  ? 'text-accent-ink'
-                  : 'text-win-fg'
-              }`}
-              data-testid="session-standing"
-            >
-              {session.status === 'active' ? '' : '🏆 '}
-              {standing}
-            </p>
+              {inlineDelete}
+            </>
           )}
         </Link>
       </div>

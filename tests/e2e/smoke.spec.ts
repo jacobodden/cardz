@@ -316,13 +316,14 @@ test('Home: cards show title, game, players and leader or winner', async ({
   const card = sessionCard(page, 'Friday Night Game')
   await expect(card.getByRole('heading', { name: 'Friday Night Game' })).toBeVisible()
   await expect(card.getByTestId('session-game')).toHaveText('High Score')
-  await expect(card.getByTestId('session-players')).toHaveText('Alice, Bob')
+  await expect(card.getByTestId('session-players')).toHaveAccessibleName('Players: Alice, Bob')
   await expect(card.getByTestId('session-standing')).toHaveText('Bob leads · 9 pts')
+  await expect(card).toContainText('High Score · Round 2')
 
   await card.getByRole('link').click()
   await finishGame(page)
   await page.goto('/')
-  await expect(card.getByTestId('session-standing')).toHaveText('🏆 Bob wins · 9 pts')
+  await expect(card.getByTestId('session-standing')).toHaveText('Winner: Bob · 9')
 })
 
 test('Home: in-progress games sit above finished ones, filterable by game', async ({
@@ -461,4 +462,29 @@ test('mobile: session page has no horizontal document overflow', async ({
   })
 
   await expectNoHorizontalOverflow(page)
+})
+
+test('mobile: home page has no horizontal overflow with long names', async ({ page }) => {
+  const players = ['Bartholomew-Maximilian', 'Christopher-Alexander', 'Anastasia-Konstantina']
+  await createSession(page, {
+    gameSlug: 'high-score',
+    title: 'An extremely long session title that will not fit on one line',
+    players,
+  })
+  await submitPointsRound(page, 1, players.map((player, i) => ({ player, points: 1000 * (i + 1) })))
+  await page.goto('/')
+  await expect(page.getByTestId('session-card')).toHaveCount(1)
+  await expectNoHorizontalOverflow(page)
+})
+
+test('Home: the felt band shows only on the home page', async ({ page }) => {
+  await page.goto('/')
+  const appBar = page.getByTestId('app-bar')
+  await expect(appBar).toHaveAttribute('data-felt', 'true')
+  await expect(appBar.getByRole('heading', { name: 'Games' })).toBeVisible()
+
+  await appBar.getByRole('link', { name: 'New game' }).click()
+  await expect(page).toHaveURL(/\/sessions\/new$/)
+  await expect(appBar).not.toHaveAttribute('data-felt')
+  await expect(appBar.getByRole('heading', { name: 'Games' })).toHaveCount(0)
 })
