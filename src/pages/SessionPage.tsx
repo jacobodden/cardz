@@ -10,7 +10,7 @@ import {
 import type { SessionDetail } from '../db/sessions'
 import type { CurrentRoundResult, RoundMetaInfo, ScoreboardRow } from '../db/rounds'
 import { getGame } from '../games'
-import type { InputField, ScoreDirection } from '../games/types'
+import type { InputField, PlayerScoreInput, ScoreDirection } from '../games/types'
 
 const SUIT_SYMBOLS = new Set(['♠', '♥', '♣', '♦'])
 
@@ -19,6 +19,44 @@ const SUIT_COLORS: Record<string, string> = {
   '♥': 'text-red-600 dark:text-red-400',
   '♣': 'text-gray-900 dark:text-gray-100',
   '♦': 'text-red-600 dark:text-red-400',
+}
+
+type FieldValue = string | number | boolean
+
+function coerce(field: InputField, raw: FieldValue | undefined) {
+  if (raw === undefined || raw === '') return undefined
+  return field.type === 'number' ? Number(raw) : raw
+}
+
+/** Round-scope inputs as the game expects them (empty values dropped). */
+function collectRoundData(
+  fields: InputField[] | undefined,
+  values: Record<string, FieldValue>
+): Record<string, any> {
+  const data: Record<string, any> = {}
+  for (const f of fields ?? []) {
+    if (f.scope !== 'round') continue
+    const value = coerce(f, values[f.key])
+    if (value !== undefined) data[f.key] = value
+  }
+  return data
+}
+
+/** Per-player inputs as the game expects them (empty values dropped). */
+function collectScores(
+  fields: InputField[] | undefined,
+  players: ScoreboardRow[],
+  values: Record<number, Record<string, FieldValue>>
+): PlayerScoreInput[] {
+  const playerFields = (fields ?? []).filter((f) => f.scope !== 'round')
+  return players.map((p) => {
+    const data: Record<string, any> = {}
+    for (const f of playerFields) {
+      const value = coerce(f, values[p.player_id]?.[f.key])
+      if (value !== undefined) data[f.key] = value
+    }
+    return { player_id: p.player_id, data }
+  })
 }
 
 function findWinners(rows: ScoreboardRow[], direction: ScoreDirection): Set<number> {
@@ -70,24 +108,8 @@ export default function SessionPage() {
     setError(null)
 
     try {
-      const roundScopeFields = round.fields?.filter((f) => f.scope === 'round') ?? []
-      const round_data: Record<string, any> = {}
-      for (const f of roundScopeFields) {
-        const raw = roundData[f.key]
-        if (raw === undefined || raw === '') continue
-        round_data[f.key] = f.type === 'number' ? Number(raw) : raw
-      }
-
-      const playerScopeFields = round.fields?.filter((f) => f.scope !== 'round') ?? []
-      const scores = players.map((p) => {
-        const data: Record<string, any> = {}
-        for (const f of playerScopeFields) {
-          const raw = playerData[p.player_id]?.[f.key]
-          if (raw === undefined || raw === '') continue
-          data[f.key] = f.type === 'number' ? Number(raw) : raw
-        }
-        return { player_id: p.player_id, data }
-      })
+      const round_data = collectRoundData(round.fields, roundData)
+      const scores = collectScores(round.fields, players, playerData)
 
       await submitRound(sessionId, { round_data, scores })
 
@@ -190,15 +212,6 @@ export default function SessionPage() {
   const currentDealer =
     active && roundNumber !== null ? getDealerForRound(roundNumber) : null
 
-  const hasBidField = playerFields.some((f) => f.key === 'bid')
-  const totalBids = hasBidField
-    ? players.reduce(
-        (sum, p) => sum + (Number(playerData[p.player_id]?.bid) || 0),
-        0
-      )
-    : 0
-  const hookRuleViolated = hasBidField && handSize > 0 && totalBids === handSize
-
   const trumpMissing = roundFields.some(
     (f) => f.required && (roundData[f.key] === undefined || roundData[f.key] === '')
   )
@@ -208,12 +221,18 @@ export default function SessionPage() {
     players.some((p) =>
       booleanFields.some((f) => playerData[p.player_id]?.[f.key] === undefined)
     )
-  const allSucceeded =
-    session.game?.slug === 'up-and-down' &&
-    booleanFields.length > 0 &&
-    players.every((p) =>
-      booleanFields.every((f) => playerData[p.player_id]?.[f.key] === true)
-    )
+  const gameImpl = session.game ? getGame(session.game.slug) : undefined
+  const ruleViolation =
+    active && round && gameImpl?.validateRound
+      ? gameImpl.validateRound(
+          {
+            round_number: round.round_number,
+            hand_size: handSize,
+            data: { ...rawRoundData, ...collectRoundData(round.fields, roundData) },
+          },
+          collectScores(round.fields, players, playerData)
+        )
+      : null
 
   const roundLabel = isComplete
     ? 'Game complete'
@@ -383,17 +402,25 @@ export default function SessionPage() {
 
       {active && round && (
         <div className="sticky bottom-0 z-10 -mx-4 mt-4 border-t border-gray-200 bg-white/90 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur dark:border-gray-800 dark:bg-gray-950/90">
-          {error && (
+          {error ? (
             <p className="mb-2 text-sm text-red-600 dark:text-red-400">{error}</p>
+          ) : (
+            ruleViolation && (
+              <p
+                data-testid="round-rule-violation"
+                className="mb-2 text-sm text-amber-700 dark:text-amber-400"
+              >
+                {ruleViolation}
+              </p>
+            )
           )}
           <button
             onClick={handleSubmit}
             disabled={
               submitting ||
-              hookRuleViolated ||
+              !!ruleViolation ||
               trumpMissing ||
-              successMissing ||
-              allSucceeded
+              successMissing
             }
             data-testid="submit-round"
             className="h-12 w-full rounded-xl bg-blue-600 text-sm font-bold text-white transition hover:bg-blue-700 active:scale-[0.99] disabled:opacity-50 dark:hover:bg-blue-800"

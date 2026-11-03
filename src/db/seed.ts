@@ -1,58 +1,47 @@
 import type { CardzDB, Game } from './dexie-db'
+import { getAllGames } from '../games'
+import type { CardGame } from '../games/types'
 
-const GAME_SEEDS: Omit<Game, 'id'>[] = [
-  {
-    slug: 'up-and-down',
-    name: 'Up & Down The River',
-    description: 'Trick-taking game where you bid the exact number of tricks you will win.',
-    min_players: 3,
-    max_players: 7,
-    config_schema: [
-      {
-        key: 'peak',
-        label: 'Peak hand size',
-        type: 'number',
-        defaultValue: 10,
-        min: 1,
-        max: 10,
-        description: 'Maximum number of cards per hand at the peak round (capped by player count)',
-      },
-    ],
-  },
-  {
-    slug: 'pay-me',
-    name: 'Pay Me',
-    description: 'Contract Rummy game. Lowest score after 11 rounds wins.',
-    min_players: 2,
-    max_players: 6,
-    config_schema: [],
-  },
-  {
-    slug: 'high-score',
-    name: 'High Score',
-    description:
-      'Keep score for any game where the highest total wins. Enter points each round, then finish whenever you like.',
-    min_players: 2,
-    max_players: 10,
-    config_schema: [],
-  },
-  {
-    slug: 'low-score',
-    name: 'Low Score',
-    description:
-      'Keep score for any game where the lowest total wins. Enter points each round, then finish whenever you like.',
-    min_players: 2,
-    max_players: 10,
-    config_schema: [],
-  },
-]
-
-export async function seedGames(db: CardzDB) {
-  const existing = await db.games.toArray()
-  const existingSlugs = new Set(existing.map((game) => game.slug))
-  const missing = GAME_SEEDS.filter((game) => !existingSlugs.has(game.slug))
-
-  if (missing.length > 0) {
-    await db.games.bulkAdd(missing)
+/** The `games` row for a game module. The module is the source of truth. */
+export function gameRow(game: CardGame): Omit<Game, 'id'> {
+  return {
+    slug: game.slug,
+    name: game.name,
+    description: game.description,
+    min_players: game.minPlayers,
+    max_players: game.maxPlayers,
+    config_schema: game.getConfigSchema(),
   }
+}
+
+function sameRow(a: Omit<Game, 'id'>, b: Omit<Game, 'id'>): boolean {
+  return (
+    a.name === b.name &&
+    a.description === b.description &&
+    a.min_players === b.min_players &&
+    a.max_players === b.max_players &&
+    JSON.stringify(a.config_schema) === JSON.stringify(b.config_schema)
+  )
+}
+
+/**
+ * Upsert every registered game by slug. New games are added and changed
+ * definitions update the existing row in place (keeping its id, so sessions
+ * still point at it). Rows for games no longer in code are left alone so old
+ * sessions keep their game name.
+ */
+export async function seedGames(db: CardzDB) {
+  await db.transaction('rw', db.games, async () => {
+    const existing = new Map((await db.games.toArray()).map((g) => [g.slug, g]))
+
+    for (const game of getAllGames()) {
+      const row = gameRow(game)
+      const current = existing.get(game.slug)
+      if (!current) {
+        await db.games.add(row)
+      } else if (!sameRow(current, row)) {
+        await db.games.update(current.id!, row)
+      }
+    }
+  })
 }

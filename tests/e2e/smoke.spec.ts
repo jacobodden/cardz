@@ -46,6 +46,36 @@ test('Up & Down: create a session and submit rounds', async ({ page }) => {
   await expectPlayerTotal(page, 'Alice', 23)
 })
 
+test('Up & Down: rule violations disable submit and explain why', async ({ page }) => {
+  await createSession(page, {
+    gameSlug: 'up-and-down',
+    players: ['Alice', 'Bob', 'Carol'],
+  })
+
+  const submit = page.getByTestId('submit-round')
+  const hint = page.getByTestId('round-rule-violation')
+
+  await page.getByRole('button', { name: 'Trump ♠' }).click()
+  // Round 1 has one card: a total bid of 1 breaks the hook rule.
+  await playerCard(page, 'Alice').getByLabel('Alice Bid').fill('1')
+  await expect(hint).toContainText('Hook rule')
+  await expect(submit).toBeDisabled()
+
+  await playerCard(page, 'Alice').getByLabel('Alice Bid').fill('0')
+  await expect(hint).toBeHidden()
+
+  // Everyone making their bid is not allowed either.
+  for (const name of ['Alice', 'Bob', 'Carol']) {
+    await playerCard(page, name).getByRole('button', { name: `${name} Made Bid? yes` }).click()
+  }
+  await expect(hint).toContainText('At least one must fail')
+  await expect(submit).toBeDisabled()
+
+  await playerCard(page, 'Carol').getByRole('button', { name: 'Carol Made Bid? no' }).click()
+  await expect(hint).toBeHidden()
+  await expect(submit).toBeEnabled()
+})
+
 test('Up & Down: round history keeps each round’s trump suit', async ({
   page,
 }) => {

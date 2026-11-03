@@ -1,15 +1,25 @@
 import type { CardGame, RoundMeta, InputField, PlayerScoreInput, PlayerScoreResult, ConfigField } from './types'
 
 const SUITS = ['♠', '♥', '♣', '♦']
+const MAX_PEAK = 10
+
+/** Largest hand every player can be dealt from one deck (one card turned for trump). */
+function maxHandSize(playerCount: number): number {
+  return Math.floor(51 / playerCount)
+}
 
 export const upAndDown: CardGame = {
   slug: 'up-and-down',
+  name: 'Up & Down The River',
+  description: 'Trick-taking game where you bid the exact number of tricks you will win.',
+  minPlayers: 3,
+  maxPlayers: 7,
   scoreDirection: 'high',
   roundMode: 'fixed',
   usesDealer: true,
 
   getRounds(playerCount: number, config?: Record<string, any>): RoundMeta[] {
-    const defaultPeak = Math.floor(51 / playerCount)
+    const defaultPeak = maxHandSize(playerCount)
     const peak = Math.min(config?.peak ?? defaultPeak, defaultPeak)
     const totalRounds = peak * 2 - 1
     const rounds: RoundMeta[] = []
@@ -31,12 +41,31 @@ export const upAndDown: CardGame = {
         key: 'peak',
         label: 'Peak hand size',
         type: 'number',
-        defaultValue: 10,
+        defaultValue: MAX_PEAK,
         min: 1,
-        max: 10,
+        max: MAX_PEAK,
         description: 'Maximum number of cards per hand at the peak round (capped by player count)',
       },
     ]
+  },
+
+  getDefaultConfig(playerCount: number) {
+    if (playerCount < 1) return { peak: MAX_PEAK }
+    return { peak: Math.min(maxHandSize(playerCount), MAX_PEAK) }
+  },
+
+  validateRound(meta: RoundMeta, inputs: PlayerScoreInput[]): string | null {
+    // Hook rule: the dealer must bid so that total bids != available tricks.
+    const totalBids = inputs.reduce((sum, i) => sum + (Number(i.data?.bid) || 0), 0)
+    if (meta.hand_size > 0 && totalBids === meta.hand_size) {
+      return `Hook rule: total bids (${totalBids}) cannot equal hand size (${meta.hand_size})`
+    }
+
+    if (inputs.length > 0 && inputs.every((i) => i.data?.success === true)) {
+      return 'Not every player can succeed. At least one must fail this round.'
+    }
+
+    return null
   },
 
   getRoundSchema(round: RoundMeta): InputField[] {

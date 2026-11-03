@@ -1,16 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/dexie-db'
 import { createSession, addPlayer as addPlayerToSession, startSession } from '../db/sessions'
 import { getGame } from '../games'
 import type { Game } from '../db/dexie-db'
-import type { ConfigField } from '../games/types'
-
-function calculatePeak(numPlayers: number, field?: ConfigField): number {
-  if (numPlayers < 1) return field?.defaultValue ?? 3
-  return Math.min(Math.floor(51 / numPlayers), field?.max ?? 10)
-}
+import { getDefaultConfig } from '../games/types'
 
 export default function NewSessionPage() {
   const navigate = useNavigate()
@@ -22,37 +17,35 @@ export default function NewSessionPage() {
   const [firstDealerIndex, setFirstDealerIndex] = useState(0)
   const [creating, setCreating] = useState(false)
 
-  const lastAutoPeak = useRef<number | null>(null)
-  const prevGameId = useRef<number | null>(null)
+  const validCount = playerNames.filter(Boolean).length
+  const gameImpl = selectedGame ? getGame(selectedGame.slug) : undefined
+  const usesDealer = gameImpl?.usesDealer ?? false
+  const defaults = useMemo(
+    () => (gameImpl ? getDefaultConfig(gameImpl, validCount) : {}),
+    [gameImpl, validCount]
+  )
+
+  // Defaults we last filled in. A field still equal to its previous default
+  // follows the player count; once the user edits it, it sticks.
+  const lastDefaults = useRef<Record<string, number>>({})
+  const prevGame = useRef<typeof gameImpl>(undefined)
 
   useEffect(() => {
-    if (!selectedGame) return
+    if (!gameImpl) return
+    const prevDefaults = lastDefaults.current
+    const switchedGame = prevGame.current !== gameImpl
+    prevGame.current = gameImpl
+    lastDefaults.current = defaults
 
-    // Reset auto-peak tracking when switching games
-    if (prevGameId.current !== selectedGame.id) {
-      lastAutoPeak.current = null
-      prevGameId.current = selectedGame.id!
-    }
-
-    if (selectedGame.slug === 'up-and-down') {
-      const numPlayers = playerNames.filter(Boolean).length
-      const peakField = selectedGame.config_schema.find((f) => f.key === 'peak')
-      const calculatedPeak = calculatePeak(numPlayers, peakField)
-
-      // Only auto-update if user hasn't manually edited the peak
-      // `config` is intentionally excluded from deps to avoid a loop on setConfig
-      if (lastAutoPeak.current === null || config.peak === lastAutoPeak.current) {
-        setConfig((prev) => ({ ...prev, peak: calculatedPeak }))
-        lastAutoPeak.current = calculatedPeak
+    setConfig((prev) => {
+      if (switchedGame) return defaults
+      const next = { ...prev }
+      for (const [key, value] of Object.entries(defaults)) {
+        if (prev[key] === undefined || prev[key] === prevDefaults[key]) next[key] = value
       }
-    } else {
-      const defaults: Record<string, number> = {}
-      for (const field of selectedGame.config_schema) {
-        defaults[field.key] = field.defaultValue
-      }
-      setConfig(defaults)
-    }
-  }, [selectedGame, playerNames])
+      return next
+    })
+  }, [gameImpl, defaults])
 
   function updateConfig(key: string, value: number) {
     setConfig((prev) => ({ ...prev, [key]: value }))
@@ -75,8 +68,7 @@ export default function NewSessionPage() {
   async function handleStart() {
     if (!selectedGame) return
     setCreating(true)
-    const gameImpl = getGame(selectedGame.slug)
-    const sessionConfig = gameImpl?.usesDealer
+    const sessionConfig = usesDealer
       ? { ...config, first_dealer_index: firstDealerIndex }
       : { ...config }
 
@@ -90,10 +82,8 @@ export default function NewSessionPage() {
 
   if (!games) return <p className="text-gray-500 dark:text-gray-400">Loading games...</p>
 
-  const gameImpl = selectedGame ? getGame(selectedGame.slug) : null
-  const usesDealer = gameImpl?.usesDealer ?? false
-
-  const validCount = playerNames.filter(Boolean).length
+  // Only games whose defaults depend on player count get a "calculated" hint.
+  const playerCountDefaults = gameImpl?.getDefaultConfig && validCount >= 1 ? defaults : null
   const canStart =
     selectedGame &&
     validCount >= selectedGame.min_players &&
@@ -148,9 +138,8 @@ export default function NewSessionPage() {
               />
             </div>
             {selectedGame.config_schema.map((field) => {
-              const isPeak = selectedGame.slug === 'up-and-down' && field.key === 'peak'
-              const autoValue = isPeak && validCount >= 1 ? calculatePeak(validCount, field) : null
-              const isManuallyEdited = isPeak && lastAutoPeak.current !== null && config.peak !== lastAutoPeak.current
+              const autoValue = playerCountDefaults?.[field.key] ?? null
+              const isManuallyEdited = autoValue !== null && config[field.key] !== autoValue
               return (
                 <div key={field.key}>
                   <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">
@@ -169,10 +158,10 @@ export default function NewSessionPage() {
                   />
                   {autoValue !== null && (
                     <p className="text-xs text-gray-400 mt-1">
-                      {isManuallyEdited ? 'Suggested' : 'Calculated'} peak: {autoValue} for {validCount} player{validCount > 1 ? 's' : ''}
+                      {isManuallyEdited ? 'Suggested' : 'Calculated'}: {autoValue} for {validCount} player{validCount > 1 ? 's' : ''}
                     </p>
                   )}
-                  {!autoValue && field.description && (
+                  {autoValue === null && field.description && (
                     <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{field.description}</p>
                   )}
                 </div>
