@@ -115,12 +115,6 @@ export async function submitRound(
 
   const { round_data, scores: rawScores } = roundData
 
-  // Merge round_data into the round's data_json
-  if (round_data) {
-    const mergedData = { ...currentRound.data_json, ...round_data }
-    await db.rounds.update(currentRound.id!, { data_json: mergedData })
-  }
-
   const currentData = { ...currentRound.data_json, ...round_data }
   const roundMeta = {
     round_number: currentRound.round_number,
@@ -128,17 +122,13 @@ export async function submitRound(
     data: currentData,
   }
 
-  // Hook rule: total bids must not equal available tricks
-  if (gameRecord.slug === 'up-and-down') {
-    const totalBids = rawScores.reduce((sum: number, s) => sum + (s.data?.bid ?? 0), 0)
-    if (totalBids > 0 && totalBids === roundMeta.hand_size) {
-      throw new Error(`Hook rule: total bids (${totalBids}) cannot equal hand size (${roundMeta.hand_size})`)
-    }
+  // Validate before writing anything so a rejected round leaves no trace.
+  const invalid = gameImpl.validateRound?.(roundMeta, rawScores)
+  if (invalid) throw new Error(invalid)
 
-    const allSucceeded = rawScores.every((s) => s.data?.success === true)
-    if (allSucceeded) {
-      throw new Error('Not every player can succeed. At least one must fail this round.')
-    }
+  // Merge round_data into the round's data_json
+  if (round_data) {
+    await db.rounds.update(currentRound.id!, { data_json: currentData })
   }
 
   const results = gameImpl.computeScore(roundMeta, rawScores)

@@ -2,10 +2,15 @@ import type { CardGame } from './types'
 
 function makePointsGame(
   slug: string,
+  name: string,
   scoreDirection: 'high' | 'low'
 ): CardGame {
   return {
     slug,
+    name,
+    description: `Keep score for any game where the ${scoreDirection === 'high' ? 'highest' : 'lowest'} total wins. Enter points each round, then finish whenever you like.`,
+    minPlayers: 2,
+    maxPlayers: 10,
     scoreDirection,
     roundMode: 'open',
     usesDealer: false,
@@ -40,5 +45,5 @@ function makePointsGame(
   }
 }
 
-export const highScore = makePointsGame('high-score', 'high')
-export const lowScore = makePointsGame('low-score', 'low')
+export const highScore = makePointsGame('high-score', 'High Score', 'high')
+export const lowScore = makePointsGame('low-score', 'Low Score', 'low')
