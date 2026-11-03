@@ -2,7 +2,7 @@
 
 A local-first, installable PWA card game scorekeeper. Track sessions, players, rounds, and scores for your favorite card games.
 
-[Hosted on GitHub Pages](https://jodden.github.io/cardz/) — all data stays in your browser (IndexedDB via Dexie.js).
+[Hosted on GitHub Pages](https://jacobodden.github.io/cardz/) — all data stays in your browser (IndexedDB via Dexie.js).
 
 ## Stack
 
