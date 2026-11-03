@@ -189,3 +189,36 @@ describe.each([
     expect(results.map((r) => r.score)).toEqual([0, 0, 0])
   })
 })
+
+describe('getRoundInfo', () => {
+  const players = [
+    { id: 1, name: 'Ann' },
+    { id: 2, name: 'Bob' },
+  ]
+  const meta = (data: Record<string, any>): RoundMeta => ({ round_number: 1, hand_size: 3, data })
+
+  it('Up & Down shows the dealer, and trump once chosen (red for red suits)', () => {
+    expect(upAndDown.getRoundInfo!(meta({ dealer_player_id: 2 }), { players })).toEqual([
+      { key: 'dealer', label: 'Dealer', value: 'Bob' },
+    ])
+    expect(upAndDown.getRoundInfo!(meta({ dealer_player_id: 1, trump: '♥' }), { players })).toEqual([
+      { key: 'dealer', label: 'Dealer', value: 'Ann' },
+      { key: 'trump', label: 'Trump', value: '♥', history: true, tone: 'red' },
+    ])
+    expect(upAndDown.getRoundInfo!(meta({ trump: '♠' }), { players })).toEqual([
+      { key: 'trump', label: 'Trump', value: '♠', history: true },
+    ])
+  })
+
+  it('Pay Me shows the wild card for every round', () => {
+    const rounds = payMe.getRounds(2)
+    const wilds = rounds.map((r) => payMe.getRoundInfo!(r, { players })[0]?.value)
+    expect(wilds).toEqual(['3s', '4s', '5s', '6s', '7s', '8s', '9s', '10s', 'Jacks', 'Queens', 'Kings'])
+    expect(payMe.getRoundInfo!(rounds[0], { players })[0]).toMatchObject({ label: 'Wilds' })
+  })
+
+  it('points games have no round info', () => {
+    expect(highScore.getRoundInfo).toBeUndefined()
+    expect(lowScore.getRoundInfo).toBeUndefined()
+  })
+})

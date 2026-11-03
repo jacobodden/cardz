@@ -1,4 +1,11 @@
-import type { CardGame, RoundMeta, InputField, PlayerScoreInput, PlayerScoreResult, ConfigField } from './types'
+import type { CardGame, RoundMeta, InputField, PlayerScoreInput, PlayerScoreResult, ConfigField, RoundInfoChip } from './types'
+
+const FACE_NAMES: Record<number, string> = { 11: 'Jacks', 12: 'Queens', 13: 'Kings' }
+
+/** Plural card rank for a wild card value, e.g. 3 -> "3s", 11 -> "Jacks". */
+export function wildCardName(rank: number): string {
+  return FACE_NAMES[rank] ?? `${rank}s`
+}
 
 export const payMe: CardGame = {
   slug: 'pay-me',
@@ -36,6 +43,12 @@ export const payMe: CardGame = {
         max: round.hand_size * 10,
       },
     ]
+  },
+
+  getRoundInfo(meta: RoundMeta): RoundInfoChip[] {
+    const wild = Number(meta.data.wildCard)
+    if (!wild) return []
+    return [{ key: 'wild', label: 'Wilds', value: wildCardName(wild) }]
   },
 
   computeScore(_meta: RoundMeta, inputs: PlayerScoreInput[]): PlayerScoreResult[] {
