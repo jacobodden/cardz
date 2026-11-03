@@ -11,9 +11,17 @@ import {
 import type { RoundMetaInfo, ScoreboardRow } from '../db/rounds'
 import { getGame } from '../games'
 import { topByTotal } from '../games/standings'
-import type { InputField, PlayerScoreInput, ScoreDirection } from '../games/types'
+import type { InputField, PlayerScoreInput, RoundInfoChip, ScoreDirection } from '../games/types'
 
 const SUIT_SYMBOLS = new Set(['♠', '♥', '♣', '♦'])
+
+const CHIP_TONES: Record<NonNullable<RoundInfoChip['tone']>, string> = {
+  red: 'text-red-600 dark:text-red-400',
+}
+
+function chipTone(chip: RoundInfoChip): string {
+  return chip.tone ? CHIP_TONES[chip.tone] : 'text-gray-900 dark:text-gray-100'
+}
 
 const SUIT_COLORS: Record<string, string> = {
   '♠': 'text-gray-900 dark:text-gray-100',
@@ -161,29 +169,20 @@ export default function SessionPage() {
     [isComplete, hasScoredRounds, players, direction]
   )
 
-  const playerMap = useMemo(() => {
-    const map: Record<number, string> = {}
-    for (const p of session?.players ?? []) {
-      map[p.id] = p.name
-    }
-    return map
-  }, [session?.players])
+  const gameImpl = session?.game ? getGame(session.game.slug) : undefined
 
-  function getRoundMeta(roundNum: number): RoundMetaInfo | undefined {
-    return roundsMeta.find((r) => r.round_number === roundNum)
+  /** The game's info chips for a round, from its stored data. */
+  function roundInfo(roundNum: number, data: Record<string, any> | undefined): RoundInfoChip[] {
+    if (!gameImpl?.getRoundInfo || !data) return []
+    return gameImpl.getRoundInfo(
+      { round_number: roundNum, hand_size: data.handSize ?? 0, data },
+      { players: session?.players ?? [] },
+    )
   }
 
-  function getTrumpForRound(roundNum: number): string | null {
-    const meta = getRoundMeta(roundNum)
-    if (!meta) return null
-    return meta.data_json?.trump ?? null
-  }
-
-  function getDealerForRound(roundNum: number): string | null {
-    const meta = getRoundMeta(roundNum)
-    if (!meta) return null
-    const dealerId = meta.data_json?.dealer_player_id
-    return dealerId ? (playerMap[dealerId] ?? null) : null
+  function getHistoryInfo(roundNum: number): RoundInfoChip[] {
+    const meta: RoundMetaInfo | undefined = roundsMeta.find((r) => r.round_number === roundNum)
+    return roundInfo(roundNum, meta?.data_json).filter((chip) => chip.history)
   }
 
   if (data === undefined) return <p className="text-gray-500 dark:text-gray-400">Loading...</p>
@@ -198,10 +197,10 @@ export default function SessionPage() {
   const rawRoundData: Record<string, any> = round?.data_json ?? {}
   const handSize: number = rawRoundData.handSize ?? 0
 
-  const currentDealer =
-    active && roundNumber !== null ? getDealerForRound(roundNumber) : null
+  const currentInfo =
+    active && roundNumber !== null ? roundInfo(roundNumber, rawRoundData) : []
 
-  const trumpMissing = roundFields.some(
+  const requiredRoundFieldMissing = roundFields.some(
     (f) => f.required && (roundData[f.key] === undefined || roundData[f.key] === '')
   )
   const booleanFields = playerFields.filter((f) => f.type === 'boolean')
@@ -210,7 +209,6 @@ export default function SessionPage() {
     players.some((p) =>
       booleanFields.some((f) => playerData[p.player_id]?.[f.key] === undefined)
     )
-  const gameImpl = session.game ? getGame(session.game.slug) : undefined
   const ruleViolation =
     active && round && gameImpl?.validateRound
       ? gameImpl.validateRound(
@@ -231,9 +229,7 @@ export default function SessionPage() {
 
   const roundSub = isComplete
     ? `${scoredCount} round${scoredCount === 1 ? '' : 's'}`
-    : currentDealer
-      ? `Dealer: ${currentDealer}`
-      : `${scoredCount} scored`
+    : `${scoredCount} scored`
 
   const progressPct =
     totalRounds > 0 ? Math.min(100, (scoredCount / totalRounds) * 100) : 0
@@ -294,6 +290,22 @@ export default function SessionPage() {
           )}
         </div>
       </div>
+
+      {currentInfo.length > 0 && (
+        <div data-testid="round-info" className="mb-3 flex flex-wrap gap-1.5">
+          {currentInfo.map((chip) => (
+            <span
+              key={chip.key}
+              data-testid="round-info-chip"
+              data-chip={chip.key}
+              className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs dark:border-gray-700 dark:bg-gray-900"
+            >
+              <span className="text-gray-500 dark:text-gray-400">{chip.label}</span>
+              <b className={`font-semibold ${chipTone(chip)}`}>{chip.value}</b>
+            </span>
+          ))}
+        </div>
+      )}
 
       {totalRounds > 0 && (
         <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800">
@@ -383,7 +395,7 @@ export default function SessionPage() {
                   [row.player_id]: !prev[row.player_id],
                 }))
               }
-              getTrump={getTrumpForRound}
+              getHistoryInfo={getHistoryInfo}
             />
           ))}
         </div>
@@ -408,7 +420,7 @@ export default function SessionPage() {
             disabled={
               submitting ||
               !!ruleViolation ||
-              trumpMissing ||
+              requiredRoundFieldMissing ||
               successMissing
             }
             data-testid="submit-round"
@@ -438,7 +450,7 @@ function PlayerCard({
   hasScoredRounds,
   expanded,
   onToggle,
-  getTrump,
+  getHistoryInfo,
 }: {
   row: ScoreboardRow
   active: boolean
@@ -452,7 +464,7 @@ function PlayerCard({
   hasScoredRounds: boolean
   expanded: boolean
   onToggle: () => void
-  getTrump: (roundNumber: number) => string | null
+  getHistoryInfo: (roundNumber: number) => RoundInfoChip[]
 }) {
   const scoredEntries = row.scores
     .map((score, index) => ({ roundNumber: index + 1, score }))
@@ -529,7 +541,7 @@ function PlayerCard({
         <div className="mt-2.5 flex items-center justify-between gap-2">
           <div className="flex flex-wrap gap-1.5">
             {recent.map((entry) => {
-              const trump = getTrump(entry.roundNumber)
+              const info = getHistoryInfo(entry.roundNumber)
               return (
                 <span
                   key={entry.roundNumber}
@@ -537,9 +549,11 @@ function PlayerCard({
                   className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-[11px] text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
                 >
                   <span>R{entry.roundNumber}</span>
-                  {trump && (
-                    <span className={SUIT_COLORS[trump] ?? ''}>{trump}</span>
-                  )}
+                  {info.map((chip) => (
+                    <span key={chip.key} title={chip.label} className={chipTone(chip)}>
+                      {chip.value}
+                    </span>
+                  ))}
                   <b className="font-bold text-gray-900 dark:text-gray-100">
                     {entry.score}
                   </b>
@@ -566,7 +580,7 @@ function PlayerCard({
         >
           {row.scores.map((score, index) => {
             const historyRound = index + 1
-            const trump = getTrump(historyRound)
+            const info = getHistoryInfo(historyRound)
             const isCurrent = roundNumber === historyRound
             return (
               <div
@@ -578,11 +592,11 @@ function PlayerCard({
                 }`}
               >
                 <span className="block text-[10px]">R{historyRound}</span>
-                {trump && (
-                  <span className={`block text-xs ${SUIT_COLORS[trump] ?? ''}`}>
-                    {trump}
+                {info.map((chip) => (
+                  <span key={chip.key} title={chip.label} className={`block text-xs ${chipTone(chip)}`}>
+                    {chip.value}
                   </span>
-                )}
+                ))}
                 <span className="block text-xs font-bold text-gray-900 dark:text-gray-100">
                   {score ?? '—'}
                 </span>

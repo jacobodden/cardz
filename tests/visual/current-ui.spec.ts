@@ -106,6 +106,17 @@ test('up and down with two scored rounds', async ({ page }) => {
   await expect(page).toHaveScreenshot('session-up-and-down-scored.png')
 })
 
+test('pay me active session', async ({ page }) => {
+  await createSession(page, {
+    gameSlug: 'pay-me',
+    title: 'Sunday Rummy',
+    players,
+  })
+
+  await resetScroll(page)
+  await expect(page).toHaveScreenshot('session-pay-me-active.png')
+})
+
 test('high score active session', async ({ page }) => {
   await createSession(page, {
     gameSlug: 'high-score',
