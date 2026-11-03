@@ -253,6 +253,32 @@ test('Finish: undo reopens a completed game', async ({ page }) => {
   await expect(page.getByTestId('submit-round')).toBeVisible()
 })
 
+test('Home: deleting a session updates the list from the database', async ({
+  page,
+}) => {
+  await createSession(page, {
+    gameSlug: 'high-score',
+    players: ['Alice', 'Bob'],
+  })
+
+  await page.goto('/')
+  await expect(page.getByRole('heading', { name: 'High Score' })).toBeVisible()
+
+  page.once('dialog', (dialog) => dialog.accept())
+  // Desktop shows an inline trash button; mobile reveals one by swiping.
+  // This test is about the list reacting, so trigger whichever exists.
+  await page.getByTitle('Delete session').last().dispatchEvent('click')
+
+  await expect(page.getByText('No game sessions yet.')).toBeVisible()
+})
+
+test('Session: unknown id shows not found instead of loading forever', async ({
+  page,
+}) => {
+  await page.goto('/sessions/999999')
+  await expect(page.getByText('Game not found.')).toBeVisible()
+})
+
 test('seeding: existing installs gain the new games', async ({ page }) => {
   await page.goto('/sessions/new')
   await expect(page.getByTestId('game-option')).toHaveCount(4)
