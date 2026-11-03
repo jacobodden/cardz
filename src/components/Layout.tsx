@@ -20,33 +20,56 @@ export default function Layout() {
     if (meta) meta.setAttribute('content', dark ? THEME_COLOR_DARK : THEME_COLOR_LIGHT)
   }, [dark])
 
+  const toggleLabel = dark ? 'Switch to light mode' : 'Switch to dark mode'
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3 flex items-center justify-between">
-          <Link to="/" className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">
-            Cardz
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1.5 sm:py-2 flex items-center justify-between">
+          <Link
+            to="/"
+            aria-label="Cardz home"
+            className="-ml-1 w-11 h-11 flex items-center justify-center rounded-lg transition hover:bg-gray-100 dark:hover:bg-gray-800 active:scale-[0.95]"
+          >
+            <img
+              src={`${import.meta.env.BASE_URL}pwa-64x64.png`}
+              alt=""
+              width={32}
+              height={32}
+              className="w-8 h-8 rounded-lg"
+            />
           </Link>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <button
-              onClick={() => setDark(!dark)}
-              className="text-lg w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition active:scale-[0.95]"
-              title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-            >
-              {dark ? '\u2600' : '\u263E'}
-            </button>
-            <Link
-              to="/sessions/new"
-              className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-2 px-3 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
-            >
-              + New Game
-            </Link>
-          </div>
+          <button
+            onClick={() => setDark(!dark)}
+            data-testid="theme-toggle"
+            className="-mr-1 w-11 h-11 flex items-center justify-center rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition active:scale-[0.95]"
+            title={toggleLabel}
+            aria-label={toggleLabel}
+          >
+            {dark ? <SunIcon /> : <MoonIcon />}
+          </button>
         </div>
       </header>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
         <Outlet />
       </main>
     </div>
+  )
+}
+
+function SunIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4" />
+    </svg>
+  )
+}
+
+function MoonIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" />
+    </svg>
   )
 }

@@ -369,6 +369,36 @@ test('Home: in-progress games sit above finished ones, filterable by game', asyn
   await expect(page.getByTestId('session-card')).toHaveCount(2)
 })
 
+test('Header: icon links home, theme toggle switches, no New Game link', async ({
+  page,
+}) => {
+  await page.goto('/sessions/new')
+  const header = page.locator('header')
+  await expect(header.getByRole('link', { name: /new game/i })).toHaveCount(0)
+
+  const toggle = header.getByRole('button', { name: 'Switch to dark mode' })
+  await toggle.click()
+  await expect(page.locator('html')).toHaveClass(/dark/)
+  await header.getByRole('button', { name: 'Switch to light mode' }).click()
+  await expect(page.locator('html')).not.toHaveClass(/dark/)
+
+  const home = header.getByRole('link', { name: 'Cardz home' })
+  await expect(home.locator('img')).toHaveJSProperty('complete', true)
+  await expect(home.locator('img')).not.toHaveJSProperty('naturalWidth', 0)
+  await home.click()
+  await expect(page).toHaveURL(/\/$/)
+})
+
+test('New game: picking a game focuses the session title', async ({ page }) => {
+  await page.goto('/sessions/new')
+  await page.locator('[data-game-slug="pay-me"]').click()
+  const title = page.getByTestId('session-title')
+  await expect(title).toBeFocused()
+  await expect(title).toBeInViewport()
+  await page.keyboard.type('Quick Game')
+  await expect(title).toHaveValue('Quick Game')
+})
+
 test('Session: unknown id shows not found instead of loading forever', async ({
   page,
 }) => {
