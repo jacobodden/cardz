@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/dexie-db'
@@ -16,6 +17,7 @@ export default function NewSessionPage() {
   const [playerNames, setPlayerNames] = useState<string[]>(['', ''])
   const [firstDealerIndex, setFirstDealerIndex] = useState(0)
   const [creating, setCreating] = useState(false)
+  const titleInput = useRef<HTMLInputElement>(null)
 
   const validCount = playerNames.filter(Boolean).length
   const gameImpl = selectedGame ? getGame(selectedGame.slug) : undefined
@@ -46,6 +48,17 @@ export default function NewSessionPage() {
       return next
     })
   }, [gameImpl, defaults])
+
+  function selectGame(g: Game) {
+    // Render the title field now so we can focus it inside the tap handler:
+    // iOS only opens the keyboard for focus() calls made during a user gesture.
+    flushSync(() => setSelectedGame(g))
+    const input = titleInput.current
+    if (!input) return
+    input.focus({ preventScroll: true })
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    input.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' })
+  }
 
   function updateConfig(key: string, value: number) {
     setConfig((prev) => ({ ...prev, [key]: value }))
@@ -100,7 +113,7 @@ export default function NewSessionPage() {
           {games.map((g) => (
             <button
               key={g.id}
-              onClick={() => setSelectedGame(g)}
+              onClick={() => selectGame(g)}
               data-testid="game-option"
               data-game-slug={g.slug}
               className={`text-left p-5 rounded-lg border-2 transition active:scale-[0.98] ${
@@ -128,6 +141,7 @@ export default function NewSessionPage() {
                 Session Title
               </label>
               <input
+                ref={titleInput}
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
