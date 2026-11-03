@@ -7,6 +7,7 @@ Card game info can be found under @docs/games
 - **PWA**: `vite-plugin-pwa` with auto-updating service worker
 - **Hosting**: GitHub Pages at `/cardz/` base path
 - **Build**: `npm run build` (runs `tsc -b && vite build`)
+- **Tests**: `npm run test:unit` (Vitest + fake-indexeddb, `tests/unit/`), `npm run test:e2e` / `npm run test:visual` (Playwright)
 
 ## PWA
 
@@ -57,5 +58,6 @@ Workflow at `.github/workflows/deploy.yml` triggers on push to `main`. Uses `act
 - All Dexie DB interactions go through the singleton `db` instance exported from `src/db/dexie-db.ts`
 - Game scoring logic lives in `src/games/` as pure functions with no side effects
 - Data access helpers live in `src/db/` (e.g. `sessions.ts`, `rounds.ts`)
+- Unit tests for `src/games/` and `src/db/` live in `tests/unit/`; DB tests call `resetDb()` from `tests/unit/db-helpers.ts`, which awaits `dbReady` before clearing tables
 - Components use `useLiveQuery` from `dexie-react-hooks` instead of manual `useEffect` + fetch
 - Tailwind v4 uses CSS `@theme` directives — no `tailwind.config.*` file
