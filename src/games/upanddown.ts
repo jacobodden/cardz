@@ -16,6 +16,7 @@ export const upAndDown: CardGame = {
   minPlayers: 3,
   maxPlayers: 7,
   scoreDirection: 'high',
+  cardFace: { rank: 'K', suit: '♠' },
   roundMode: 'fixed',
   usesDealer: true,
 
