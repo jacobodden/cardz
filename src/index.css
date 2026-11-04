@@ -369,6 +369,89 @@
   --avatar-3: #3d3520;
 }
 
+/*
+ * Graphite: neutral charcoal greys with a warm gold accent. Gold is the
+ * accent and buttons; the leader highlight is a paler cream/amber so it
+ * still reads apart from it. Cards stay light, as in Felt.
+ */
+:root[data-palette="graphite"] {
+  color-scheme: light;
+  --page: #f3f3f2;
+  --surface: #ffffff;
+  --surface-2: #ebebea;
+  --line: #e2e2e0;
+  --line-strong: #c4c4c1;
+  --ink: #1c1d20;
+  --muted: #5d5f64;
+  --felt: #34373d;
+  --on-felt: #ffffff;
+  --accent: #c9a24a;
+  --on-accent: #1c1d20;
+  --accent-ink: #7d5d0e;
+  --accent-soft: #f6f0e0;
+  --lead-bg: #fbf3df;
+  --lead-border: #d9a441;
+  --lead-label: #7a5200;
+  --win-bg: #fbf3df;
+  --win-fg: #7a5200;
+  --warn: #8a5f00;
+  --red-suit: #be2c35;
+  --danger: #b3262f;
+  --danger-solid: #b3262f;
+  --on-danger: #ffffff;
+  --yes-bg: #e3f1e6;
+  --yes-fg: #1d6b3a;
+  --no-bg: #f9e3e4;
+  --no-fg: #a3232c;
+  --card-face: #ffffff;
+  --card-edge: #d6d6d3;
+  --card-black: #1c1d20;
+  --card-red: #be2c35;
+  --card-ring: #e0b650;
+  --avatar-1: #e4e4e1;
+  --avatar-2: #f1e1d6;
+  --avatar-3: #dfe3ea;
+}
+
+:root.dark[data-palette="graphite"] {
+  color-scheme: dark;
+  --page: #121315;
+  --surface: #1c1d20;
+  --surface-2: #26282c;
+  --line: #2f3135;
+  --line-strong: #44474d;
+  --ink: #ececea;
+  --muted: #a0a2a7;
+  --felt: #26282d;
+  --on-felt: #ececea;
+  --accent: #d6ae55;
+  --on-accent: #17181a;
+  --accent-ink: #e3c27a;
+  --accent-soft: #2a2619;
+  --lead-bg: #3a2f1b;
+  --lead-border: #9a7428;
+  --lead-label: #f0c969;
+  --win-bg: #3a2f1b;
+  --win-fg: #f0c969;
+  --warn: #f0c969;
+  --red-suit: #ff7b80;
+  --danger: #ff8a8f;
+  --danger-solid: #b3262f;
+  --on-danger: #ffffff;
+  --yes-bg: #1c3526;
+  --yes-fg: #7fd69a;
+  --no-bg: #3e1d21;
+  --no-fg: #ff9a9f;
+  --card-face: #f2f0eb;
+  --card-edge: #f2f0eb;
+  --card-black: #1a1a1a;
+  --card-red: #be2c35;
+  --card-ring: #e0b650;
+  --avatar-1: #33353a;
+  --avatar-2: #4a2b2c;
+  --avatar-3: #2c3748;
+}
+
 html {
   touch-action: manipulation;
   background-color: var(--page);

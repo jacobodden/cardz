@@ -50,6 +50,12 @@ export const THEMES: readonly Theme[] = [
     swatch: '#9c3f1a',
     themeColor: { light: '#9c3f1a', dark: '#7a2f14' },
   },
+  {
+    id: 'graphite',
+    name: 'Graphite',
+    swatch: '#34373d',
+    themeColor: { light: '#34373d', dark: '#26282d' },
+  },
 ]
 
 /** The theme with `id`, or the default for an unknown, removed or missing id. */
