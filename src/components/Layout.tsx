@@ -12,8 +12,15 @@ export default function Layout() {
   })
 
   const [heroTarget, setHeroTarget] = useState<HTMLElement | null>(null)
+  const [actionsTarget, setActionsTarget] = useState<HTMLElement | null>(null)
   const [felt, setFelt] = useState(false)
-  const heroSlot = useMemo(() => ({ target: heroTarget, setFelt }), [heroTarget])
+  const iconButton = `w-11 h-11 flex items-center justify-center rounded-lg transition active:scale-[0.95] disabled:opacity-50 ${
+    felt ? 'text-on-felt hover:bg-on-felt/10' : 'text-muted hover:bg-surface-2'
+  }`
+  const heroSlot = useMemo(
+    () => ({ target: heroTarget, actions: actionsTarget, iconButton, setFelt }),
+    [heroTarget, actionsTarget, iconButton]
+  )
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark)
@@ -30,9 +37,6 @@ export default function Layout() {
   }, [dark, felt])
 
   const toggleLabel = dark ? 'Switch to light mode' : 'Switch to dark mode'
-  const iconButton = felt
-    ? 'text-on-felt hover:bg-on-felt/10'
-    : 'text-muted hover:bg-surface-2'
 
   return (
     <HeroSlotContext.Provider value={heroSlot}>
@@ -46,7 +50,7 @@ export default function Layout() {
             <Link
               to="/"
               aria-label="Cardz home"
-              className={`-ml-1 w-11 h-11 flex items-center justify-center rounded-lg transition active:scale-[0.95] ${iconButton}`}
+              className={`-ml-1 ${iconButton}`}
             >
               <img
                 src={`${import.meta.env.BASE_URL}pwa-64x64.png`}
@@ -56,15 +60,19 @@ export default function Layout() {
                 className="w-8 h-8 rounded-lg"
               />
             </Link>
-            <button
-              onClick={() => setDark(!dark)}
-              data-testid="theme-toggle"
-              className={`-mr-1 w-11 h-11 flex items-center justify-center rounded-lg transition active:scale-[0.95] ${iconButton}`}
-              title={toggleLabel}
-              aria-label={toggleLabel}
-            >
-              {dark ? <SunIcon /> : <MoonIcon />}
-            </button>
+            <div className="-mr-1 flex items-center gap-1">
+              {/* Pages add icon buttons here (see HeaderActions). */}
+              <div ref={setActionsTarget} className="contents" />
+              <button
+                onClick={() => setDark(!dark)}
+                data-testid="theme-toggle"
+                className={iconButton}
+                title={toggleLabel}
+                aria-label={toggleLabel}
+              >
+                {dark ? <SunIcon /> : <MoonIcon />}
+              </button>
+            </div>
           </header>
           {/* Pages render their hero (see FeltHero) here, inside the band. */}
           <div ref={setHeroTarget} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" />
