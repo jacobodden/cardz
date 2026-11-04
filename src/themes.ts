@@ -32,6 +32,12 @@ export const THEMES: readonly Theme[] = [
     swatch: '#1e6b4e',
     themeColor: { light: '#1e6b4e', dark: '#174a36' },
   },
+  {
+    id: 'midnight',
+    name: 'Midnight',
+    swatch: '#6b3fe0',
+    themeColor: { light: '#6b3fe0', dark: '#3a2a7a' },
+  },
 ]
 
 /** The theme with `id`, or the default for an unknown, removed or missing id. */

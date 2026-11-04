@@ -3,6 +3,7 @@ import {
   createSession,
   finishGame,
   resetScroll,
+  setPalette,
   setTheme,
   submitPointsRound,
   submitUpAndDownRound,
@@ -201,3 +202,54 @@ test('theme picker menu open', async ({ page }) => {
   await expect(page.getByRole('menu', { name: 'Color theme' })).toBeVisible()
   await expect(page).toHaveScreenshot('theme-picker-open.png')
 })
+
+for (const mode of ['light', 'dark'] as const) {
+  test.describe(`midnight ${mode}`, () => {
+    test.beforeEach(async ({ page }) => {
+      await setPalette(page, 'midnight')
+      await setTheme(page, mode)
+    })
+
+    test('home page', async ({ page }) => {
+      await seedHomeSessions(page)
+      await expect(page).toHaveScreenshot(`midnight-home-${mode}.png`)
+    })
+
+    test('up and down session with scored rounds', async ({ page }) => {
+      await createSession(page, { gameSlug: 'up-and-down', title: 'Friday Night Game', players })
+      await submitUpAndDownRound(page, 1, {
+        trump: '♠',
+        bids: [
+          { player: 'Alice', bid: 1, success: true },
+          { player: 'Bob', bid: 1, success: false },
+          { player: 'Carol', bid: 0, success: false },
+        ],
+      })
+      await page.getByRole('button', { name: 'Trump ♥' }).click()
+      await resetScroll(page)
+      await expect(page).toHaveScreenshot(`midnight-session-${mode}.png`)
+    })
+
+    test('completed session', async ({ page }) => {
+      await createSession(page, { gameSlug: 'low-score', title: 'Sunday Rummy', players })
+      await submitPointsRound(page, 1, [
+        { player: 'Alice', points: 5 },
+        { player: 'Bob', points: 8 },
+        { player: 'Carol', points: 3 },
+      ])
+      await finishGame(page)
+      await resetScroll(page)
+      await expect(page).toHaveScreenshot(`midnight-session-complete-${mode}.png`)
+    })
+
+    test('new game form', async ({ page }) => {
+      // Picking a game scrolls to the title; reduced motion makes that instant.
+      await page.emulateMedia({ reducedMotion: 'reduce' })
+      await page.goto('/sessions/new')
+      await page.locator('[data-game-slug="up-and-down"]').click()
+      await page.getByTestId('session-title').blur()
+      await resetScroll(page)
+      await expect(page).toHaveScreenshot(`midnight-new-game-${mode}.png`)
+    })
+  })
+}
