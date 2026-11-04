@@ -1,6 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Outlet, Link } from 'react-router-dom'
 import { HeroSlotContext } from './heroSlot'
+import ThemePicker from './ThemePicker'
+import { THEME_STORAGE_KEY, getTheme } from '../themes'
+
+function readStorage(key: string): string | null {
+  try {
+    return localStorage.getItem(key)
+  } catch {
+    return null
+  }
+}
 
 export default function Layout() {
   const [dark, setDark] = useState(() => {
@@ -10,6 +20,9 @@ export default function Layout() {
     }
     return window.matchMedia('(prefers-color-scheme: dark)').matches
   })
+
+  // index.html's startup script has already applied this before first paint.
+  const [palette, setPalette] = useState(() => getTheme(readStorage(THEME_STORAGE_KEY)).id)
 
   const [heroTarget, setHeroTarget] = useState<HTMLElement | null>(null)
   const [actionsTarget, setActionsTarget] = useState<HTMLElement | null>(null)
@@ -28,13 +41,22 @@ export default function Layout() {
   }, [dark])
 
   useEffect(() => {
+    document.documentElement.setAttribute('data-palette', palette)
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, palette)
+    } catch {
+      // Private mode or blocked storage: the choice just won't persist.
+    }
+  }, [palette])
+
+  useEffect(() => {
     // Match the browser chrome to the top of the page, whatever the palette says it is.
     const meta = document.querySelector('meta[name="theme-color"]')
     const color = getComputedStyle(document.documentElement)
       .getPropertyValue(felt ? '--felt' : '--surface')
       .trim()
     if (meta && color) meta.setAttribute('content', color)
-  }, [dark, felt])
+  }, [dark, felt, palette])
 
   const toggleLabel = dark ? 'Switch to light mode' : 'Switch to dark mode'
 
@@ -63,6 +85,7 @@ export default function Layout() {
             <div className="-mr-1 flex items-center gap-1">
               {/* Pages add icon buttons here (see HeaderActions). */}
               <div ref={setActionsTarget} className="contents" />
+              <ThemePicker value={palette} onChange={setPalette} buttonClass={iconButton} />
               <button
                 onClick={() => setDark(!dark)}
                 data-testid="theme-toggle"

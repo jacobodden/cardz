@@ -23,6 +23,10 @@ Custom variant defined in `src/index.css`:
 ```
 Theme preference is stored in `localStorage('theme')` and the `.dark` class is toggled on `<html>`. The toggle lives in `src/components/Layout.tsx`, which also updates `<meta name="theme-color">` for the browser chrome.
 
+## Color themes
+
+Themes are separate from light/dark. `src/themes.ts` lists them (id, name, swatch, theme-color per mode); each theme's tokens live in `src/index.css` under `:root[data-palette="<id>"]` and `:root.dark[data-palette="<id>"]`. The choice is stored in `localStorage('palette')`; unknown ids fall back to `felt`. `index.html`'s startup script applies the theme and mode before first paint, using the registry that `vite.config.ts` injects in place of `__THEMES__`. The picker is `src/components/ThemePicker.tsx`. To add a theme, add a registry entry and both token blocks; `tests/unit/themes.test.ts` checks they match.
+
 ## Database Schema (Dexie)
 
 Defined in `src/db/dexie-db.ts` — `CardzDB` extends `Dexie` with five tables:

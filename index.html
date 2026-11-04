@@ -9,12 +9,24 @@
     <meta name="theme-color" content="#1e6b4e" />
     <title>Cardz</title>
     <script>
-      (function() {
-        var t = localStorage.getItem('theme');
-        if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-          document.documentElement.classList.add('dark');
-          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#174a36');
-        }
+      // Runs before first paint so the saved theme and mode never flash.
+      // The `themes` object is injected by vite.config.ts from src/themes.ts.
+      (function () {
+        var themes = __THEMES__;
+        var root = document.documentElement;
+        var palette = null;
+        var mode = null;
+        try {
+          palette = localStorage.getItem(themes.storageKey);
+          mode = localStorage.getItem('theme');
+        } catch (e) {}
+        if (!Object.prototype.hasOwnProperty.call(themes.colors, palette)) palette = themes.defaultId;
+        root.setAttribute('data-palette', palette);
+        var dark = mode === 'dark' || (!mode && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (dark) root.classList.add('dark');
+        document
+          .querySelector('meta[name="theme-color"]')
+          .setAttribute('content', themes.colors[palette][dark ? 'dark' : 'light']);
       })();
     </script>
   </head>
