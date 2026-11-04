@@ -44,6 +44,12 @@ export const THEMES: readonly Theme[] = [
     swatch: '#0c5f73',
     themeColor: { light: '#0c5f73', dark: '#0a3d4f' },
   },
+  {
+    id: 'ember',
+    name: 'Ember',
+    swatch: '#9c3f1a',
+    themeColor: { light: '#9c3f1a', dark: '#7a2f14' },
+  },
 ]
 
 /** The theme with `id`, or the default for an unknown, removed or missing id. */
