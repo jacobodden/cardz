@@ -67,6 +67,16 @@ export const upAndDown: CardGame = {
       return 'Not every player can succeed. At least one must fail this round.'
     }
 
+    // A player who made their bid won exactly that many tricks, and the round
+    // only has hand_size tricks, so the made bids can't add up to more.
+    const madeTricks = inputs
+      .filter((i) => i.data?.success === true)
+      .reduce((sum, i) => sum + (Number(i.data?.bid) || 0), 0)
+    if (meta.hand_size > 0 && madeTricks > meta.hand_size) {
+      const tricks = `${meta.hand_size} trick${meta.hand_size === 1 ? '' : 's'}`
+      return `Made bids total ${madeTricks}, but this round only has ${tricks}. Someone marked as made must have missed.`
+    }
+
     return null
   },
 
