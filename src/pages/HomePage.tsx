@@ -4,7 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { listSessions, deleteSession } from '../db/sessions'
 import type { SessionSummary } from '../db/sessions'
 import { getGame } from '../games'
-import type { CardFace } from '../games/types'
+import CardTile from '../components/CardTile'
 import FeltHero from '../components/FeltHero'
 
 interface Section {
@@ -240,22 +240,6 @@ function PlayerAvatars({ names }: { names: string[] }) {
           +{extra}
         </span>
       )}
-    </div>
-  )
-}
-
-const RED_SUITS = new Set(['♥', '♦'])
-
-function CardTile({ face }: { face: CardFace }) {
-  const color = RED_SUITS.has(face.suit) ? 'text-card-red' : 'text-card-black'
-  return (
-    <div
-      aria-hidden="true"
-      className={`w-10 h-[54px] shrink-0 rounded-md bg-card-face border border-card-edge flex flex-col justify-between px-[5px] py-[3px] font-extrabold ${color}`}
-    >
-      <span className="text-xs leading-none">{face.rank}</span>
-      <span className="text-lg leading-none self-center">{face.suit}</span>
-      <span className="text-xs leading-none self-end rotate-180">{face.rank}</span>
     </div>
   )
 }

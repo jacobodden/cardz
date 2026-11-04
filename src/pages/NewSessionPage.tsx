@@ -7,6 +7,12 @@ import { createSession, addPlayer as addPlayerToSession, startSession } from '..
 import { getGame } from '../games'
 import type { Game } from '../db/dexie-db'
 import { getDefaultConfig } from '../games/types'
+import FeltHero from '../components/FeltHero'
+import CardTile from '../components/CardTile'
+
+const INPUT =
+  'h-12 w-full rounded-xl border border-line-strong bg-surface px-3.5 text-base text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent-ink'
+const SECTION_HEADING = 'mb-2 text-[13px] font-bold text-muted'
 
 export default function NewSessionPage() {
   const navigate = useNavigate()
@@ -93,7 +99,22 @@ export default function NewSessionPage() {
     navigate(`/sessions/${session.id}`)
   }
 
-  if (!games) return <p className="text-muted">Loading games...</p>
+  const hero = (
+    <FeltHero>
+      <div className="mx-auto max-w-xl pt-1 pb-5">
+        <h1 className="text-[32px] leading-tight font-extrabold tracking-tight">New game</h1>
+        <p className="mt-0.5 text-sm text-on-felt/85">Pick a game, add players, and deal.</p>
+      </div>
+    </FeltHero>
+  )
+
+  if (!games)
+    return (
+      <>
+        {hero}
+        <p className="text-muted">Loading games...</p>
+      </>
+    )
 
   // Only games whose defaults depend on player count get a "calculated" hint.
   const playerCountDefaults = gameImpl?.getDefaultConfig && validCount >= 1 ? defaults : null
@@ -101,46 +122,63 @@ export default function NewSessionPage() {
     selectedGame &&
     validCount >= selectedGame.min_players &&
     validCount <= selectedGame.max_players
+  const startHint =
+    selectedGame && validCount < selectedGame.min_players
+      ? `Add ${selectedGame.min_players - validCount} more player${selectedGame.min_players - validCount === 1 ? '' : 's'} to start`
+      : null
 
   return (
-    <div className="max-w-xl">
-      <h1 className="text-2xl font-bold text-ink mb-6">New Game</h1>
+    <div className="mx-auto max-w-xl">
+      {hero}
 
       {/* Game selector */}
-      <section className="mb-8">
-        <h2 className="text-sm font-medium text-ink mb-3">Select Game</h2>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {games.map((g) => (
-            <button
-              key={g.id}
-              onClick={() => selectGame(g)}
-              data-testid="game-option"
-              data-game-slug={g.slug}
-              className={`text-left p-5 rounded-lg border-2 transition active:scale-[0.98] ${
-                selectedGame?.id === g.id
-                  ? 'border-accent-ink bg-accent-soft'
-                  : 'border-line bg-surface hover:border-line-strong'
-              }`}
-            >
-              <h3 className="font-semibold text-ink">{g.name}</h3>
-              <p className="text-sm text-muted mt-1">{g.description}</p>
-              <p className="text-xs text-muted mt-2">
-                {g.min_players}-{g.max_players} players
-              </p>
-            </button>
-          ))}
+      <section aria-labelledby="pick-game" className="mb-6">
+        <h2 id="pick-game" className={SECTION_HEADING}>
+          Game
+        </h2>
+        <div className="grid gap-2.5 sm:grid-cols-2">
+          {games.map((g) => {
+            const selected = selectedGame?.id === g.id
+            const face = getGame(g.slug)?.cardFace
+            return (
+              <button
+                key={g.id}
+                type="button"
+                onClick={() => selectGame(g)}
+                aria-pressed={selected}
+                data-testid="game-option"
+                data-game-slug={g.slug}
+                className={`flex items-start gap-3 rounded-2xl border-2 p-3.5 text-left transition active:scale-[0.98] ${
+                  selected ? 'border-accent-ink bg-accent-soft' : 'border-line bg-surface hover:border-line-strong'
+                }`}
+              >
+                {face && <CardTile face={face} />}
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-start justify-between gap-2">
+                    <span className="text-base leading-snug font-bold text-ink">{g.name}</span>
+                    {selected && <CheckIcon />}
+                  </span>
+                  <span className="mt-0.5 block text-sm text-muted">{g.description}</span>
+                  <span className="mt-1.5 block text-xs font-semibold text-muted">
+                    {g.min_players}–{g.max_players} players
+                  </span>
+                </span>
+              </button>
+            )
+          })}
         </div>
       </section>
 
       {selectedGame && (
         <>
           {/* Session title & game config */}
-          <section className="mb-8 space-y-4">
+          <section className="mb-6 space-y-4">
             <div>
-              <label className="text-sm font-medium text-ink block mb-1">
-                Session Title
+              <label htmlFor="session-title" className={`block ${SECTION_HEADING}`}>
+                Title
               </label>
               <input
+                id="session-title"
                 ref={titleInput}
                 type="text"
                 value={title}
@@ -148,7 +186,7 @@ export default function NewSessionPage() {
                 placeholder="e.g. Friday Night Game"
                 aria-label="Session Title"
                 data-testid="session-title"
-                className="w-full border border-line-strong rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent-ink bg-surface text-ink"
+                className={INPUT}
               />
             </div>
             {selectedGame.config_schema.map((field) => {
@@ -156,42 +194,54 @@ export default function NewSessionPage() {
               const isManuallyEdited = autoValue !== null && config[field.key] !== autoValue
               return (
                 <div key={field.key}>
-                  <label className="text-sm font-medium text-ink block mb-1">
+                  <label htmlFor={`config-${field.key}`} className={`block ${SECTION_HEADING}`}>
                     {field.label}
                   </label>
-                  <input
-                    type="number"
-                    value={config[field.key] ?? field.defaultValue}
-                    onChange={(e) => updateConfig(field.key, Number(e.target.value))}
-                    min={field.min}
-                    max={field.max}
-                    inputMode="numeric"
-                    aria-label={field.label}
-                    data-testid={`config-${field.key}`}
-                    className="w-full sm:w-24 border border-line-strong rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent-ink bg-surface text-ink"
-                  />
-                  {autoValue !== null && (
-                    <p className="text-xs text-muted mt-1">
-                      {isManuallyEdited ? 'Suggested' : 'Calculated'}: {autoValue} for {validCount} player{validCount > 1 ? 's' : ''}
-                    </p>
-                  )}
-                  {autoValue === null && field.description && (
-                    <p className="text-xs text-muted mt-1">{field.description}</p>
-                  )}
+                  <div className="flex items-center gap-3">
+                    <input
+                      id={`config-${field.key}`}
+                      type="number"
+                      value={config[field.key] ?? field.defaultValue}
+                      onChange={(e) => updateConfig(field.key, Number(e.target.value))}
+                      min={field.min}
+                      max={field.max}
+                      inputMode="numeric"
+                      aria-label={field.label}
+                      data-testid={`config-${field.key}`}
+                      className={`${INPUT} w-24! text-center font-semibold tabular-nums`}
+                    />
+                    {autoValue !== null && (
+                      <p className="text-[13px] text-muted">
+                        {isManuallyEdited ? 'Suggested' : 'Calculated'}: {autoValue} for {validCount} player
+                        {validCount > 1 ? 's' : ''}
+                      </p>
+                    )}
+                    {autoValue === null && field.description && (
+                      <p className="text-[13px] text-muted">{field.description}</p>
+                    )}
+                  </div>
                 </div>
               )
             })}
           </section>
 
           {/* Players */}
-          <section className="mb-8">
-            <h2 className="text-sm font-medium text-ink mb-3">
-              Players ({validCount}/{selectedGame.min_players}–{selectedGame.max_players})
+          <section aria-labelledby="players-heading" className="mb-6">
+            <h2 id="players-heading" className={`flex justify-between ${SECTION_HEADING}`}>
+              <span>Players</span>
+              <span className="font-semibold tabular-nums">
+                {validCount} of {selectedGame.min_players}–{selectedGame.max_players}
+              </span>
             </h2>
             <div className="space-y-2">
               {playerNames.map((name, i) => (
                 <div key={i} className="flex items-center gap-2">
-                  <span className="text-sm text-muted w-6 shrink-0">{i + 1}.</span>
+                  <span
+                    aria-hidden="true"
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[13px] font-extrabold text-ink ${AVATAR_TONES[i % AVATAR_TONES.length]}`}
+                  >
+                    {i + 1}
+                  </span>
                   <input
                     type="text"
                     value={name}
@@ -199,12 +249,15 @@ export default function NewSessionPage() {
                     placeholder={`Player ${i + 1}`}
                     aria-label={`Player ${i + 1} name`}
                     data-testid="player-name-input"
-                    className="flex-1 border border-line-strong rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent-ink bg-surface text-ink"
+                    className={`${INPUT} min-w-0 flex-1`}
                   />
                   {playerNames.length > 2 && (
                     <button
+                      type="button"
                       onClick={() => removePlayer(i)}
-                      className="w-10 h-10 flex items-center justify-center text-danger hover:opacity-80 text-xl rounded-lg hover:bg-no-bg transition active:scale-[0.95]"
+                      aria-label={`Remove player ${i + 1}`}
+                      title="Remove player"
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-xl text-danger transition hover:bg-no-bg active:scale-[0.95]"
                     >
                       ×
                     </button>
@@ -214,9 +267,10 @@ export default function NewSessionPage() {
             </div>
             {validCount < selectedGame.max_players && (
               <button
+                type="button"
                 onClick={addPlayer}
                 data-testid="add-player"
-                className="mt-2 w-full sm:w-auto text-sm text-accent-ink hover:opacity-80 py-2.5 px-4 rounded-lg hover:bg-accent-soft transition active:scale-[0.98]"
+                className="mt-2 h-11 w-full rounded-xl border border-dashed border-line-strong text-sm font-bold text-accent-ink transition hover:bg-accent-soft active:scale-[0.98]"
               >
                 + Add player
               </button>
@@ -224,16 +278,17 @@ export default function NewSessionPage() {
           </section>
 
           {usesDealer && validCount > 0 && (
-            <section className="mb-8">
-              <label className="text-sm font-medium text-ink block mb-1">
-                First Dealer
+            <section className="mb-6">
+              <label htmlFor="first-dealer" className={`block ${SECTION_HEADING}`}>
+                First dealer
               </label>
               <select
+                id="first-dealer"
                 value={firstDealerIndex}
                 onChange={(e) => setFirstDealerIndex(Number(e.target.value))}
                 aria-label="First Dealer"
                 data-testid="first-dealer"
-                className="w-full sm:w-auto border border-line-strong rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent-ink bg-surface text-ink"
+                className={INPUT}
               >
                 {playerNames.map((name, i) => (
                   <option key={i} value={i}>
@@ -244,16 +299,30 @@ export default function NewSessionPage() {
             </section>
           )}
 
-          <button
-            onClick={handleStart}
-            disabled={!canStart || creating}
-            data-testid="start-game"
-            className="w-full sm:w-auto bg-accent text-on-accent px-6 py-3 rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium active:scale-[0.98] transition"
-          >
-            {creating ? 'Starting...' : 'Start Game'}
-          </button>
+          <div className="sticky bottom-0 z-10 -mx-4 mt-4 -mb-4 border-t border-line bg-page/90 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur sm:-mb-6">
+            {startHint && <p className="mb-2 text-center text-[13px] text-muted">{startHint}</p>}
+            <button
+              type="button"
+              onClick={handleStart}
+              disabled={!canStart || creating}
+              data-testid="start-game"
+              className="h-[52px] w-full rounded-[14px] bg-felt text-[17px] font-extrabold text-on-felt transition hover:opacity-90 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-55"
+            >
+              {creating ? 'Starting...' : `Start ${selectedGame.name}`}
+            </button>
+          </div>
         </>
       )}
     </div>
+  )
+}
+
+const AVATAR_TONES = ['bg-avatar-1', 'bg-avatar-2', 'bg-avatar-3']
+
+function CheckIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="mt-0.5 shrink-0 text-accent-ink">
+      <path d="M5 12.5l4.5 4.5L19 7.5" />
+    </svg>
   )
 }

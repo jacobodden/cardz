@@ -77,6 +77,20 @@ test('new session picker', async ({ page }) => {
   await expect(page).toHaveScreenshot('new-session-picker.png')
 })
 
+test('new session form in dark mode', async ({ page }) => {
+  await setTheme(page, 'dark')
+  await page.goto('/sessions/new')
+  await page.locator('[data-game-slug="up-and-down"]').click()
+  await page.getByTestId('add-player').click()
+  for (const [i, name] of players.entries()) {
+    await page.getByTestId('player-name-input').nth(i).fill(name)
+  }
+  await page.getByTestId('player-name-input').last().blur()
+  // The form below the picker, with the sticky Start bar.
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
+  await expect(page).toHaveScreenshot('new-session-form-dark.png')
+})
+
 test('up and down active session', async ({ page }) => {
   await createSession(page, {
     gameSlug: 'up-and-down',
