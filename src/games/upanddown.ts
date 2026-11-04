@@ -9,6 +9,25 @@ function maxHandSize(playerCount: number): number {
   return Math.floor(51 / playerCount)
 }
 
+/**
+ * Whether `tricks` can be shared among players who missed their bids so
+ * each one wins a number of tricks different from their bid.
+ */
+export function canSplitMissedTricks(tricks: number, missedBids: number[]): boolean {
+  // reachable[n]: the players so far can have won n tricks in total.
+  let reachable = new Set([0])
+  for (const bid of missedBids) {
+    const next = new Set<number>()
+    for (const sum of reachable) {
+      for (let won = 0; sum + won <= tricks; won++) {
+        if (won !== bid) next.add(sum + won)
+      }
+    }
+    reachable = next
+  }
+  return reachable.has(tricks)
+}
+
 export const upAndDown: CardGame = {
   slug: 'up-and-down',
   name: 'Up & Down The River',
@@ -75,6 +94,21 @@ export const upAndDown: CardGame = {
     if (meta.hand_size > 0 && madeTricks > meta.hand_size) {
       const tricks = `${meta.hand_size} trick${meta.hand_size === 1 ? '' : 's'}`
       return `Made bids total ${madeTricks}, but this round only has ${tricks}. Someone marked as made must have missed.`
+    }
+
+    // Once everyone is marked, the tricks left over went to the players who
+    // missed, and each of them must have won a number other than their bid.
+    // E.g. a missed bid of 0 needs at least one trick left for that player.
+    const answered = inputs.length > 0 && inputs.every((i) => typeof i.data?.success === 'boolean')
+    if (meta.hand_size > 0 && answered) {
+      const left = meta.hand_size - madeTricks
+      const missedBids = inputs
+        .filter((i) => i.data?.success === false)
+        .map((i) => Number(i.data?.bid) || 0)
+      if (!canSplitMissedTricks(left, missedBids)) {
+        const tricks = `${left} trick${left === 1 ? '' : 's'}`
+        return `That leaves ${tricks} for the players who missed, but they can't be split so each of them missed their bid. Check who made it.`
+      }
     }
 
     return null
