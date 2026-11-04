@@ -92,17 +92,13 @@ export async function createSession(
   await expect(page.getByTestId('round-number')).toBeVisible()
 }
 
-/** A player's input row for the current round on the session page. */
-export function playerRow(page: Page, playerName: string) {
+/**
+ * A player's card on the session page: name, total, rank badge, this
+ * round's inputs and their recent rounds.
+ */
+export function playerCard(page: Page, playerName: string) {
   return page.locator(
-    `[data-testid="player-row"][data-player-name="${playerName}"]`
-  )
-}
-
-/** A player's tile in the session standings strip. */
-export function playerStanding(page: Page, playerName: string) {
-  return page.locator(
-    `[data-testid="player-standing"][data-player-name="${playerName}"]`
+    `[data-testid="player-card"][data-player-name="${playerName}"]`
   )
 }
 
@@ -144,7 +140,7 @@ export async function expectPlayerTotal(
   total: number | string
 ): Promise<void> {
   await expect(
-    playerStanding(page, playerName).getByTestId('player-total')
+    playerCard(page, playerName).getByTestId('player-total')
   ).toHaveText(String(total))
 }
 
@@ -171,7 +167,7 @@ export async function submitUpAndDownRound(
 
   for (const bid of input.bids) {
     await setStepper(page, `${bid.player} Bid`, bid.bid)
-    await playerRow(page, bid.player)
+    await playerCard(page, bid.player)
       .getByRole('button', {
         name: `${bid.player} Made Bid? ${bid.success ? 'yes' : 'no'}`,
       })
@@ -194,7 +190,7 @@ export async function submitPayMeRound(
   await expectRound(page, roundNumber)
 
   for (const entry of cardValues) {
-    await playerRow(page, entry.player)
+    await playerCard(page, entry.player)
       .getByLabel(`${entry.player} Cards Left (value)`)
       .fill(String(entry.value))
   }
@@ -215,7 +211,7 @@ export async function submitPointsRound(
   await expectRound(page, roundNumber)
 
   for (const entry of points) {
-    await playerRow(page, entry.player)
+    await playerCard(page, entry.player)
       .getByRole('spinbutton', { name: `${entry.player} Points` })
       .fill(String(entry.points))
   }
