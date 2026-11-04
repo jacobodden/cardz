@@ -13,6 +13,11 @@ export interface InputField {
   max?: number
   scope?: 'round' | 'player'
   required?: boolean
+  /**
+   * Enter a number field with −/+ buttons instead of typing. Suits small
+   * counts with a `max`, such as a bid.
+   */
+  stepper?: boolean
 }
 
 export interface PlayerScoreInput {

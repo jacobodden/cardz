@@ -15,8 +15,8 @@ export default defineConfig({
         name: 'Cardz',
         short_name: 'Cardz',
         description: 'Card game score tracker',
-        theme_color: '#863bff',
-        background_color: '#ffffff',
+        theme_color: '#1e6b4e',
+        background_color: '#eef3ef',
         display: 'standalone',
         icons: [
           { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },

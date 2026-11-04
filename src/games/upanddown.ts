@@ -87,6 +87,7 @@ export const upAndDown: CardGame = {
         min: 0,
         max: round.hand_size,
         scope: 'player',
+        stepper: true,
       },
       {
         key: 'success',

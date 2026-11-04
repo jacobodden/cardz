@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useContext, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { finishSession, getSession } from '../db/sessions'
@@ -12,8 +12,12 @@ import type { RoundMetaInfo, ScoreboardRow } from '../db/rounds'
 import { getGame } from '../games'
 import { topByTotal } from '../games/standings'
 import type { InputField, PlayerScoreInput, RoundInfoChip, ScoreDirection } from '../games/types'
+import FeltHero from '../components/FeltHero'
+import HeaderActions from '../components/HeaderActions'
+import { HeroSlotContext } from '../components/heroSlot'
 
 const SUIT_SYMBOLS = new Set(['♠', '♥', '♣', '♦'])
+const RED_SUITS = new Set(['♥', '♦'])
 
 const CHIP_TONES: Record<NonNullable<RoundInfoChip['tone']>, string> = {
   red: 'text-red-suit',
@@ -23,18 +27,16 @@ function chipTone(chip: RoundInfoChip): string {
   return chip.tone ? CHIP_TONES[chip.tone] : 'text-ink'
 }
 
-const SUIT_COLORS: Record<string, string> = {
-  '♠': 'text-ink',
-  '♥': 'text-red-suit',
-  '♣': 'text-ink',
-  '♦': 'text-red-suit',
-}
-
 type FieldValue = string | number | boolean
 
 function coerce(field: InputField, raw: FieldValue | undefined) {
   if (raw === undefined || raw === '') return undefined
   return field.type === 'number' ? Number(raw) : raw
+}
+
+/** A select whose options are all card suits, shown as playing cards. */
+function isSuitField(field: InputField): boolean {
+  return field.type === 'select' && !!field.options?.every((s) => SUIT_SYMBOLS.has(s))
 }
 
 /** Round-scope inputs as the game expects them (empty values dropped). */
@@ -72,12 +74,34 @@ function findWinners(rows: ScoreboardRow[], direction: ScoreDirection): Set<numb
   return new Set(topByTotal(rows, direction).map((r) => r.player_id))
 }
 
+function ordinal(n: number): string {
+  const tens = n % 100
+  if (tens >= 11 && tens <= 13) return `${n}th`
+  return `${n}${['th', 'st', 'nd', 'rd'][n % 10] ?? 'th'}`
+}
+
+/** Competition rank of `total`: 1 + how many totals beat it (ties share a rank). */
+function rankOf(total: number, totals: number[], direction: ScoreDirection): number {
+  return 1 + totals.filter((t) => (direction === 'low' ? t < total : t > total)).length
+}
+
+/** Standings tiles per row: wraps 4+ players so names and totals stay readable. */
+function standingColumns(count: number): number {
+  if (count <= 3) return Math.max(count, 1)
+  return count === 4 ? 2 : 3
+}
+
+function formatRoundScore(score: number, direction: ScoreDirection): string {
+  return direction === 'high' && score > 0 ? `+${score}` : String(score)
+}
+
 export default function SessionPage() {
   const { id } = useParams<{ id: string }>()
   const sessionId = Number(id)
+  const { iconButton } = useContext(HeroSlotContext)
   const [roundData, setRoundData] = useState<Record<string, string | number>>({})
-  const [playerData, setPlayerData] = useState<Record<number, Record<string, string | number | boolean>>>({})
-  const [expandedPlayers, setExpandedPlayers] = useState<Record<number, boolean>>({})
+  const [playerData, setPlayerData] = useState<Record<number, Record<string, FieldValue>>>({})
+  const [showHistory, setShowHistory] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [undoing, setUndoing] = useState(false)
   const [finishing, setFinishing] = useState(false)
@@ -189,6 +213,8 @@ export default function SessionPage() {
   if (!session) return <p className="text-muted">Game not found.</p>
 
   const roundFields = round?.fields?.filter((f) => f.scope === 'round') ?? []
+  const suitFields = roundFields.filter(isSuitField)
+  const otherRoundFields = roundFields.filter((f) => !isSuitField(f))
   const playerFields = round?.fields?.filter((f) => f.scope !== 'round') ?? []
   const totalRounds = session.total_rounds ?? 0
   const active = !isComplete && !!round && !round.complete
@@ -197,8 +223,14 @@ export default function SessionPage() {
   const rawRoundData: Record<string, any> = round?.data_json ?? {}
   const handSize: number = rawRoundData.handSize ?? 0
 
+  // Facts for the band's round line. Chips for fields being entered (trump)
+  // are left out: the inputs already show them.
   const currentInfo =
-    active && roundNumber !== null ? roundInfo(roundNumber, rawRoundData) : []
+    active && roundNumber !== null
+      ? roundInfo(roundNumber, rawRoundData).filter(
+          (chip) => !roundFields.some((f) => f.key === chip.key)
+        )
+      : []
 
   const requiredRoundFieldMissing = roundFields.some(
     (f) => f.required && (roundData[f.key] === undefined || roundData[f.key] === '')
@@ -227,389 +259,383 @@ export default function SessionPage() {
       ? `Round ${roundNumber}${totalRounds > 0 ? ` of ${totalRounds}` : ''}`
       : 'Round'
 
-  const roundSub = isComplete
-    ? `${scoredCount} round${scoredCount === 1 ? '' : 's'}`
-    : `${scoredCount} scored`
-
   const progressPct =
     totalRounds > 0 ? Math.min(100, (scoredCount / totalRounds) * 100) : 0
 
-  const standings = [...players].sort((a, b) =>
-    direction === 'low' ? a.total - b.total : b.total - a.total
-  )
-  const winnerNames = standings
-    .filter((p) => winners.has(p.player_id))
-    .map((p) => p.name)
+  const totals = players.map((p) => p.total)
+  const winnerRows = players.filter((p) => winners.has(p.player_id))
+
+  // "Bids so far" line for the first stepper field.
+  const stepperField = playerFields.find((f) => f.stepper)
+  const stillToEnter = stepperField
+    ? players.filter((p) => coerce(stepperField, playerData[p.player_id]?.[stepperField.key]) === undefined)
+    : []
+
+  /** Best scorer(s) of a round, for the recent-round chips. */
+  function roundBest(roundNum: number): { names: string; score: number } | null {
+    const rows = players
+      .map((p) => ({ name: p.name, total: p.scores[roundNum - 1] }))
+      .filter((r): r is { name: string; total: number } => r.total !== null && r.total !== undefined)
+    const best = topByTotal(rows, direction)
+    if (best.length === 0) return null
+    return { names: best.map((r) => r.name).join(' & '), score: best[0].total }
+  }
+
+  const scoredRounds = Array.from({ length: scoredCount }, (_, i) => i + 1)
+  const recentRounds = scoredRounds.slice(-2)
 
   return (
-    <div className="mx-auto max-w-xl pb-2">
-      <header className="mb-3">
-        <h1 className="text-2xl font-bold tracking-tight text-ink">
-          {session.title || session.game?.name || 'Game'}
-        </h1>
-        {session.game && (
-          <p className="mt-0.5 text-sm text-muted">
-            {session.game.name} · {direction === 'low' ? 'lowest' : 'highest'} total wins
-          </p>
-        )}
-      </header>
-
-      {/* Round bar: round status + Undo / Finish */}
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <div className="min-w-0">
-          <div
-            data-testid="round-number"
-            className="truncate text-base font-bold text-ink"
+    <div className="mx-auto max-w-xl">
+      <HeaderActions>
+        {hasScoredRounds && (
+          <button
+            type="button"
+            onClick={handleUndo}
+            disabled={undoing}
+            data-testid="undo-round"
+            title="Undo last round"
+            aria-label="Undo last round"
+            className={iconButton}
           >
-            {roundLabel}
-          </div>
-          <div className="text-xs text-muted">{roundSub}</div>
-        </div>
-        <div className="flex shrink-0 gap-1.5">
-          {hasScoredRounds && (
-            <button
-              onClick={handleUndo}
-              disabled={undoing}
-              data-testid="undo-round"
-              title="Undo last round"
-              className="flex h-10 items-center gap-1 rounded-lg border border-line-strong px-3 text-sm font-medium text-muted transition hover:bg-surface-2 active:scale-[0.98] disabled:opacity-50"
-            >
-              {undoing ? '…' : '↶ Undo'}
-            </button>
+            <UndoIcon />
+          </button>
+        )}
+      </HeaderActions>
+
+      <FeltHero>
+        <div className="mx-auto max-w-xl pb-4">
+          {session.game && (
+            <p className="text-[13px] font-semibold text-on-felt/80">
+              {session.game.name} · {direction === 'low' ? 'lowest' : 'highest'} total wins
+            </p>
           )}
-          {!isComplete && (
-            <button
-              onClick={handleFinish}
-              disabled={!hasScoredRounds || finishing}
-              data-testid="finish-game"
-              title="Finish game"
-              className="flex h-10 items-center rounded-lg border border-no-fg/30 bg-no-bg px-3 text-sm font-semibold text-no-fg transition hover:opacity-90 active:scale-[0.98] disabled:opacity-40"
+          <h1 className="text-2xl leading-tight font-extrabold tracking-tight">
+            {session.title || session.game?.name || 'Game'}
+          </h1>
+          <p className="mt-0.5 text-sm text-on-felt/85">
+            <span data-testid="round-number">{roundLabel}</span>
+            {isComplete && (
+              <span>
+                {' · '}
+                {scoredCount} round{scoredCount === 1 ? '' : 's'}
+              </span>
+            )}
+            {currentInfo.map((chip) => (
+              <span key={chip.key}>
+                {' · '}
+                <span data-testid="round-info-chip" data-chip={chip.key}>
+                  {chip.label} {chip.value}
+                </span>
+              </span>
+            ))}
+            {active && handSize > 0 && (
+              <span data-testid="hand-size">
+                {' · '}
+                {handSize} card{handSize === 1 ? '' : 's'}
+              </span>
+            )}
+          </p>
+          {totalRounds > 0 && (
+            <div
+              role="progressbar"
+              aria-label="Rounds played"
+              aria-valuemin={0}
+              aria-valuemax={totalRounds}
+              aria-valuenow={scoredCount}
+              className="mt-2.5 h-[5px] overflow-hidden rounded-full bg-on-felt/25"
             >
-              {finishing ? '…' : 'Finish'}
-            </button>
+              <div
+                className="h-full rounded-full bg-on-felt transition-all"
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
           )}
+          {active &&
+            suitFields.map((f) => (
+              <SuitCards
+                key={f.key}
+                field={f}
+                value={roundData[f.key]}
+                onChange={(v) => setRoundData((prev) => ({ ...prev, [f.key]: v }))}
+              />
+            ))}
         </div>
-      </div>
+      </FeltHero>
 
-      {currentInfo.length > 0 && (
-        <div data-testid="round-info" className="mb-3 flex flex-wrap gap-1.5">
-          {currentInfo.map((chip) => (
-            <span
-              key={chip.key}
-              data-testid="round-info-chip"
-              data-chip={chip.key}
-              className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-2.5 py-1 text-xs"
-            >
-              <span className="text-muted">{chip.label}</span>
-              <b className={`font-semibold ${chipTone(chip)}`}>{chip.value}</b>
-            </span>
-          ))}
-        </div>
-      )}
-
-      {totalRounds > 0 && (
-        <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-line">
-          <div
-            className="h-full rounded-full bg-accent transition-all"
-            style={{ width: `${progressPct}%` }}
-          />
-        </div>
-      )}
-
-      {error && !active && (
-        <p className="mb-3 text-sm text-danger">{error}</p>
-      )}
+      {error && !active && <p className="mb-3 text-sm text-danger">{error}</p>}
 
       {isComplete && (
-        <section className="mb-3 rounded-xl border border-accent-ink/40 bg-gradient-to-b from-accent-soft to-surface p-4">
-          <p className="text-base font-bold text-accent-ink">
-            🏆{' '}
-            {winnerNames.length > 1
-              ? `${winnerNames.join(' & ')} tie!`
-              : `${winnerNames[0] ?? 'Winner'} wins!`}
-          </p>
-          <p className="mt-0.5 text-xs text-muted">
-            {direction === 'low' ? 'Lowest' : 'Highest'} total after {scoredCount}{' '}
-            round{scoredCount === 1 ? '' : 's'}
-          </p>
-          <div className="mt-2 space-y-1">
-            {standings.map((p) => (
-              <div
-                key={p.player_id}
-                className="flex items-baseline justify-between gap-3"
-              >
-                <span className="text-sm font-medium text-ink">
-                  {p.name}
-                </span>
-                <span className="text-sm font-bold text-ink">
-                  {p.total} pts
-                </span>
-              </div>
-            ))}
+        <section
+          data-testid="winner-panel"
+          className="mb-3 flex items-center gap-3 rounded-2xl border border-lead-border bg-lead-bg p-4"
+        >
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-surface text-lead-label">
+            <TrophyIcon />
+          </span>
+          <div className="min-w-0">
+            <p className="text-lg leading-tight font-extrabold text-ink">
+              {winnerRows.length > 1
+                ? `${winnerRows.map((p) => p.name).join(' & ')} tie!`
+                : `${winnerRows[0]?.name ?? 'Winner'} wins!`}
+            </p>
+            <p className="mt-0.5 text-sm text-lead-label">
+              {direction === 'low' ? 'Lowest' : 'Highest'} total after {scoredCount} round
+              {scoredCount === 1 ? '' : 's'}
+              {winnerRows[0] && ` · ${winnerRows[0].total} pts`}
+            </p>
           </div>
         </section>
       )}
 
-      <div data-testid={isComplete ? undefined : 'current-round'}>
-        {active && roundFields.length > 0 && (
-          <section className="mb-3 rounded-xl border border-line bg-surface p-3">
-            <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted">
-              Round settings
-            </p>
-            <div className="flex flex-wrap items-center gap-3">
-              {roundFields.map((f) => (
-                <RoundFieldInput
-                  key={f.key}
-                  field={f}
-                  value={roundData[f.key]}
-                  onChange={(v) => setRoundData((prev) => ({ ...prev, [f.key]: v }))}
-                />
-              ))}
-            </div>
-          </section>
-        )}
-
-        <div data-testid="player-cards" className="space-y-3">
-          {players.map((row) => (
-            <PlayerCard
+      <section
+        aria-label="Standings"
+        data-testid="standings"
+        className="grid gap-2"
+        style={{ gridTemplateColumns: `repeat(${standingColumns(players.length)}, minmax(0, 1fr))` }}
+      >
+        {players.map((row) => {
+          const top = winners.has(row.player_id) || leaders.has(row.player_id)
+          const rankLabel = isComplete
+            ? top
+              ? 'Winner'
+              : ordinal(rankOf(row.total, totals, direction))
+            : !hasScoredRounds
+              ? '–'
+              : top
+                ? 'Leading'
+                : ordinal(rankOf(row.total, totals, direction))
+          return (
+            <div
               key={row.player_id}
-              row={row}
-              active={active}
-              roundNumber={roundNumber}
-              handSize={handSize}
-              fields={playerFields}
-              values={playerData[row.player_id]}
-              onChange={(key, value) =>
-                setPlayerData((prev) => ({
-                  ...prev,
-                  [row.player_id]: { ...prev[row.player_id], [key]: value },
-                }))
-              }
-              isLeader={leaders.has(row.player_id)}
-              isWinner={winners.has(row.player_id)}
-              hasScoredRounds={hasScoredRounds}
-              expanded={!!expandedPlayers[row.player_id]}
-              onToggle={() =>
-                setExpandedPlayers((prev) => ({
-                  ...prev,
-                  [row.player_id]: !prev[row.player_id],
-                }))
-              }
-              getHistoryInfo={getHistoryInfo}
-            />
-          ))}
-        </div>
-      </div>
+              data-testid="player-standing"
+              data-player-name={row.name}
+              className={`min-w-0 rounded-xl border px-2.5 py-2 ${
+                top ? 'border-lead-border bg-lead-bg' : 'border-line bg-surface'
+              }`}
+            >
+              <p className={`text-xs font-bold ${top ? 'text-lead-label' : 'text-muted'}`}>
+                {rankLabel}
+              </p>
+              <p className="flex items-baseline justify-between gap-1.5">
+                <span className="min-w-0 truncate text-sm font-semibold text-ink">{row.name}</span>
+                <span
+                  data-testid="player-total"
+                  className="shrink-0 text-xl font-extrabold tabular-nums text-ink"
+                >
+                  {row.total}
+                </span>
+              </p>
+            </div>
+          )
+        })}
+      </section>
 
       {active && round && (
-        <div className="sticky bottom-0 z-10 -mx-4 mt-4 border-t border-line bg-surface/90 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur">
+        <div data-testid="current-round" className="mt-3">
+          {otherRoundFields.length > 0 && (
+            <section className="mb-2.5 rounded-[14px] border border-line bg-surface p-3">
+              <p className="mb-2 text-[11px] font-bold tracking-wider text-muted uppercase">
+                Round settings
+              </p>
+              <div className="flex flex-wrap items-center gap-3">
+                {otherRoundFields.map((f) => (
+                  <RoundFieldInput
+                    key={f.key}
+                    field={f}
+                    value={roundData[f.key]}
+                    onChange={(v) => setRoundData((prev) => ({ ...prev, [f.key]: v }))}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
+          <TypedFieldCaptions fields={playerFields} />
+
+          <div data-testid="player-rows" className="space-y-2.5">
+            {players.map((row) => (
+              <div
+                key={row.player_id}
+                data-testid="player-row"
+                data-player-name={row.name}
+                className="flex items-center gap-2.5 rounded-[14px] border border-line bg-surface py-2.5 pr-3 pl-3"
+              >
+                <span className="min-w-0 flex-1 truncate text-base font-bold text-ink">{row.name}</span>
+                {playerFields.map((field) => (
+                  <PlayerFieldInput
+                    key={field.key}
+                    field={field}
+                    playerName={row.name}
+                    value={playerData[row.player_id]?.[field.key]}
+                    onChange={(v) =>
+                      setPlayerData((prev) => ({
+                        ...prev,
+                        [row.player_id]: { ...prev[row.player_id], [field.key]: v },
+                      }))
+                    }
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
+
+          {stepperField && (
+            <p data-testid="stepper-progress" className="mt-2.5 text-[13px] text-muted">
+              {stepperField.label}s so far: {players.length - stillToEnter.length} of {players.length}
+              {stillToEnter.length > 0 &&
+                ` · ${stillToEnter.map((p) => p.name).join(', ')} still to ${stepperField.label.toLowerCase()}`}
+            </p>
+          )}
+        </div>
+      )}
+
+      {hasScoredRounds && (
+        <section aria-label="Rounds" className="mt-3">
+          <div className="flex items-center gap-1.5">
+            <span className="shrink-0 text-xs text-muted">Recent:</span>
+            <div className="flex min-w-0 flex-1 gap-1.5 overflow-hidden">
+              {recentRounds.map((n) => {
+                const best = roundBest(n)
+                return (
+                  <span
+                    key={n}
+                    data-testid="recent-round-chip"
+                    className="min-w-0 truncate rounded-md border border-line bg-surface px-2 py-0.5 text-xs whitespace-nowrap text-ink"
+                  >
+                    R{n}
+                    {getHistoryInfo(n).map((chip) => (
+                      <span key={chip.key} title={chip.label} className={`ml-1 ${chipTone(chip)}`}>
+                        {chip.value}
+                      </span>
+                    ))}
+                    {best && ` ${best.names} ${formatRoundScore(best.score, direction)}`}
+                  </span>
+                )
+              })}
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowHistory((v) => !v)}
+              aria-expanded={showHistory}
+              aria-controls="round-history"
+              className="-mr-1 flex h-11 shrink-0 items-center px-1 text-xs font-bold text-accent-ink hover:opacity-80"
+            >
+              {showHistory ? 'Hide rounds' : 'All rounds'}
+            </button>
+          </div>
+
+          {showHistory && (
+            <RoundHistory
+              players={players}
+              rounds={scoredRounds}
+              direction={direction}
+              getHistoryInfo={getHistoryInfo}
+            />
+          )}
+        </section>
+      )}
+
+      {active && round && (
+        <div className="sticky bottom-0 z-10 -mx-4 mt-4 -mb-4 border-t border-line bg-page/90 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur sm:-mb-6">
           {error ? (
             <p className="mb-2 text-sm text-danger">{error}</p>
           ) : (
             ruleViolation && (
-              <p
-                data-testid="round-rule-violation"
-                className="mb-2 text-sm text-warn"
-              >
+              <p data-testid="round-rule-violation" className="mb-2 text-sm text-warn">
                 {ruleViolation}
               </p>
             )
           )}
-          <button
-            onClick={handleSubmit}
-            disabled={
-              submitting ||
-              !!ruleViolation ||
-              requiredRoundFieldMissing ||
-              successMissing
-            }
-            data-testid="submit-round"
-            className="h-12 w-full rounded-xl bg-accent text-sm font-bold text-on-accent transition hover:opacity-90 active:scale-[0.99] disabled:opacity-50"
-          >
-            {submitting ? 'Saving...' : `Submit Round ${round.round_number}`}
-          </button>
-          <p className="mt-1 text-center text-[11px] text-muted">
-            One submit saves all player scores
-          </p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={handleFinish}
+              disabled={!hasScoredRounds || finishing}
+              data-testid="finish-game"
+              title="Finish game"
+              className="h-[52px] shrink-0 rounded-[14px] border border-line bg-surface px-4 text-[15px] font-bold text-danger transition hover:bg-surface-2 active:scale-[0.98] disabled:opacity-50"
+            >
+              {finishing ? '…' : 'Finish'}
+            </button>
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={submitting || !!ruleViolation || requiredRoundFieldMissing || successMissing}
+              data-testid="submit-round"
+              className="h-[52px] min-w-0 flex-1 rounded-[14px] bg-felt text-[17px] font-extrabold text-on-felt transition hover:opacity-90 active:scale-[0.99] disabled:opacity-55"
+            >
+              {submitting ? 'Saving...' : `Submit round ${round.round_number}`}
+            </button>
+          </div>
         </div>
       )}
     </div>
   )
 }
 
-function PlayerCard({
-  row,
-  active,
-  roundNumber,
-  handSize,
-  fields,
-  values,
+/** Trump (or any suit) choice as four playing cards in the felt band. */
+function SuitCards({
+  field,
+  value,
   onChange,
-  isLeader,
-  isWinner,
-  hasScoredRounds,
-  expanded,
-  onToggle,
-  getHistoryInfo,
 }: {
-  row: ScoreboardRow
-  active: boolean
-  roundNumber: number | null
-  handSize: number
-  fields: InputField[]
-  values: Record<string, string | number | boolean> | undefined
-  onChange: (key: string, value: string | number | boolean) => void
-  isLeader: boolean
-  isWinner: boolean
-  hasScoredRounds: boolean
-  expanded: boolean
-  onToggle: () => void
-  getHistoryInfo: (roundNumber: number) => RoundInfoChip[]
+  field: InputField
+  value: string | number | undefined
+  onChange: (v: string) => void
 }) {
-  const scoredEntries = row.scores
-    .map((score, index) => ({ roundNumber: index + 1, score }))
-    .filter(
-      (entry): entry is { roundNumber: number; score: number } =>
-        entry.score !== null
-    )
-
-  const recent = scoredEntries.slice(-2)
-
-  const cardTone = isWinner
-    ? 'border-lead-border bg-gradient-to-b from-lead-bg to-surface'
-    : active && isLeader && hasScoredRounds
-      ? 'border-lead-border ring-1 ring-lead-border/50'
-      : 'border-line'
-
   return (
-    <article
-      data-testid="player-card"
-      data-player-name={row.name}
-      className={`rounded-xl border bg-surface p-3.5 shadow-sm ${cardTone}`}
-    >
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <div className="flex items-center gap-1 text-sm font-bold text-ink">
-            <span className="truncate">{row.name}</span>
-            {isWinner && <span aria-label="Winner">👑</span>}
-          </div>
-          <div className="mt-0.5 flex items-baseline gap-1">
-            <span
-              data-testid="player-total"
-              className="text-3xl font-extrabold leading-none tracking-tight text-ink"
-            >
-              {row.total}
-            </span>
-            <span className="text-xs font-semibold text-muted">
-              pts
-            </span>
-          </div>
-        </div>
-        {active && isLeader && hasScoredRounds && (
-          <span className="shrink-0 rounded-full bg-lead-bg px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-lead-label">
-            Leading
-          </span>
-        )}
-      </div>
-
-      {active && roundNumber !== null && (
-        <div className="mt-3 border-t border-dashed border-line pt-2.5">
-          <div className="mb-1.5 flex items-center justify-between gap-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-muted">
-              This round
-            </span>
-            <span className="text-[11px] font-semibold text-muted">
-              R{roundNumber}
-              {handSize > 0 ? ` · ${handSize} card${handSize === 1 ? '' : 's'}` : ''}
-            </span>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            {fields.map((field) => (
-              <CardFieldInput
-                key={field.key}
-                field={field}
-                playerName={row.name}
-                value={values?.[field.key]}
-                onChange={(v) => onChange(field.key, v)}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {scoredEntries.length > 0 && (
-        <div className="mt-2.5 flex items-center justify-between gap-2">
-          <div className="flex flex-wrap gap-1.5">
-            {recent.map((entry) => {
-              const info = getHistoryInfo(entry.roundNumber)
-              return (
-                <span
-                  key={entry.roundNumber}
-                  data-testid="recent-round-chip"
-                  className="inline-flex items-center gap-1 rounded-md border border-line bg-surface-2 px-1.5 py-0.5 text-[11px] text-muted"
-                >
-                  <span>R{entry.roundNumber}</span>
-                  {info.map((chip) => (
-                    <span key={chip.key} title={chip.label} className={chipTone(chip)}>
-                      {chip.value}
-                    </span>
-                  ))}
-                  <b className="font-bold text-ink">
-                    {entry.score}
-                  </b>
-                </span>
-              )
-            })}
-          </div>
+    <div role="group" aria-label={field.label} className="mt-3.5 flex items-center gap-2.5">
+      <span className="w-[50px] shrink-0 text-[13px] font-bold text-on-felt/90">{field.label}</span>
+      {field.options!.map((opt) => {
+        const selected = value === opt
+        return (
           <button
+            key={opt}
             type="button"
-            onClick={onToggle}
-            aria-expanded={expanded}
-            aria-label={`${expanded ? 'Hide' : 'Show'} all rounds for ${row.name}`}
-            className="shrink-0 py-1 text-[11px] font-bold text-accent-ink hover:opacity-80"
+            onClick={() => onChange(opt)}
+            aria-label={`${field.label} ${opt}`}
+            aria-pressed={selected}
+            className={`flex h-[60px] w-[52px] items-center justify-center rounded-lg bg-card-face text-[26px] leading-none transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-felt ${
+              RED_SUITS.has(opt) ? 'text-card-red' : 'text-card-black'
+            } ${
+              selected
+                ? '-translate-y-1 shadow-lg ring-3 ring-card-ring'
+                : 'shadow-[0_2px_4px_rgb(0_0_0/0.25)] active:translate-y-0.5'
+            }`}
           >
-            {expanded ? 'Hide rounds ⌃' : 'All rounds ›'}
+            {opt}
           </button>
-        </div>
-      )}
-
-      {expanded && row.scores.length > 0 && (
-        <div
-          data-testid="round-history"
-          className="mt-2.5 grid grid-cols-4 gap-1.5 border-t border-dashed border-line pt-2.5 sm:grid-cols-6"
-        >
-          {row.scores.map((score, index) => {
-            const historyRound = index + 1
-            const info = getHistoryInfo(historyRound)
-            const isCurrent = roundNumber === historyRound
-            return (
-              <div
-                key={historyRound}
-                className={`rounded-md border px-1 py-1 text-center leading-tight ${
-                  isCurrent
-                    ? 'border-dashed border-accent-ink bg-accent-soft text-accent-ink'
-                    : 'border-line bg-surface-2 text-muted'
-                }`}
-              >
-                <span className="block text-[10px]">R{historyRound}</span>
-                {info.map((chip) => (
-                  <span key={chip.key} title={chip.label} className={`block text-xs ${chipTone(chip)}`}>
-                    {chip.value}
-                  </span>
-                ))}
-                <span className="block text-xs font-bold text-ink">
-                  {score ?? '—'}
-                </span>
-              </div>
-            )
-          })}
-        </div>
-      )}
-    </article>
+        )
+      })}
+    </div>
   )
 }
 
-function CardFieldInput({
+/** Fields whose input is typed into a number box get a caption above the rows. */
+function isTypedNumber(field: InputField): boolean {
+  return field.type === 'number' && !field.stepper
+}
+
+function allowsNegative(field: InputField): boolean {
+  return field.min === undefined || field.min < 0
+}
+
+function TypedFieldCaptions({ fields }: { fields: InputField[] }) {
+  if (!fields.some(isTypedNumber)) return null
+  return (
+    <div aria-hidden="true" className="mb-1 flex justify-end gap-2.5 px-3 text-xs font-semibold text-muted">
+      {fields.filter(isTypedNumber).map((f) => (
+        <span key={f.key} className="flex gap-1">
+          {/* Centered over the input; a long label overflows both sides evenly. */}
+          <span className="flex w-28 justify-center whitespace-nowrap">{f.label}</span>
+          {allowsNegative(f) && <span className="w-11" />}
+        </span>
+      ))}
+    </div>
+  )
+}
+
+function PlayerFieldInput({
   field,
   playerName,
   value,
@@ -617,108 +643,216 @@ function CardFieldInput({
 }: {
   field: InputField
   playerName: string
-  value: string | number | boolean | undefined
-  onChange: (v: string | number | boolean) => void
+  value: FieldValue | undefined
+  onChange: (v: FieldValue) => void
 }) {
+  const label = `${playerName} ${field.label}`
+
   if (field.type === 'boolean') {
     return (
-      <div className="flex items-center gap-2">
-        <span className="text-xs font-medium text-muted">
-          {field.label}
-        </span>
-        <div className="inline-flex h-11 overflow-hidden rounded-lg border border-line">
-          <button
-            type="button"
-            onClick={() => onChange(false)}
-            aria-label={`${playerName} ${field.label} no`}
-            aria-pressed={value === false}
-            className={`w-11 text-base font-bold transition active:scale-[0.97] ${
-              value === false
-                ? 'bg-no-bg text-no-fg'
-                : 'bg-surface text-muted hover:bg-surface-2'
-            }`}
-          >
-            ✗
-          </button>
-          <button
-            type="button"
-            onClick={() => onChange(true)}
-            aria-label={`${playerName} ${field.label} yes`}
-            aria-pressed={value === true}
-            className={`w-11 border-l border-line text-base font-bold transition active:scale-[0.97] ${
-              value === true
-                ? 'bg-yes-bg text-yes-fg'
-                : 'bg-surface text-muted hover:bg-surface-2'
-            }`}
-          >
-            ✓
-          </button>
-        </div>
+      <div className="flex h-11 shrink-0 overflow-hidden rounded-[10px] border border-line">
+        <button
+          type="button"
+          onClick={() => onChange(false)}
+          aria-label={`${label} no`}
+          aria-pressed={value === false}
+          className={`w-11 text-base font-extrabold transition active:scale-[0.97] ${
+            value === false ? 'bg-no-bg text-no-fg' : 'bg-surface text-muted hover:bg-surface-2'
+          }`}
+        >
+          ✗
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange(true)}
+          aria-label={`${label} yes`}
+          aria-pressed={value === true}
+          className={`w-11 border-l border-line text-base font-extrabold transition active:scale-[0.97] ${
+            value === true ? 'bg-yes-bg text-yes-fg' : 'bg-surface text-muted hover:bg-surface-2'
+          }`}
+        >
+          ✓
+        </button>
       </div>
     )
   }
 
   if (field.type === 'select' && field.options) {
     return (
-      <label className="flex min-w-0 flex-1 items-center gap-2">
-        <span className="shrink-0 text-xs font-medium text-muted">
+      <select
+        value={(value ?? '') as string | number}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label={label}
+        className="h-11 w-32 shrink-0 rounded-[10px] border border-line-strong bg-surface px-3 text-base text-ink focus:ring-2 focus:ring-accent-ink focus:outline-none"
+      >
+        <option value="" disabled>
           {field.label}
-        </span>
-        <select
-          value={(value ?? '') as string | number}
-          onChange={(e) => onChange(e.target.value)}
-          aria-label={`${playerName} ${field.label}`}
-          className="h-11 min-w-0 flex-1 rounded-lg border border-line-strong bg-surface px-3 text-base text-ink focus:outline-none focus:ring-2 focus:ring-accent-ink"
-        >
-          <option value="" disabled>
-            Select...
+        </option>
+        {field.options.map((opt) => (
+          <option key={opt} value={opt}>
+            {opt}
           </option>
-          {field.options.map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
-            </option>
-          ))}
-        </select>
-      </label>
+        ))}
+      </select>
     )
   }
 
-  const allowsNegative = field.min === undefined || field.min < 0
-  const numericValue = Number(value)
+  if (field.stepper) {
+    return <Stepper field={field} label={label} value={value} onChange={onChange} />
+  }
 
+  const negative = allowsNegative(field)
   return (
-    <label className="flex min-w-0 flex-1 items-center gap-2">
-      <span className="shrink-0 text-xs font-medium text-muted">
-        {field.label}
-      </span>
+    <div className="flex shrink-0 gap-1">
       <input
         type="number"
         min={field.min}
         max={field.max}
         value={value === undefined ? '' : (value as string | number)}
-        onChange={(e) => {
-          const raw = e.target.value
-          onChange(raw === '' ? '' : raw)
-        }}
+        onChange={(e) => onChange(e.target.value)}
         placeholder="0"
-        inputMode={allowsNegative ? 'decimal' : 'numeric'}
-        aria-label={`${playerName} ${field.label}`}
-        className="h-11 min-w-0 flex-1 rounded-lg border border-line-strong bg-surface px-3 text-base font-semibold text-ink focus:outline-none focus:ring-2 focus:ring-accent-ink"
+        inputMode={negative ? 'decimal' : 'numeric'}
+        aria-label={label}
+        className="h-11 w-28 rounded-[10px] border border-line-strong bg-surface px-3 text-center text-base font-semibold text-ink tabular-nums focus:ring-2 focus:ring-accent-ink focus:outline-none"
       />
-      {allowsNegative && (
+      {negative && (
         <button
           type="button"
           onClick={() => {
             if (value === undefined || value === '') return
-            onChange(String(-numericValue))
+            onChange(String(-Number(value)))
           }}
-          aria-label={`${playerName} ${field.label} toggle sign`}
-          className="h-11 w-11 shrink-0 rounded-lg border border-line bg-surface-2 text-base font-bold text-muted transition hover:bg-surface-2 active:scale-[0.97]"
+          aria-label={`${label} toggle sign`}
+          className="h-11 w-11 rounded-[10px] border border-line bg-surface-2 text-base font-bold text-muted transition active:scale-[0.97]"
         >
           ±
         </button>
       )}
-    </label>
+    </div>
+  )
+}
+
+/**
+ * −/+ entry for a small count. Starts unset ("–"): − sets the minimum and
+ * + sets one above it, so a bid of 0 is one tap.
+ */
+function Stepper({
+  field,
+  label,
+  value,
+  onChange,
+}: {
+  field: InputField
+  label: string
+  value: FieldValue | undefined
+  onChange: (v: number) => void
+}) {
+  const min = field.min ?? 0
+  const max = field.max ?? Infinity
+  const n = value === undefined || value === '' ? null : Number(value)
+
+  const button =
+    'h-11 w-10 bg-surface text-xl text-ink transition hover:bg-surface-2 active:scale-[0.95] disabled:text-line-strong disabled:hover:bg-surface'
+
+  return (
+    <div
+      role="group"
+      aria-label={label}
+      className="flex shrink-0 items-center overflow-hidden rounded-[10px] border border-line"
+    >
+      <button
+        type="button"
+        onClick={() => onChange(n === null ? min : Math.max(min, n - 1))}
+        disabled={n !== null && n <= min}
+        aria-label={`Decrease ${label}`}
+        className={button}
+      >
+        −
+      </button>
+      <output
+        aria-live="polite"
+        data-testid="stepper-value"
+        className={`w-[34px] text-center text-lg font-extrabold tabular-nums ${n === null ? 'text-muted' : 'text-ink'}`}
+      >
+        {n === null ? '–' : n}
+      </output>
+      <button
+        type="button"
+        onClick={() => onChange(n === null ? Math.min(min + 1, max) : Math.min(max, n + 1))}
+        disabled={n !== null && n >= max}
+        aria-label={`Increase ${label}`}
+        className={button}
+      >
+        +
+      </button>
+    </div>
+  )
+}
+
+/** Every scored round, one row each, with the round's best score in bold. */
+function RoundHistory({
+  players,
+  rounds,
+  direction,
+  getHistoryInfo,
+}: {
+  players: ScoreboardRow[]
+  rounds: number[]
+  direction: ScoreDirection
+  getHistoryInfo: (roundNumber: number) => RoundInfoChip[]
+}) {
+  return (
+    <div
+      id="round-history"
+      data-testid="round-history"
+      className="mt-1 overflow-x-auto rounded-[14px] border border-line bg-surface"
+    >
+      <table className="w-full text-sm tabular-nums">
+        <thead>
+          <tr className="border-b border-line text-xs text-muted">
+            <th scope="col" className="px-3 py-2 text-left font-semibold">
+              Round
+            </th>
+            {players.map((p) => (
+              <th key={p.player_id} scope="col" className="max-w-24 truncate px-2 py-2 text-right font-semibold">
+                {p.name}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rounds.map((n) => {
+            const scores = players.map((p) => p.scores[n - 1] ?? null)
+            const present = scores.filter((s): s is number => s !== null)
+            const best = present.length
+              ? direction === 'low'
+                ? Math.min(...present)
+                : Math.max(...present)
+              : null
+            return (
+              <tr key={n} className="border-b border-line last:border-b-0">
+                <th scope="row" className="px-3 py-2 text-left font-semibold whitespace-nowrap text-muted">
+                  R{n}
+                  {getHistoryInfo(n).map((chip) => (
+                    <span key={chip.key} title={chip.label} className={`ml-1 ${chipTone(chip)}`}>
+                      {chip.value}
+                    </span>
+                  ))}
+                </th>
+                {scores.map((s, i) => (
+                  <td
+                    key={players[i].player_id}
+                    className={`px-2 py-2 text-right ${s !== null && s === best ? 'font-extrabold text-ink' : 'text-muted'}`}
+                  >
+                    {s ?? '—'}
+                  </td>
+                ))}
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
   )
 }
 
@@ -732,36 +866,6 @@ function RoundFieldInput({
   onChange: (v: string | number) => void
 }) {
   if (field.type === 'select' && field.options) {
-    const isSuitField = field.options.every((s) => SUIT_SYMBOLS.has(s))
-
-    if (isSuitField) {
-      return (
-        <div>
-          <p className="mb-1.5 text-xs font-medium text-muted">
-            {field.label}
-          </p>
-          <div className="flex gap-1.5">
-            {field.options.map((opt) => (
-              <button
-                key={opt}
-                type="button"
-                onClick={() => onChange(opt)}
-                aria-label={`${field.label} ${opt}`}
-                aria-pressed={value === opt}
-                className={`flex h-11 w-11 items-center justify-center rounded-lg border-2 text-xl transition active:scale-[0.95] ${
-                  value === opt
-                    ? 'border-accent-ink bg-accent-soft'
-                    : 'border-line bg-surface hover:border-line-strong'
-                } ${SUIT_COLORS[opt] ?? 'text-muted'}`}
-              >
-                {opt}
-              </button>
-            ))}
-          </div>
-        </div>
-      )
-    }
-
     return (
       <label className="flex flex-wrap items-center gap-1.5 text-sm text-muted">
         <span>{field.label}</span>
@@ -769,7 +873,7 @@ function RoundFieldInput({
           value={value ?? ''}
           onChange={(e) => onChange(e.target.value)}
           aria-label={field.label}
-          className="h-11 rounded-lg border border-line-strong bg-surface px-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent-ink"
+          className="h-11 rounded-lg border border-line-strong bg-surface px-3 text-sm text-ink focus:ring-2 focus:ring-accent-ink focus:outline-none"
         >
           <option value="" disabled>
             Select...
@@ -795,8 +899,27 @@ function RoundFieldInput({
         onChange={(e) => onChange(Number(e.target.value))}
         inputMode="numeric"
         aria-label={field.label}
-        className="h-11 w-20 rounded-lg border border-line-strong bg-surface px-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent-ink"
+        className="h-11 w-20 rounded-lg border border-line-strong bg-surface px-3 text-sm text-ink focus:ring-2 focus:ring-accent-ink focus:outline-none"
       />
     </label>
+  )
+}
+
+function UndoIcon() {
+  return (
+    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M9 14L4 9l5-5" />
+      <path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" />
+    </svg>
+  )
+}
+
+function TrophyIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M8 4h8v5a4 4 0 0 1-8 0V4z" />
+      <path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4" />
+      <path d="M12 13v4M9 20h6M10 17h4" />
+    </svg>
   )
 }
