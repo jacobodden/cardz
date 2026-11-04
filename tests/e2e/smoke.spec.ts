@@ -617,3 +617,69 @@ test('Browser theme color follows the felt band in light and dark', async ({ pag
   await page.getByRole('button', { name: 'Switch to dark mode' }).click()
   await expect(themeColor).toHaveAttribute('content', '#174a36')
 })
+
+test('Theme picker: menu lists themes, picks one, and closes', async ({ page }) => {
+  await page.goto('/')
+  const button = page.locator('header').getByRole('button', { name: 'Color theme' })
+  await expect(button).toHaveAttribute('aria-haspopup', 'menu')
+  await expect(button).toHaveAttribute('aria-expanded', 'false')
+
+  // Opens on the current theme; Escape closes and returns focus.
+  await button.click()
+  await expect(button).toHaveAttribute('aria-expanded', 'true')
+  const menu = page.getByRole('menu', { name: 'Color theme' })
+  const felt = menu.getByRole('menuitemradio', { name: 'Felt' })
+  await expect(felt).toHaveAttribute('aria-checked', 'true')
+  await expect(felt).toBeFocused()
+  await page.keyboard.press('Escape')
+  await expect(menu).toHaveCount(0)
+  await expect(button).toBeFocused()
+
+  // A tap outside closes it too.
+  await button.click()
+  await page.getByRole('heading', { name: 'Games' }).click()
+  await expect(menu).toHaveCount(0)
+
+  // Picking saves the choice, which survives a reload.
+  await button.click()
+  await felt.click()
+  await expect(menu).toHaveCount(0)
+  expect(await page.evaluate(() => localStorage.getItem('palette'))).toBe('felt')
+  await page.reload()
+  await expect(page.locator('html')).toHaveAttribute('data-palette', 'felt')
+})
+
+test('Theme picker: an unknown saved theme falls back to Felt before first paint', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('palette', 'removed-theme'))
+  // Record what the startup script applied, before React mounts.
+  await page.addInitScript(() => {
+    document.addEventListener('DOMContentLoaded', () => {
+      ;(window as any).__startup = {
+        palette: document.documentElement.getAttribute('data-palette'),
+        color: document.querySelector('meta[name="theme-color"]')?.getAttribute('content'),
+      }
+    })
+  })
+  await page.goto('/')
+  expect(await page.evaluate(() => (window as any).__startup)).toEqual({
+    palette: 'felt',
+    color: '#1e6b4e',
+  })
+  await expect(page.locator('html')).toHaveAttribute('data-palette', 'felt')
+  // The app rewrites the stored id to the theme it actually uses.
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('palette'))).toBe('felt')
+})
+
+test('Startup script applies dark mode and its theme color before first paint', async ({ page }) => {
+  await setTheme(page, 'dark')
+  await page.addInitScript(() => {
+    document.addEventListener('DOMContentLoaded', () => {
+      ;(window as any).__startup = {
+        dark: document.documentElement.classList.contains('dark'),
+        color: document.querySelector('meta[name="theme-color"]')?.getAttribute('content'),
+      }
+    })
+  })
+  await page.goto('/')
+  expect(await page.evaluate(() => (window as any).__startup)).toEqual({ dark: true, color: '#174a36' })
+})

@@ -194,3 +194,10 @@ test('dark mode active session', async ({ page }) => {
   await resetScroll(page)
   await expect(page).toHaveScreenshot('session-up-and-down-dark.png')
 })
+
+test('theme picker menu open', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Color theme' }).click()
+  await expect(page.getByRole('menu', { name: 'Color theme' })).toBeVisible()
+  await expect(page).toHaveScreenshot('theme-picker-open.png')
+})
