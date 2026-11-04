@@ -10,7 +10,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.png'],
+      includeAssets: ['favicon.png', 'favicon.ico', 'apple-touch-icon-180x180.png'],
       manifest: {
         name: 'Cardz',
         short_name: 'Cardz',
