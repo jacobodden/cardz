@@ -15,20 +15,38 @@ export interface CreateSessionOptions {
 }
 
 /**
- * Set the app theme before the first navigation. Call this before createSession().
- * Layout.tsx reads localStorage('theme') on mount.
+ * Seed localStorage `key` with `value` before the page's scripts run, like
+ * a setting saved on an earlier visit. Init scripts run on every
+ * navigation, so this only seeds the tab's first page: after that, what the
+ * app saves (e.g. the user toggling dark mode) survives reloads.
+ */
+async function seedStorage(page: Page, key: string, value: string): Promise<void> {
+  await page.addInitScript(
+    ([k, v]) => {
+      try {
+        if (sessionStorage.getItem('cardz-test-seeded')) return
+        localStorage.setItem(k, v)
+        // Mark after every init script has run on this first page.
+        addEventListener('DOMContentLoaded', () => sessionStorage.setItem('cardz-test-seeded', '1'))
+      } catch {
+        // about:blank and other opaque origins have no storage.
+      }
+    },
+    [key, value] as const
+  )
+}
+
+/**
+ * Set light or dark mode before the first navigation. Call this before
+ * createSession(). A later call wins over an earlier one.
  */
 export async function setTheme(page: Page, theme: Theme): Promise<void> {
-  await page.addInitScript((value) => {
-    localStorage.setItem('theme', value)
-  }, theme)
+  await seedStorage(page, 'theme', theme)
 }
 
 /** Set the color theme (see src/themes.ts) before the first navigation. */
 export async function setPalette(page: Page, palette: string): Promise<void> {
-  await page.addInitScript((value) => {
-    localStorage.setItem('palette', value)
-  }, palette)
+  await seedStorage(page, 'palette', palette)
 }
 
 /**
