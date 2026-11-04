@@ -391,31 +391,15 @@ test('Header: icon links home, theme toggle switches, no New Game link', async (
   await expect(page).toHaveURL(/\/$/)
 })
 
-test('New game: picking a game focuses the session title', async ({ page }) => {
+test('New game: picking a game does not focus the title', async ({ page }) => {
+  // No auto-focus: on phones it opens the keyboard and scrolls the page.
   await page.goto('/sessions/new')
   await page.locator('[data-game-slug="pay-me"]').click()
   const title = page.getByTestId('session-title')
-  await expect(title).toBeFocused()
-  await expect(title).toBeInViewport()
-  await page.keyboard.type('Quick Game')
+  await expect(title).toBeVisible()
+  await expect(title).not.toBeFocused()
+  await title.fill('Quick Game')
   await expect(title).toHaveValue('Quick Game')
-})
-
-test('New game: the title stays visible when the keyboard shrinks the screen', async ({ page, isMobile }) => {
-  test.skip(!isMobile, 'Only touch screens have an on-screen keyboard')
-  const size = page.viewportSize()!
-  await page.goto('/sessions/new')
-  await page.locator('[data-game-slug="up-and-down"]').click()
-  const title = page.getByTestId('session-title')
-  await expect(title).toBeFocused()
-  // The title section goes to the top, leaving the lower part for the keyboard.
-  await expect
-    .poll(async () => (await title.boundingBox())!.y)
-    .toBeLessThan(size.height * 0.4)
-
-  // An on-screen keyboard takes roughly the bottom half.
-  await page.setViewportSize({ width: size.width, height: Math.round(size.height * 0.5) })
-  await expect(title).toBeInViewport({ ratio: 1 })
 })
 
 test('New game: the peak field can be cleared and falls back to the suggested value', async ({ page }) => {
@@ -818,4 +802,49 @@ test('Pinch-zoom is allowed and form controls are big enough to avoid iOS auto-z
     await createSession(page, { gameSlug, players: ['Ann', 'Ben', 'Cal'] })
     await expectControlsAtLeast16px()
   }
+})
+
+test('Header: felt under the iOS status bar, seamless with the band, pinned on scroll', async ({ page }) => {
+  await createSession(page, {
+    gameSlug: 'high-score',
+    title: 'Status bar',
+    // A full table, so the page is tall enough to scroll.
+    players: ['Ann', 'Ben', 'Cal', 'Dee', 'Eve', 'Fay', 'Gus', 'Hal', 'Ivy', 'Jo'],
+  })
+
+  // Installed on iOS, the page draws under a transparent status bar.
+  const meta = (name: string) => page.locator(`meta[name="${name}"]`)
+  await expect(meta('apple-mobile-web-app-status-bar-style')).toHaveAttribute('content', 'black-translucent')
+  await expect(meta('apple-mobile-web-app-capable')).toHaveAttribute('content', 'yes')
+  await expect(meta('viewport')).toHaveAttribute('content', /viewport-fit=cover/)
+
+  const header = page.locator('header').locator('..')
+  const band = page.getByTestId('app-bar')
+  const themeColor = meta('theme-color')
+
+  // The header, the felt band and the theme-color all match, in each theme and mode.
+  const expected = [
+    { felt: 'rgb(30, 107, 78)', hex: '#1e6b4e' },
+    { felt: 'rgb(23, 74, 54)', hex: '#174a36' },
+    { felt: 'rgb(107, 63, 224)', hex: '#6b3fe0' },
+    { felt: 'rgb(58, 42, 122)', hex: '#3a2a7a' },
+  ]
+  for (const [i, { felt, hex }] of expected.entries()) {
+    if (i === 2) {
+      await page.getByRole('button', { name: 'Color theme' }).click()
+      await page.getByRole('menuitemradio', { name: 'Midnight' }).click()
+      await page.getByRole('button', { name: 'Switch to light mode' }).click()
+    } else if (i > 0) {
+      await page.getByRole('button', { name: 'Switch to dark mode' }).click()
+    }
+    await expect(header).toHaveCSS('background-color', felt)
+    await expect(band).toHaveCSS('background-color', felt)
+    await expect(themeColor).toHaveAttribute('content', hex)
+  }
+
+  // Scrolled down, the header stays pinned to the top with its buttons.
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(100)
+  expect((await header.boundingBox())!.y).toBe(0)
+  await expect(page.getByRole('link', { name: 'Cardz home' })).toBeInViewport()
 })

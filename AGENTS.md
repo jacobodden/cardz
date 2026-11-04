@@ -18,7 +18,9 @@ Docs live in `docs/` as HTML sharing `docs/assets/docs.css` (Felt tokens, light 
 
 ## PWA
 
-Configured in `vite.config.ts` via `VitePWA` plugin. Manifest has static `theme_color` and `background_color`; the `<meta name="theme-color">` tag is updated dynamically at runtime by `Layout.tsx` when toggling dark/light mode.
+Configured in `vite.config.ts` via `VitePWA` plugin. Manifest has static `theme_color` and `background_color`; the `<meta name="theme-color">` tag is updated at runtime by `Layout.tsx` to the current theme's `--felt` (it follows the theme and dark/light mode).
+
+Installed on iOS, the app draws under a transparent status bar (`apple-mobile-web-app-status-bar-style: black-translucent`, `viewport-fit=cover` in `index.html`). The header in `Layout.tsx` is always felt, sticky at the top and padded by `env(safe-area-inset-top)`, so the status bar shows the theme's felt with no seam and white status text stays readable. Page gutters use the `safe-x` utility (`src/index.css`) to clear the notch in landscape; `<html>`'s felt/page split background makes top overscroll felt. Keep the header felt in every theme: the status bar text is always white.
 
 App icons managed via `@vite-pwa/assets-generator` (`npm run generate-pwa-assets`). Icons: `pwa-192x192.png`, `pwa-512x512.png`, `maskable-icon-512x512.png`. The header logo is a separate transparent image, `public/app-logo.png`.
 

@@ -27,12 +27,12 @@ export default function Layout() {
   const [heroTarget, setHeroTarget] = useState<HTMLElement | null>(null)
   const [actionsTarget, setActionsTarget] = useState<HTMLElement | null>(null)
   const [felt, setFelt] = useState(false)
-  const iconButton = `w-11 h-11 flex items-center justify-center rounded-lg transition active:scale-[0.95] disabled:opacity-50 ${
-    felt ? 'text-on-felt hover:bg-on-felt/10' : 'text-muted hover:bg-surface-2'
-  }`
+  // The header is always felt, so its buttons always use the on-felt colors.
+  const iconButton =
+    'w-11 h-11 flex items-center justify-center rounded-lg transition active:scale-[0.95] disabled:opacity-50 text-on-felt hover:bg-on-felt/10'
   const heroSlot = useMemo(
     () => ({ target: heroTarget, actions: actionsTarget, iconButton, setFelt }),
-    [heroTarget, actionsTarget, iconButton]
+    [heroTarget, actionsTarget]
   )
 
   useEffect(() => {
@@ -50,25 +50,24 @@ export default function Layout() {
   }, [palette])
 
   useEffect(() => {
-    // Match the browser chrome to the top of the page, whatever the palette says it is.
+    // Match the browser chrome (and the installed app's status bar) to the felt header.
     const meta = document.querySelector('meta[name="theme-color"]')
-    const color = getComputedStyle(document.documentElement)
-      .getPropertyValue(felt ? '--felt' : '--surface')
-      .trim()
+    const color = getComputedStyle(document.documentElement).getPropertyValue('--felt').trim()
     if (meta && color) meta.setAttribute('content', color)
-  }, [dark, felt, palette])
+  }, [dark, palette])
 
   const toggleLabel = dark ? 'Switch to light mode' : 'Switch to dark mode'
 
   return (
     <HeroSlotContext.Provider value={heroSlot}>
       <div className="min-h-screen bg-page text-ink">
-        <div
-          data-testid="app-bar"
-          data-felt={felt || undefined}
-          className={felt ? 'bg-felt text-on-felt rounded-b-[28px]' : 'bg-surface border-b border-line'}
-        >
-          <header className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1.5 sm:py-2 flex items-center justify-between">
+        {/*
+          Pinned felt header. It extends up under the iOS status bar
+          (black-translucent, see index.html), so the bar shows the theme's
+          felt with no seam, and scrolled content never sits behind the clock.
+        */}
+        <div className="sticky top-0 z-30 bg-felt text-on-felt pt-[env(safe-area-inset-top)]">
+          <header className="safe-x max-w-7xl mx-auto py-1.5 sm:py-2 flex items-center justify-between">
             <Link
               to="/"
               aria-label="Cardz home"
@@ -97,10 +96,16 @@ export default function Layout() {
               </button>
             </div>
           </header>
-          {/* Pages render their hero (see FeltHero) here, inside the band. */}
-          <div ref={setHeroTarget} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" />
         </div>
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <div
+          data-testid="app-bar"
+          data-felt={felt || undefined}
+          className={felt ? 'bg-felt text-on-felt rounded-b-[28px]' : undefined}
+        >
+          {/* Pages render their hero (see FeltHero) here, in the felt band under the header. */}
+          <div ref={setHeroTarget} className="safe-x max-w-7xl mx-auto" />
+        </div>
+        <main className="safe-x max-w-7xl mx-auto py-4 sm:py-6">
           <Outlet />
         </main>
       </div>
