@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pay Me — Cardz rules</title>
+  <link rel="stylesheet" href="../assets/docs.css">
+</head>
+<body>
+  <header class="band">
+    <div class="wrap">
+      <p class="crumbs"><a href="../index.html">Cardz docs</a> / <a href="index.html">Games</a></p>
+      <h1>Pay Me</h1>
+      <p class="lede">An 11-round Contract Rummy game for 2 to 6 players. Lowest score wins.</p>
+    </div>
+  </header>
+  <main class="wrap">
+    <h2>Description</h2>
+    <p>Players build melds to empty their hands. Hand sizes grow by one card each round, from 3 to 13 cards, and the wild card changes every round to match the number of cards in play.</p>
+
+    <h2>Setup</h2>
+    <h3>Deck</h3>
+    <p>Use one standard deck for 2 players, two decks for 3–4, or three decks for 5–6. Jokers are omitted.</p>
+    <h3>Table</h3>
+    <p>Place the remaining deck in the center as a draw pile and flip the top card face up to start the discard pile.</p>
+    <h3>Wilds</h3>
+    <p>All cards matching the round's hand size are wild. Round 1 deals 3 cards, so threes are wild; round 11 deals 13 cards, so kings are wild.</p>
+
+    <h2>Gameplay</h2>
+    <h3>Dealing</h3>
+    <p>The first hand deals 3 cards to each player. Each later round adds 1 more card, peaking at 13 cards in round 11.</p>
+    <h3>Turns</h3>
+    <p>On your turn, draw either the top face-up card from the discard pile or the top card from the stock pile.</p>
+    <h3>Melding</h3>
+    <p>If you have valid melds (a set of 3 or more of a kind, or a run of 3 or more consecutive cards in the same suit), you can lay them on the table.</p>
+    <h3>Discarding</h3>
+    <p>End your turn by discarding one card face up.</p>
+
+    <h2>Going out</h2>
+    <p>When you can lay down your entire hand, say “Pay Me”. Every other player may draw one more card to try to finish melding their hand. You then lay down your melded hand, and the other players may play off it with any unmelded cards in their own hand, for example:</p>
+    <ul>
+      <li>adding another 4 to your set of fours;</li>
+      <li>adding the 9♣ to your run of 5♣ 6♣ 7♣ 8♣ (it must match the suit).</li>
+    </ul>
+
+    <h2>Scoring</h2>
+    <p>Each player scores the value of the cards left in their hand:</p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Card</th><th>Points</th></tr></thead>
+        <tbody>
+          <tr><td>Jack, Queen, King</td><td>10</td></tr>
+          <tr><td>Ace</td><td>1</td></tr>
+          <tr><td>2–10</td><td>Face value</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>The player with the lowest total after all 11 rounds wins the pot.</p>
+  </main>
+</body>
+</html>
