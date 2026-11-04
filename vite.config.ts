@@ -2,11 +2,26 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import type { Plugin } from 'vite'
+import { DEFAULT_THEME_ID, THEME_STORAGE_KEY, themeColorMap } from './src/themes.ts'
+
+/** Gives index.html's startup script the theme registry (see src/themes.ts). */
+function injectThemes(): Plugin {
+  const themes = { defaultId: DEFAULT_THEME_ID, storageKey: THEME_STORAGE_KEY, colors: themeColorMap() }
+  return {
+    name: 'cardz-inject-themes',
+    transformIndexHtml(html) {
+      if (!html.includes('__THEMES__')) throw new Error('index.html is missing the __THEMES__ placeholder')
+      return html.replace('__THEMES__', JSON.stringify(themes))
+    },
+  }
+}
 
 export default defineConfig({
   base: process.env.NODE_ENV === 'production' ? '/cardz/' : '/',
   plugins: [
     react(),
+    injectThemes(),
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
