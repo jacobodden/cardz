@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { flushSync } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/dexie-db'
@@ -19,37 +18,6 @@ function clamp(value: number, min?: number, max?: number): number {
   return Math.min(max ?? Infinity, Math.max(min ?? -Infinity, Math.round(value)))
 }
 
-/**
- * Scroll `section` to the top of the screen for a just-focused `input`.
- * Centering would be measured before the on-screen keyboard opens and then
- * end up behind it; at the top, the keyboard opening below can't cover it.
- * If the visible area still shrinks the field out of view (the keyboard
- * animating in, or the browser's own scroll fighting ours), reveal it once
- * more.
- */
-function revealAboveKeyboard(input: HTMLElement, section: HTMLElement): void {
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  section.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' })
-
-  const viewport = window.visualViewport
-  if (!viewport) return
-  const stop = () => {
-    viewport.removeEventListener('resize', onResize)
-    window.clearTimeout(timer)
-  }
-  const onResize = () => {
-    if (document.activeElement !== input) return stop()
-    const rect = input.getBoundingClientRect()
-    const top = viewport.offsetTop
-    if (rect.top < top || rect.bottom > top + viewport.height) {
-      stop()
-      section.scrollIntoView({ behavior: 'auto', block: 'start' })
-    }
-  }
-  const timer = window.setTimeout(stop, 1500)
-  viewport.addEventListener('resize', onResize)
-}
-
 export default function NewSessionPage() {
   const navigate = useNavigate()
   const games = useLiveQuery(() => db.games.toArray(), [])
@@ -60,8 +28,6 @@ export default function NewSessionPage() {
   const [playerNames, setPlayerNames] = useState<string[]>(['', ''])
   const [firstDealerIndex, setFirstDealerIndex] = useState(0)
   const [creating, setCreating] = useState(false)
-  const titleInput = useRef<HTMLInputElement>(null)
-  const titleSection = useRef<HTMLDivElement>(null)
 
   const validCount = playerNames.filter(Boolean).length
   const gameImpl = selectedGame ? getGame(selectedGame.slug) : undefined
@@ -92,17 +58,6 @@ export default function NewSessionPage() {
       return next
     })
   }, [gameImpl, defaults])
-
-  function selectGame(g: Game) {
-    // Render the title field now so we can focus it inside the tap handler:
-    // iOS only opens the keyboard for focus() calls made during a user gesture.
-    flushSync(() => setSelectedGame(g))
-    const input = titleInput.current
-    const section = titleSection.current
-    if (!input || !section) return
-    input.focus({ preventScroll: true })
-    revealAboveKeyboard(input, section)
-  }
 
   function updateConfig(key: string, raw: string) {
     setConfig((prev) => ({ ...prev, [key]: raw === '' ? null : Number(raw) }))
@@ -200,7 +155,7 @@ export default function NewSessionPage() {
               <button
                 key={g.id}
                 type="button"
-                onClick={() => selectGame(g)}
+                onClick={() => setSelectedGame(g)}
                 aria-pressed={selected}
                 data-testid="game-option"
                 data-game-slug={g.slug}
@@ -226,18 +181,15 @@ export default function NewSessionPage() {
       </section>
 
       {selectedGame && (
-        // On touch screens the form is at least a screen tall, so picking a
-        // game can scroll the title to the top, clear of the keyboard.
-        <div className="pointer-coarse:flex pointer-coarse:min-h-dvh pointer-coarse:flex-col">
+        <>
           {/* Session title & game config */}
           <section className="mb-6 space-y-4">
-            <div ref={titleSection} className="scroll-mt-3">
+            <div>
               <label htmlFor="session-title" className={`block ${SECTION_HEADING}`}>
                 Title
               </label>
               <input
                 id="session-title"
-                ref={titleInput}
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -361,7 +313,6 @@ export default function NewSessionPage() {
             </section>
           )}
 
-          <div aria-hidden="true" className="hidden flex-1 pointer-coarse:block" />
           <div className="sticky bottom-0 z-10 -mx-4 mt-4 -mb-4 border-t border-line bg-page/90 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur sm:-mb-6">
             {startHint && <p className="mb-2 text-center text-[13px] text-muted">{startHint}</p>}
             <button
@@ -374,7 +325,7 @@ export default function NewSessionPage() {
               {creating ? 'Starting...' : `Start ${selectedGame.name}`}
             </button>
           </div>
-        </div>
+        </>
       )}
     </div>
   )
