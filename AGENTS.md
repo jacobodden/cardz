@@ -1,4 +1,10 @@
-Card game info can be found under @docs/games
+Card game rules (HTML; read them as text):
+- @docs/games/up-and-down.html
+- @docs/games/pay-me.html
+- @docs/games/high-score.html
+- @docs/games/low-score.html
+
+Docs live in `docs/` as HTML sharing `docs/assets/docs.css` (Felt tokens, light and dark); start at `docs/index.html`, see `docs/architecture.html` for the overview. Keep docs in HTML: no Markdown under `docs/`. Add a rules page under `docs/games/` (and link it from `docs/games/index.html` and `README.md`) when adding a game.
 
 ## Tech stack
 
@@ -7,13 +13,16 @@ Card game info can be found under @docs/games
 - **PWA**: `vite-plugin-pwa` with auto-updating service worker
 - **Hosting**: GitHub Pages at `/cardz/` base path
 - **Build**: `npm run build` (runs `tsc -b && vite build`)
-- **Tests**: `npm run test:unit` (Vitest + fake-indexeddb, `tests/unit/`), `npm run test:e2e` / `npm run test:visual` (Playwright)
+- **Tests**: `npm run test:unit` (Vitest + fake-indexeddb, `tests/unit/`), `npm run test:e2e` / `npm run test:visual` (Playwright). Visual tests run inside the pinned Playwright container (`scripts/playwright-container.sh`, podman or docker), the same image as CI, so baselines match; update them with `npm run test:visual:update`, never with a host run.
+- **Lint**: `npm run lint` (oxlint), also run in CI
 
 ## PWA
 
 Configured in `vite.config.ts` via `VitePWA` plugin. Manifest has static `theme_color` and `background_color`; the `<meta name="theme-color">` tag is updated dynamically at runtime by `Layout.tsx` when toggling dark/light mode.
 
-App icons managed via `@vite-pwa/assets-generator` (`npm run generate-pwa-assets`). Icons: `pwa-192x192.png`, `pwa-512x512.png`, `maskable-icon-512x512.png`.
+App icons managed via `@vite-pwa/assets-generator` (`npm run generate-pwa-assets`). Icons: `pwa-192x192.png`, `pwa-512x512.png`, `maskable-icon-512x512.png`. The header logo is a separate transparent image, `public/app-logo.png`.
+
+The viewport meta allows pinch-zoom. Keep form controls at 16px text or larger so iOS doesn't auto-zoom on focus (an e2e test checks this).
 
 ## Dark mode
 
