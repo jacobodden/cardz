@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { getAllGames, getGame } from '../../src/games'
-import { upAndDown } from '../../src/games/upanddown'
+import { canSplitMissedTricks, upAndDown } from '../../src/games/upanddown'
 import { payMe } from '../../src/games/payme'
 import { highScore, lowScore } from '../../src/games/points'
 import { getDefaultConfig, type RoundMeta } from '../../src/games/types'
@@ -150,6 +150,51 @@ describe('Up & Down', () => {
         expect(upAndDown.validateRound!(meta(3), round([2, true], [3, false], [1]))).toBeNull()
         expect(upAndDown.validateRound!(meta(3), round([2, true], [3], [1]))).toBeNull()
         expect(upAndDown.validateRound!(meta(3), round([2, true], [3, true], [1]))).toMatch(/Made bids total 5/)
+      })
+    })
+
+    describe('the tricks left must fit the players who missed', () => {
+      const round = (...players: [bid: number, success?: boolean][]) =>
+        players.map(([bid, success], i) => ({ player_id: i + 1, data: { bid, success } }))
+
+      it('rejects a missed bid of 0 when no tricks are left', () => {
+        // 3 tricks, all taken by Alice (2) and Bob (1); Carol missing 0 needs one.
+        // (Dee's bid keeps the total off the hand size, so the hook rule passes.)
+        expect(upAndDown.validateRound!(meta(3), round([2, true], [1, true], [0, false], [1, false]))).toBe(
+          "That leaves 0 tricks for the players who missed, but they can't be split so each of them missed their bid. Check who made it.",
+        )
+      })
+
+      it('rejects a leftover that every split would hand someone their bid', () => {
+        // 1 trick left for Bob (bid 1) and Cal (bid 1): whoever wins it made their bid.
+        expect(upAndDown.validateRound!(meta(3), round([2, true], [1, false], [1, false]))).toMatch(
+          /leaves 1 trick for the players who missed/,
+        )
+      })
+
+      it('accepts leftovers that can be split', () => {
+        // 1 trick left: Bob (bid 0) wins it, Cal (bid 2) wins none.
+        expect(upAndDown.validateRound!(meta(3), round([2, true], [0, false], [2, false]))).toBeNull()
+        // 2 tricks left: Bob (bid 1) wins both, Cal (bid 2) none.
+        expect(upAndDown.validateRound!(meta(3), round([1, true], [1, false], [2, false]))).toBeNull()
+        // Nobody made it: 3 tricks among bids 1, 1, 0 (e.g. 0, 2, 1).
+        expect(upAndDown.validateRound!(meta(3), round([1, false], [1, false], [0, false]))).toBeNull()
+      })
+
+      it('waits until every player is marked', () => {
+        expect(upAndDown.validateRound!(meta(3), round([2, true], [1, true], [0, false], [1]))).toBeNull()
+      })
+
+      it('canSplitMissedTricks covers the edge cases', () => {
+        expect(canSplitMissedTricks(0, [])).toBe(true)
+        expect(canSplitMissedTricks(1, [])).toBe(false)
+        expect(canSplitMissedTricks(0, [0])).toBe(false)
+        expect(canSplitMissedTricks(0, [3])).toBe(true)
+        expect(canSplitMissedTricks(2, [2])).toBe(false)
+        expect(canSplitMissedTricks(2, [1, 1])).toBe(true)
+        expect(canSplitMissedTricks(1, [1, 1])).toBe(false)
+        expect(canSplitMissedTricks(2, [0, 0])).toBe(true)
+        expect(canSplitMissedTricks(1, [0, 0])).toBe(false)
       })
     })
   })

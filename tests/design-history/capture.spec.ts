@@ -69,7 +69,7 @@ test('capture current design history', async ({ browser }) => {
         bids: [
           { player: 'Alice', bid: 1, success: true },
           { player: 'Bob', bid: 1, success: false },
-          { player: 'Carol', bid: 0, success: false },
+          { player: 'Carol', bid: 1, success: false },
         ],
       })
 
@@ -78,7 +78,7 @@ test('capture current design history', async ({ browser }) => {
         bids: [
           { player: 'Alice', bid: 2, success: true },
           { player: 'Bob', bid: 1, success: false },
-          { player: 'Carol', bid: 0, success: false },
+          { player: 'Carol', bid: 1, success: false },
         ],
       })
 

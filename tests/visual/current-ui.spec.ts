@@ -51,7 +51,7 @@ async function seedHomeSessions(page: Page) {
     bids: [
       { player: 'Alice', bid: 1, success: true },
       { player: 'Bob', bid: 1, success: false },
-      { player: 'Carol', bid: 0, success: false },
+      { player: 'Carol', bid: 1, success: false },
     ],
   })
 
@@ -115,7 +115,7 @@ test('up and down with two scored rounds', async ({ page }) => {
     bids: [
       { player: 'Alice', bid: 1, success: true },
       { player: 'Bob', bid: 1, success: false },
-      { player: 'Carol', bid: 0, success: false },
+      { player: 'Carol', bid: 1, success: false },
     ],
   })
 
@@ -124,7 +124,7 @@ test('up and down with two scored rounds', async ({ page }) => {
     bids: [
       { player: 'Alice', bid: 2, success: true },
       { player: 'Bob', bid: 1, success: false },
-      { player: 'Carol', bid: 0, success: false },
+      { player: 'Carol', bid: 1, success: false },
     ],
   })
 
@@ -222,7 +222,7 @@ for (const mode of ['light', 'dark'] as const) {
         bids: [
           { player: 'Alice', bid: 1, success: true },
           { player: 'Bob', bid: 1, success: false },
-          { player: 'Carol', bid: 0, success: false },
+          { player: 'Carol', bid: 1, success: false },
         ],
       })
       await page.getByRole('button', { name: 'Trump ♥' }).click()

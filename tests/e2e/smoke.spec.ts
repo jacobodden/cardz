@@ -31,7 +31,7 @@ test('Up & Down: create a session and submit rounds', async ({ page }) => {
     bids: [
       { player: 'Alice', bid: 1, success: true },
       { player: 'Bob', bid: 1, success: false },
-      { player: 'Carol', bid: 0, success: false },
+      { player: 'Carol', bid: 1, success: false },
     ],
   })
 
@@ -42,7 +42,7 @@ test('Up & Down: create a session and submit rounds', async ({ page }) => {
     bids: [
       { player: 'Alice', bid: 2, success: true },
       { player: 'Bob', bid: 1, success: false },
-      { player: 'Carol', bid: 0, success: false },
+      { player: 'Carol', bid: 1, success: false },
     ],
   })
 
@@ -86,6 +86,12 @@ test('Up & Down: rule violations disable submit and explain why', async ({ page 
   await expect(submit).toBeDisabled()
 
   await playerRow(page, 'Bob').getByRole('button', { name: 'Bob Made Bid? no' }).click()
+
+  // Alice took the only trick, so Carol (bid 0) can't have missed.
+  await expect(hint).toContainText("That leaves 0 tricks for the players who missed")
+  await expect(submit).toBeDisabled()
+
+  await playerRow(page, 'Carol').getByRole('button', { name: 'Carol Made Bid? yes' }).click()
   await expect(hint).toBeHidden()
   await expect(submit).toBeEnabled()
 })
@@ -104,7 +110,7 @@ test('Up & Down: round history keeps each round’s trump suit', async ({
     bids: [
       { player: 'Alice', bid: 1, success: true },
       { player: 'Bob', bid: 1, success: false },
-      { player: 'Carol', bid: 0, success: false },
+      { player: 'Carol', bid: 1, success: false },
     ],
   })
 
@@ -113,7 +119,7 @@ test('Up & Down: round history keeps each round’s trump suit', async ({
     bids: [
       { player: 'Alice', bid: 2, success: true },
       { player: 'Bob', bid: 1, success: false },
-      { player: 'Carol', bid: 0, success: false },
+      { player: 'Carol', bid: 1, success: false },
     ],
   })
 
@@ -141,10 +147,11 @@ test('Up & Down: final round completes the game automatically', async ({
   await expect(page.getByTestId('round-number')).toHaveText(/^Round 1 of 1$/)
 
   await page.getByRole('button', { name: 'Trump ♠' }).click()
+  // One trick: Alice bids 1 and takes it; Bob and Carol bid 1 and take none.
   for (const bid of [
-    { player: 'Alice', bid: 0, success: true },
-    { player: 'Bob', bid: 0, success: false },
-    { player: 'Carol', bid: 0, success: false },
+    { player: 'Alice', bid: 1, success: true },
+    { player: 'Bob', bid: 1, success: false },
+    { player: 'Carol', bid: 1, success: false },
   ]) {
     await setStepper(page, `${bid.player} Bid`, bid.bid)
     await playerRow(page, bid.player)
@@ -196,7 +203,7 @@ test('Up & Down: the dealer chip follows the rotation', async ({ page }) => {
     bids: [
       { player: 'Alice', bid: 1, success: true },
       { player: 'Bob', bid: 1, success: false },
-      { player: 'Carol', bid: 0, success: false },
+      { player: 'Carol', bid: 1, success: false },
     ],
   })
 
@@ -587,9 +594,10 @@ test('Session: felt band shows round line, trump cards and header undo', async (
 
   // Undo appears in the header once a round is scored.
   await expect(page.getByTestId('undo-round')).toHaveCount(0)
-  await setStepper(page, 'Alice Bid', 0)
-  await setStepper(page, 'Bob Bid', 0)
-  await setStepper(page, 'Carol Bid', 0)
+  // One trick: Alice bids 1 and takes it; Bob and Carol bid 1 and take none.
+  await setStepper(page, 'Alice Bid', 1)
+  await setStepper(page, 'Bob Bid', 1)
+  await setStepper(page, 'Carol Bid', 1)
   for (const [name, made] of [['Alice', 'yes'], ['Bob', 'no'], ['Carol', 'no']]) {
     await playerRow(page, name).getByRole('button', { name: `${name} Made Bid? ${made}` }).click()
   }
