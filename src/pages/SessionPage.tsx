@@ -1,4 +1,4 @@
-import { useContext, useMemo, useState } from 'react'
+import { useContext, useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { finishSession, getSession } from '../db/sessions'
@@ -85,12 +85,6 @@ function rankOf(total: number, totals: number[], direction: ScoreDirection): num
   return 1 + totals.filter((t) => (direction === 'low' ? t < total : t > total)).length
 }
 
-/** Standings tiles per row: wraps 4+ players so names and totals stay readable. */
-function standingColumns(count: number): number {
-  if (count <= 3) return Math.max(count, 1)
-  return count === 4 ? 2 : 3
-}
-
 function formatRoundScore(score: number, direction: ScoreDirection): string {
   return direction === 'high' && score > 0 ? `+${score}` : String(score)
 }
@@ -106,6 +100,12 @@ export default function SessionPage() {
   const [undoing, setUndoing] = useState(false)
   const [finishing, setFinishing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // The toggle sits in the first card; bring the table (below every card)
+  // into view when it opens.
+  useEffect(() => {
+    if (showHistory) document.getElementById('round-history')?.scrollIntoView({ block: 'nearest' })
+  }, [showHistory])
 
   // Re-runs whenever any table it reads changes, so submit/undo/finish
   // don't need to reload by hand. `undefined` while loading; `null` when
@@ -271,18 +271,9 @@ export default function SessionPage() {
     ? players.filter((p) => coerce(stepperField, playerData[p.player_id]?.[stepperField.key]) === undefined)
     : []
 
-  /** Best scorer(s) of a round, for the recent-round chips. */
-  function roundBest(roundNum: number): { names: string; score: number } | null {
-    const rows = players
-      .map((p) => ({ name: p.name, total: p.scores[roundNum - 1] }))
-      .filter((r): r is { name: string; total: number } => r.total !== null && r.total !== undefined)
-    const best = topByTotal(rows, direction)
-    if (best.length === 0) return null
-    return { names: best.map((r) => r.name).join(' & '), score: best[0].total }
-  }
-
   const scoredRounds = Array.from({ length: scoredCount }, (_, i) => i + 1)
-  const recentRounds = scoredRounds.slice(-2)
+  // Each card shows up to this many of its player's latest rounds.
+  const recentRounds = scoredRounds.slice(-3)
 
   return (
     <div className="mx-auto max-w-xl">
@@ -387,152 +378,184 @@ export default function SessionPage() {
         </section>
       )}
 
-      <section
-        aria-label="Standings"
-        data-testid="standings"
-        className="grid gap-2"
-        style={{ gridTemplateColumns: `repeat(${standingColumns(players.length)}, minmax(0, 1fr))` }}
-      >
-        {players.map((row) => {
+      {active && round && otherRoundFields.length > 0 && (
+        <section className="mb-3 rounded-[14px] border border-line bg-surface p-3">
+          <p className="mb-2 text-[11px] font-bold tracking-wider text-muted uppercase">
+            Round settings
+          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            {otherRoundFields.map((f) => (
+              <RoundFieldInput
+                key={f.key}
+                field={f}
+                value={roundData[f.key]}
+                onChange={(v) => setRoundData((prev) => ({ ...prev, [f.key]: v }))}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      <div data-testid="player-cards" className="space-y-2.5">
+        {players.map((row, index) => {
           const top = winners.has(row.player_id) || leaders.has(row.player_id)
-          const rankLabel = isComplete
-            ? top
-              ? 'Winner'
+          const rankLabel = !hasScoredRounds
+            ? null
+            : top
+              ? isComplete
+                ? 'Winner'
+                : 'Leading'
               : ordinal(rankOf(row.total, totals, direction))
-            : !hasScoredRounds
-              ? '–'
-              : top
-                ? 'Leading'
-                : ordinal(rankOf(row.total, totals, direction))
+          // Secondary text on the leader's tinted card uses the lead label
+          // colour, which is contrast-checked against lead-bg.
+          const subtle = top ? 'text-lead-label' : 'text-muted'
+          const recent = recentRounds.filter((n) => row.scores[n - 1] != null)
           return (
-            <div
+            <section
               key={row.player_id}
-              data-testid="player-standing"
+              aria-label={row.name}
+              data-testid="player-card"
               data-player-name={row.name}
-              className={`min-w-0 rounded-xl border px-2.5 py-2 ${
+              className={`rounded-2xl border px-3.5 py-3 ${
                 top ? 'border-lead-border bg-lead-bg' : 'border-line bg-surface'
               }`}
             >
-              <p className={`text-xs font-bold ${top ? 'text-lead-label' : 'text-muted'}`}>
-                {rankLabel}
-              </p>
-              <p className="flex items-baseline justify-between gap-1.5">
-                <span className="min-w-0 truncate text-sm font-semibold text-ink">{row.name}</span>
-                <span
-                  data-testid="player-total"
-                  className="shrink-0 text-xl font-extrabold tabular-nums text-ink"
+              <div className="flex items-start gap-3">
+                <div className="min-w-0 flex-1">
+                  <h2 data-testid="player-name" className="truncate text-base font-bold text-ink">
+                    {row.name}
+                  </h2>
+                  <p className="flex items-baseline gap-1">
+                    <span
+                      data-testid="player-total"
+                      className="text-[32px] leading-none font-extrabold tracking-tight tabular-nums text-ink"
+                    >
+                      {row.total}
+                    </span>
+                    <span className={`text-sm font-semibold ${subtle}`}>pts</span>
+                  </p>
+                </div>
+                {rankLabel && (
+                  <span
+                    data-testid="player-rank"
+                    className={`mt-0.5 shrink-0 rounded-full border px-2.5 py-0.5 text-xs font-extrabold tracking-wide uppercase ${
+                      top
+                        ? 'border-lead-border text-lead-label'
+                        : 'border-line bg-surface-2 text-muted'
+                    }`}
+                  >
+                    {rankLabel}
+                  </span>
+                )}
+              </div>
+
+              {active && round && playerFields.length > 0 && (
+                <div
+                  data-testid="player-round-inputs"
+                  className={`mt-2.5 border-t border-dashed pt-2.5 ${
+                    top ? 'border-lead-border' : 'border-line'
+                  }`}
                 >
-                  {row.total}
-                </span>
-              </p>
-            </div>
+                  <p className={`flex justify-between gap-2 text-[11px] font-bold tracking-wider uppercase ${subtle}`}>
+                    <span>This round</span>
+                    <span data-testid="card-round-line" className="tabular-nums">
+                      R{round.round_number}
+                      {handSize > 0 && ` · ${handSize} card${handSize === 1 ? '' : 's'}`}
+                    </span>
+                  </p>
+                  <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+                    {playerFields.map((field) => (
+                      <div
+                        key={field.key}
+                        className={`flex min-w-0 items-center gap-2 ${
+                          playerFields.length === 1 ? 'flex-1 justify-between' : ''
+                        }`}
+                      >
+                        {/* The control carries the full "<name> <field>" label. */}
+                        <span aria-hidden="true" className={`min-w-0 truncate text-sm font-semibold ${subtle}`}>
+                          {field.label}
+                        </span>
+                        <PlayerFieldInput
+                          field={field}
+                          playerName={row.name}
+                          value={playerData[row.player_id]?.[field.key]}
+                          onChange={(v) =>
+                            setPlayerData((prev) => ({
+                              ...prev,
+                              [row.player_id]: { ...prev[row.player_id], [field.key]: v },
+                            }))
+                          }
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {hasScoredRounds && (
+                <div className="mt-2.5 flex items-center gap-2">
+                  {/*
+                    Newest first in the DOM, laid out right-to-left and wrapped:
+                    chips that don't fit drop to a hidden second line, oldest
+                    first, so the row never scrolls or clips a chip in half.
+                  */}
+                  <ol
+                    aria-label={`${row.name} recent rounds`}
+                    className="flex h-[26px] min-w-0 flex-1 flex-row-reverse flex-wrap justify-end gap-1.5 overflow-hidden"
+                  >
+                    {[...recent].reverse().map((n) => (
+                      <li
+                        key={n}
+                        data-testid="recent-round-chip"
+                        className="flex h-[26px] shrink-0 items-center gap-1 rounded-md border border-line bg-surface px-2 text-xs whitespace-nowrap text-muted"
+                      >
+                        R{n}
+                        {getHistoryInfo(n).map((chip) => (
+                          <span key={chip.key} title={chip.label} className={chipTone(chip)}>
+                            {chip.value}
+                          </span>
+                        ))}
+                        <span className="font-bold tabular-nums text-ink">
+                          {formatRoundScore(row.scores[n - 1] as number, direction)}
+                        </span>
+                      </li>
+                    ))}
+                  </ol>
+                  {index === 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowHistory((v) => !v)}
+                      aria-expanded={showHistory}
+                      aria-controls="round-history"
+                      data-testid="toggle-history"
+                      className="-my-2.5 -mr-1 flex h-11 shrink-0 items-center rounded-md border border-transparent px-1.5 text-xs font-bold whitespace-nowrap text-accent-ink hover:opacity-80"
+                    >
+                      {showHistory ? 'Hide rounds' : 'All rounds'}
+                      {!showHistory && <span aria-hidden="true">&nbsp;›</span>}
+                    </button>
+                  )}
+                </div>
+              )}
+            </section>
           )
         })}
-      </section>
+      </div>
 
-      {active && round && (
-        <div data-testid="current-round" className="mt-3">
-          {otherRoundFields.length > 0 && (
-            <section className="mb-2.5 rounded-[14px] border border-line bg-surface p-3">
-              <p className="mb-2 text-[11px] font-bold tracking-wider text-muted uppercase">
-                Round settings
-              </p>
-              <div className="flex flex-wrap items-center gap-3">
-                {otherRoundFields.map((f) => (
-                  <RoundFieldInput
-                    key={f.key}
-                    field={f}
-                    value={roundData[f.key]}
-                    onChange={(v) => setRoundData((prev) => ({ ...prev, [f.key]: v }))}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
-
-          <TypedFieldCaptions fields={playerFields} />
-
-          <div data-testid="player-rows" className="space-y-2.5">
-            {players.map((row) => (
-              <div
-                key={row.player_id}
-                data-testid="player-row"
-                data-player-name={row.name}
-                className="flex items-center gap-2.5 rounded-[14px] border border-line bg-surface py-2.5 pr-3 pl-3"
-              >
-                <span className="min-w-0 flex-1 truncate text-base font-bold text-ink">{row.name}</span>
-                {playerFields.map((field) => (
-                  <PlayerFieldInput
-                    key={field.key}
-                    field={field}
-                    playerName={row.name}
-                    value={playerData[row.player_id]?.[field.key]}
-                    onChange={(v) =>
-                      setPlayerData((prev) => ({
-                        ...prev,
-                        [row.player_id]: { ...prev[row.player_id], [field.key]: v },
-                      }))
-                    }
-                  />
-                ))}
-              </div>
-            ))}
-          </div>
-
-          {stepperField && (
-            <p data-testid="stepper-progress" className="mt-2.5 text-[13px] text-muted">
-              {stepperField.label}s so far: {players.length - stillToEnter.length} of {players.length}
-              {stillToEnter.length > 0 &&
-                ` · ${stillToEnter.map((p) => p.name).join(', ')} still to ${stepperField.label.toLowerCase()}`}
-            </p>
-          )}
-        </div>
+      {active && stepperField && (
+        <p data-testid="stepper-progress" className="mt-2.5 text-[13px] text-muted">
+          {stepperField.label}s so far: {players.length - stillToEnter.length} of {players.length}
+          {stillToEnter.length > 0 &&
+            ` · ${stillToEnter.map((p) => p.name).join(', ')} still to ${stepperField.label.toLowerCase()}`}
+        </p>
       )}
 
-      {hasScoredRounds && (
-        <section aria-label="Rounds" className="mt-3">
-          <div className="flex items-center gap-1.5">
-            <span className="shrink-0 text-xs text-muted">Recent:</span>
-            <div className="flex min-w-0 flex-1 gap-1.5 overflow-hidden">
-              {recentRounds.map((n) => {
-                const best = roundBest(n)
-                return (
-                  <span
-                    key={n}
-                    data-testid="recent-round-chip"
-                    className="min-w-0 truncate rounded-md border border-line bg-surface px-2 py-0.5 text-xs whitespace-nowrap text-ink"
-                  >
-                    R{n}
-                    {getHistoryInfo(n).map((chip) => (
-                      <span key={chip.key} title={chip.label} className={`ml-1 ${chipTone(chip)}`}>
-                        {chip.value}
-                      </span>
-                    ))}
-                    {best && ` ${best.names} ${formatRoundScore(best.score, direction)}`}
-                  </span>
-                )
-              })}
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowHistory((v) => !v)}
-              aria-expanded={showHistory}
-              aria-controls="round-history"
-              className="-mr-1 flex h-11 shrink-0 items-center px-1 text-xs font-bold text-accent-ink hover:opacity-80"
-            >
-              {showHistory ? 'Hide rounds' : 'All rounds'}
-            </button>
-          </div>
-
-          {showHistory && (
-            <RoundHistory
-              players={players}
-              rounds={scoredRounds}
-              direction={direction}
-              getHistoryInfo={getHistoryInfo}
-            />
-          )}
-        </section>
+      {hasScoredRounds && showHistory && (
+        <RoundHistory
+          players={players}
+          rounds={scoredRounds}
+          direction={direction}
+          getHistoryInfo={getHistoryInfo}
+        />
       )}
 
       {active && round && (
@@ -611,28 +634,8 @@ function SuitCards({
   )
 }
 
-/** Fields whose input is typed into a number box get a caption above the rows. */
-function isTypedNumber(field: InputField): boolean {
-  return field.type === 'number' && !field.stepper
-}
-
 function allowsNegative(field: InputField): boolean {
   return field.min === undefined || field.min < 0
-}
-
-function TypedFieldCaptions({ fields }: { fields: InputField[] }) {
-  if (!fields.some(isTypedNumber)) return null
-  return (
-    <div aria-hidden="true" className="mb-1 flex justify-end gap-2.5 px-3 text-xs font-semibold text-muted">
-      {fields.filter(isTypedNumber).map((f) => (
-        <span key={f.key} className="flex gap-1">
-          {/* Centered over the input; a long label overflows both sides evenly. */}
-          <span className="flex w-28 justify-center whitespace-nowrap">{f.label}</span>
-          {allowsNegative(f) && <span className="w-11" />}
-        </span>
-      ))}
-    </div>
-  )
 }
 
 function PlayerFieldInput({
@@ -650,13 +653,13 @@ function PlayerFieldInput({
 
   if (field.type === 'boolean') {
     return (
-      <div className="flex h-11 shrink-0 overflow-hidden rounded-[10px] border border-line">
+      <div className="flex shrink-0 overflow-hidden rounded-[10px] border border-line">
         <button
           type="button"
           onClick={() => onChange(false)}
           aria-label={`${label} no`}
           aria-pressed={value === false}
-          className={`w-11 text-base font-extrabold transition active:scale-[0.97] ${
+          className={`h-11 w-11 text-base font-extrabold transition active:scale-[0.97] ${
             value === false ? 'bg-no-bg text-no-fg' : 'bg-surface text-muted hover:bg-surface-2'
           }`}
         >
@@ -667,7 +670,7 @@ function PlayerFieldInput({
           onClick={() => onChange(true)}
           aria-label={`${label} yes`}
           aria-pressed={value === true}
-          className={`w-11 border-l border-line text-base font-extrabold transition active:scale-[0.97] ${
+          className={`h-11 w-11 border-l border-line text-base font-extrabold transition active:scale-[0.97] ${
             value === true ? 'bg-yes-bg text-yes-fg' : 'bg-surface text-muted hover:bg-surface-2'
           }`}
         >
@@ -752,7 +755,7 @@ function Stepper({
   const n = value === undefined || value === '' ? null : Number(value)
 
   const button =
-    'h-11 w-10 bg-surface text-xl text-ink transition hover:bg-surface-2 active:scale-[0.95] disabled:text-line-strong disabled:hover:bg-surface'
+    'h-11 w-11 bg-surface text-xl text-ink transition hover:bg-surface-2 active:scale-[0.95] disabled:text-line-strong disabled:hover:bg-surface'
 
   return (
     <div
@@ -805,7 +808,7 @@ function RoundHistory({
     <div
       id="round-history"
       data-testid="round-history"
-      className="mt-1 overflow-x-auto rounded-[14px] border border-line bg-surface"
+      className="mt-3 scroll-mb-32 overflow-x-auto rounded-[14px] border border-line bg-surface"
     >
       <table className="w-full text-sm tabular-nums">
         <thead>

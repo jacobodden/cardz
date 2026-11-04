@@ -5,8 +5,7 @@ import {
   expectPlayerTotal,
   expandHistory,
   finishGame,
-  playerRow,
-  playerStanding,
+  playerCard,
   sessionCard,
   setStepper,
   setTheme,
@@ -69,12 +68,12 @@ test('Up & Down: rule violations disable submit and explain why', async ({ page 
 
   // Everyone making their bid is not allowed either.
   for (const name of ['Alice', 'Bob', 'Carol']) {
-    await playerRow(page, name).getByRole('button', { name: `${name} Made Bid? yes` }).click()
+    await playerCard(page, name).getByRole('button', { name: `${name} Made Bid? yes` }).click()
   }
   await expect(hint).toContainText('At least one must fail')
   await expect(submit).toBeDisabled()
 
-  await playerRow(page, 'Carol').getByRole('button', { name: 'Carol Made Bid? no' }).click()
+  await playerCard(page, 'Carol').getByRole('button', { name: 'Carol Made Bid? no' }).click()
   await expect(hint).toBeHidden()
   await expect(submit).toBeEnabled()
 
@@ -85,13 +84,13 @@ test('Up & Down: rule violations disable submit and explain why', async ({ page 
   await expect(hint).toContainText('Made bids total 2, but this round only has 1 trick.')
   await expect(submit).toBeDisabled()
 
-  await playerRow(page, 'Bob').getByRole('button', { name: 'Bob Made Bid? no' }).click()
+  await playerCard(page, 'Bob').getByRole('button', { name: 'Bob Made Bid? no' }).click()
 
   // Alice took the only trick, so Carol (bid 0) can't have missed.
   await expect(hint).toContainText("That leaves 0 tricks for the players who missed")
   await expect(submit).toBeDisabled()
 
-  await playerRow(page, 'Carol').getByRole('button', { name: 'Carol Made Bid? yes' }).click()
+  await playerCard(page, 'Carol').getByRole('button', { name: 'Carol Made Bid? yes' }).click()
   await expect(hint).toBeHidden()
   await expect(submit).toBeEnabled()
 })
@@ -123,15 +122,25 @@ test('Up & Down: round history keeps each round’s trump suit', async ({
     ],
   })
 
-  const recent = page.getByTestId('recent-round-chip')
-  await expect(recent).toHaveCount(2)
-  await expect(recent.first()).toHaveText('R1♠ Alice +11')
-  await expect(recent.last()).toHaveText('R2♥ Alice +12')
+  // Each card lists its own player's rounds, newest first in the DOM.
+  const aliceRecent = playerCard(page, 'Alice').getByTestId('recent-round-chip')
+  await expect(aliceRecent).toHaveText(['R2♥+12', 'R1♠+11'])
+  await expect(playerCard(page, 'Bob').getByTestId('recent-round-chip')).toHaveText(['R2♥0', 'R1♠0'])
+  await expect(aliceRecent.getByTitle('Trump').first()).toHaveClass(/text-red-suit/)
+
+  // Only the first card carries the toggle, which controls the one table.
+  const toggle = page.getByTestId('toggle-history')
+  await expect(toggle).toHaveCount(1)
+  await expect(playerCard(page, 'Alice').getByTestId('toggle-history')).toBeVisible()
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false')
 
   await expandHistory(page)
   const history = page.getByTestId('round-history')
   await expect(history).toContainText('♠')
   await expect(history).toContainText('♥')
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true')
+  await toggle.click()
+  await expect(history).toHaveCount(0)
 })
 
 test('Up & Down: final round completes the game automatically', async ({
@@ -154,7 +163,7 @@ test('Up & Down: final round completes the game automatically', async ({
     { player: 'Carol', bid: 1, success: false },
   ]) {
     await setStepper(page, `${bid.player} Bid`, bid.bid)
-    await playerRow(page, bid.player)
+    await playerCard(page, bid.player)
       .getByRole('button', {
         name: `${bid.player} Made Bid? ${bid.success ? 'yes' : 'no'}`,
       })
@@ -599,13 +608,13 @@ test('Session: felt band shows round line, trump cards and header undo', async (
   await setStepper(page, 'Bob Bid', 1)
   await setStepper(page, 'Carol Bid', 1)
   for (const [name, made] of [['Alice', 'yes'], ['Bob', 'no'], ['Carol', 'no']]) {
-    await playerRow(page, name).getByRole('button', { name: `${name} Made Bid? ${made}` }).click()
+    await playerCard(page, name).getByRole('button', { name: `${name} Made Bid? ${made}` }).click()
   }
   await page.getByTestId('submit-round').click()
   await expect(page.getByTestId('round-number')).toHaveText('Round 2 of 19')
   await expect(page.locator('header').getByTestId('undo-round')).toBeVisible()
-  await expect(playerStanding(page, 'Alice')).toContainText('Leading')
-  await expect(playerStanding(page, 'Bob')).toContainText('2nd')
+  await expect(playerCard(page, 'Alice').getByTestId('player-rank')).toHaveText('Leading')
+  await expect(playerCard(page, 'Bob').getByTestId('player-rank')).toHaveText('2nd')
 
   await page.getByTestId('undo-round').click()
   await expect(page.getByTestId('round-number')).toHaveText('Round 1 of 19')
@@ -647,16 +656,19 @@ test('Session: completed game shows the winner panel and standings', async ({ pa
 
   await expect(page.getByTestId('winner-panel')).toContainText('Alice wins!')
   await expect(page.getByTestId('winner-panel')).toContainText('Lowest total after 1 round · 3 pts')
-  await expect(playerStanding(page, 'Alice')).toContainText('Winner')
-  await expect(playerStanding(page, 'Bob')).toContainText('2nd')
-  await expect(page.getByTestId('player-row')).toHaveCount(0)
+  await expect(playerCard(page, 'Alice').getByTestId('player-rank')).toHaveText('Winner')
+  await expect(playerCard(page, 'Bob').getByTestId('player-rank')).toHaveText('2nd')
+  await expect(page.getByTestId('player-card')).toHaveCount(2)
+  await expect(page.getByTestId('player-round-inputs')).toHaveCount(0)
+  // Low score: a round's points show without a + sign.
+  await expect(playerCard(page, 'Alice').getByTestId('recent-round-chip')).toHaveText(['R13'])
 })
 
 test('mobile: session page fits seven players without horizontal overflow', async ({ page }) => {
   const players = ['Bartholomew', 'Christopher', 'Anastasia', 'Dmitri', 'Evangeline', 'Fitzgerald', 'Guinevere']
   await createSession(page, { gameSlug: 'up-and-down', players })
-  await expect(page.getByTestId('player-row')).toHaveCount(7)
-  await expect(page.getByTestId('player-standing')).toHaveCount(7)
+  await expect(page.getByTestId('player-card')).toHaveCount(7)
+  await expect(page.getByTestId('player-round-inputs')).toHaveCount(7)
   await expectNoHorizontalOverflow(page)
 })
 
@@ -866,4 +878,82 @@ test('Header: felt under the iOS status bar, seamless with the band, pinned on s
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(100)
   expect((await header.boundingBox())!.y).toBe(0)
   await expect(page.getByRole('link', { name: 'Cardz home' })).toBeInViewport()
+})
+
+test('Session: one card per player with name, total, rank and this round', async ({ page }) => {
+  await createSession(page, { gameSlug: 'up-and-down', players: ['Alice', 'Bob', 'Carol'] })
+
+  const cards = page.getByTestId('player-card')
+  await expect(cards).toHaveCount(3)
+  const alice = playerCard(page, 'Alice')
+  await expect(alice.getByTestId('player-name')).toHaveText('Alice')
+  await expect(alice.getByTestId('player-total')).toHaveText('0')
+  // No rank and no recent rounds before anything is scored.
+  await expect(page.getByTestId('player-rank')).toHaveCount(0)
+  await expect(page.getByTestId('recent-round-chip')).toHaveCount(0)
+  await expect(page.getByTestId('toggle-history')).toHaveCount(0)
+
+  const inputs = alice.getByTestId('player-round-inputs')
+  await expect(inputs).toContainText('This round')
+  await expect(inputs.getByTestId('card-round-line')).toHaveText('R1 · 1 card')
+  await expect(inputs).toContainText('Bid')
+  await expect(inputs).toContainText('Made Bid?')
+  await expect(inputs.getByRole('group', { name: 'Alice Bid', exact: true })).toBeVisible()
+  await expect(inputs.getByRole('button', { name: 'Alice Made Bid? yes' })).toBeVisible()
+})
+
+for (const [gameSlug, label] of [
+  ['pay-me', 'Cards Left (value)'],
+  ['high-score', 'Points'],
+  ['low-score', 'Points'],
+] as const) {
+  test(`Session: ${gameSlug} labels its number field inside each card`, async ({ page }) => {
+    await createSession(page, { gameSlug, players: ['Alice', 'Bob'] })
+    const inputs = playerCard(page, 'Bob').getByTestId('player-round-inputs')
+    await expect(inputs).toContainText(label)
+    await expect(inputs.getByLabel(`Bob ${label}`, { exact: true })).toBeVisible()
+    await expectNoHorizontalOverflow(page)
+  })
+}
+
+test('mobile: seven long names truncate inside their cards', async ({ page }) => {
+  const players = [
+    'Bartholomew-Maximilian-Fitzgerald',
+    'Christopher-Alexander',
+    'Anastasia',
+    'Dmitri',
+    'Evangeline',
+    'Fitzgerald',
+    'Guinevere',
+  ]
+  await createSession(page, { gameSlug: 'up-and-down', players })
+  await submitUpAndDownRound(page, 1, {
+    trump: '♦',
+    bids: players.map((player, i) => ({ player, bid: 1, success: i === 0 })),
+  })
+  await expect(page.getByTestId('player-card')).toHaveCount(7)
+
+  const name = playerCard(page, players[0]).getByTestId('player-name')
+  const clipped = await name.evaluate((el) => el.scrollWidth > el.clientWidth)
+  const viewport = page.viewportSize()!
+  // Only phones are narrow enough to clip this name.
+  if (viewport.width < 500) expect(clipped).toBe(true)
+  await expect(playerCard(page, players[0]).getByTestId('player-rank')).toHaveText('Leading')
+  await expectNoHorizontalOverflow(page)
+})
+
+test('Session: card controls are at least 44px tall', async ({ page }) => {
+  await createSession(page, { gameSlug: 'up-and-down', players: ['Alice', 'Bob', 'Carol'] })
+  await submitUpAndDownRound(page, 1, {
+    trump: '♠',
+    bids: [
+      { player: 'Alice', bid: 1, success: true },
+      { player: 'Bob', bid: 1, success: false },
+      { player: 'Carol', bid: 1, success: false },
+    ],
+  })
+  const buttons = playerCard(page, 'Alice').getByRole('button')
+  const heights = await buttons.evaluateAll((els) => els.map((el) => el.getBoundingClientRect().height))
+  expect(heights.length).toBeGreaterThan(0)
+  for (const h of heights) expect(h).toBeGreaterThanOrEqual(44)
 })

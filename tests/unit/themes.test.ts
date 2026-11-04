@@ -40,7 +40,7 @@ const TEXT_PAIRS: [fg: string, bg: string, alpha?: number][] = [
   ['ink', 'page'], ['ink', 'surface'], ['ink', 'lead-bg'], ['ink', 'accent-soft'],
   ['ink', 'avatar-1'], ['ink', 'avatar-2'], ['ink', 'avatar-3'],
   ['muted', 'page'], ['muted', 'surface'], ['muted', 'surface-2'], ['muted', 'accent-soft'],
-  ['accent-ink', 'page'], ['accent-ink', 'surface'], ['accent-ink', 'accent-soft'],
+  ['accent-ink', 'page'], ['accent-ink', 'surface'], ['accent-ink', 'accent-soft'], ['accent-ink', 'lead-bg'],
   ['on-felt', 'felt'], ['on-felt', 'felt', 0.85], ['on-felt', 'felt', 0.8], ['felt', 'on-felt'],
   ['on-accent', 'accent'], ['on-danger', 'danger-solid'],
   ['lead-label', 'lead-bg'], ['win-fg', 'win-bg'], ['warn', 'page'],
