@@ -77,6 +77,17 @@ test('Up & Down: rule violations disable submit and explain why', async ({ page 
   await playerRow(page, 'Carol').getByRole('button', { name: 'Carol Made Bid? no' }).click()
   await expect(hint).toBeHidden()
   await expect(submit).toBeEnabled()
+
+  // Made bids can't take more tricks than the round has: Alice and Bob
+  // both bidding 1 and making it would be 2 tricks out of 1.
+  await setStepper(page, 'Alice Bid', 1)
+  await setStepper(page, 'Bob Bid', 1)
+  await expect(hint).toContainText('Made bids total 2, but this round only has 1 trick.')
+  await expect(submit).toBeDisabled()
+
+  await playerRow(page, 'Bob').getByRole('button', { name: 'Bob Made Bid? no' }).click()
+  await expect(hint).toBeHidden()
+  await expect(submit).toBeEnabled()
 })
 
 test('Up & Down: round history keeps each round’s trump suit', async ({

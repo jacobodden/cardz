@@ -124,6 +124,34 @@ describe('Up & Down', () => {
       // Not answered yet: not a violation
       expect(upAndDown.validateRound!(meta(5), made(true, undefined, true))).toBeNull()
     })
+
+    describe('made bids cannot exceed the tricks in the round', () => {
+      const round = (...players: [bid: number, success?: boolean][]) =>
+        players.map(([bid, success], i) => ({ player_id: i + 1, data: { bid, success } }))
+
+      it('rejects made bids that total more than the hand size', () => {
+        // 3 tricks: Alice (2) and Bob (2) can't both have made it.
+        expect(upAndDown.validateRound!(meta(3), round([2, true], [2, true], [0, false]))).toBe(
+          'Made bids total 4, but this round only has 3 tricks. Someone marked as made must have missed.',
+        )
+        expect(upAndDown.validateRound!(meta(1), round([1, true], [1, true], [0, false]))).toMatch(
+          /only has 1 trick\./,
+        )
+      })
+
+      it('accepts made bids up to the hand size', () => {
+        // Exactly all 3 tricks taken by players who made it; Carol (bid 1) took none.
+        expect(upAndDown.validateRound!(meta(3), round([2, true], [1, true], [1, false]))).toBeNull()
+        expect(upAndDown.validateRound!(meta(3), round([2, true], [0, true], [2, false]))).toBeNull()
+      })
+
+      it('counts only players marked as made, including partial input', () => {
+        // Bob's bid of 3 doesn't count until he is marked as made.
+        expect(upAndDown.validateRound!(meta(3), round([2, true], [3, false], [1]))).toBeNull()
+        expect(upAndDown.validateRound!(meta(3), round([2, true], [3], [1]))).toBeNull()
+        expect(upAndDown.validateRound!(meta(3), round([2, true], [3, true], [1]))).toMatch(/Made bids total 5/)
+      })
+    })
   })
 
   it('exposes the peak config with a default of 10', () => {
