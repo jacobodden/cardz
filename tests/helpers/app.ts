@@ -24,6 +24,13 @@ export async function setTheme(page: Page, theme: Theme): Promise<void> {
   }, theme)
 }
 
+/** Set the color theme (see src/themes.ts) before the first navigation. */
+export async function setPalette(page: Page, palette: string): Promise<void> {
+  await page.addInitScript((value) => {
+    localStorage.setItem('palette', value)
+  }, palette)
+}
+
 /**
  * Create a session through the UI and wait for the session screen to be ready.
  */

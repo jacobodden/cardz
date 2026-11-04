@@ -127,6 +127,88 @@
   --avatar-3: #2b3a5e;
 }
 
+/*
+ * Midnight: violet band and accents on cool grays (concept C on the design
+ * canvas). Leader/winner stay gold and cards stay light, as in Felt.
+ */
+:root[data-palette="midnight"] {
+  color-scheme: light;
+  --page: #f4f2fa;
+  --surface: #ffffff;
+  --surface-2: #eeebf6;
+  --line: #e7e3f2;
+  --line-strong: #c9c2de;
+  --ink: #1a1530;
+  --muted: #5e5878;
+  --felt: #6b3fe0;
+  --on-felt: #ffffff;
+  --accent: #6b3fe0;
+  --on-accent: #ffffff;
+  --accent-ink: #5b2fd0;
+  --accent-soft: #f3eeff;
+  --lead-bg: #faf0dc;
+  --lead-border: #e2c068;
+  --lead-label: #8a5f00;
+  --win-bg: #faf0dc;
+  --win-fg: #8a5f00;
+  --warn: #8a5f00;
+  --red-suit: #c42b4b;
+  --danger: #b3264a;
+  --danger-solid: #b3264a;
+  --on-danger: #ffffff;
+  --yes-bg: #e3f4e8;
+  --yes-fg: #1d6b3a;
+  --no-bg: #fbe4e8;
+  --no-fg: #a12440;
+  --card-face: #ffffff;
+  --card-edge: #d9d3ea;
+  --card-black: #1a1530;
+  --card-red: #c42b4b;
+  --card-ring: #f2c76a;
+  --avatar-1: #e6defb;
+  --avatar-2: #fbdde4;
+  --avatar-3: #dce3f5;
+}
+
+:root.dark[data-palette="midnight"] {
+  color-scheme: dark;
+  --page: #0e0c16;
+  --surface: #1a1727;
+  --surface-2: #26223a;
+  --line: #2e2944;
+  --line-strong: #423b60;
+  --ink: #eeeaf8;
+  --muted: #a39dbb;
+  --felt: #3a2a7a;
+  --on-felt: #eeeaf8;
+  --accent: #8b6cf6;
+  --on-accent: #0e0c16;
+  --accent-ink: #b9a5ff;
+  --accent-soft: #241e3d;
+  --lead-bg: #3a2f17;
+  --lead-border: #8a6a22;
+  --lead-label: #f2c76a;
+  --win-bg: #3a2f17;
+  --win-fg: #f2c76a;
+  --warn: #f2c76a;
+  --red-suit: #ff7a93;
+  --danger: #ff8aa0;
+  --danger-solid: #b3264a;
+  --on-danger: #ffffff;
+  --yes-bg: #1c3526;
+  --yes-fg: #7fd69a;
+  --no-bg: #3e1c26;
+  --no-fg: #ff9aae;
+  --card-face: #f4f1ea;
+  --card-edge: #f4f1ea;
+  --card-black: #1a1a1a;
+  --card-red: #c42b4b;
+  --card-ring: #f2c76a;
+  --avatar-1: #2f2752;
+  --avatar-2: #4a2333;
+  --avatar-3: #263559;
+}
+
 html {
   touch-action: manipulation;
   background-color: var(--page);
