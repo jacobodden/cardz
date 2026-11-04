@@ -722,3 +722,21 @@ test('Theme picker: switching to Midnight recolors the app and survives a reload
   await expect(page.getByRole('menuitemradio', { name: 'Midnight' })).toHaveAttribute('aria-checked', 'true')
   await expect(page.getByRole('menuitemradio', { name: 'Felt' })).toHaveAttribute('aria-checked', 'false')
 })
+
+test('Header logo is the transparent cards-and-pencil art, not the PWA icon', async ({ page }) => {
+  await page.goto('/')
+  const logo = page.getByRole('link', { name: 'Cardz home' }).locator('img')
+  await expect(logo).toHaveAttribute('src', /app-logo\.png$/)
+  const pixels = await logo.evaluate(async (img: HTMLImageElement) => {
+    await img.decode()
+    const c = document.createElement('canvas')
+    c.width = img.naturalWidth
+    c.height = img.naturalHeight
+    const ctx = c.getContext('2d')!
+    ctx.drawImage(img, 0, 0)
+    const alpha = (x: number, y: number) => ctx.getImageData(x, y, 1, 1).data[3]
+    const mid = Math.floor(c.width / 2)
+    return { width: c.width, corner: alpha(0, 0), center: alpha(mid, mid) }
+  })
+  expect(pixels).toEqual({ width: 128, corner: 0, center: 255 })
+})

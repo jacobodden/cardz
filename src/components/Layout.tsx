@@ -75,11 +75,11 @@ export default function Layout() {
               className={`-ml-1 ${iconButton}`}
             >
               <img
-                src={`${import.meta.env.BASE_URL}pwa-64x64.png`}
+                src={`${import.meta.env.BASE_URL}app-logo.png`}
                 alt=""
                 width={32}
                 height={32}
-                className="w-8 h-8 rounded-lg"
+                className="w-8 h-8 drop-shadow-sm"
               />
             </Link>
             <div className="-mr-1 flex items-center gap-1">
