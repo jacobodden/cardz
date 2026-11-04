@@ -85,6 +85,7 @@ scores    ++id, round_id, player_id, score, data_json</code></pre>
 
     <h2>Themes</h2>
     <p>Light/dark mode and the color theme are independent. Mode is the <code>.dark</code> class on <code>&lt;html&gt;</code>, stored in <code>localStorage('theme')</code>. The color theme is <code>data-palette</code> on <code>&lt;html&gt;</code>, stored in <code>localStorage('palette')</code>, with each theme's tokens in <code>src/index.css</code> and its entry in <code>src/themes.ts</code>. A startup script in <code>index.html</code> applies both before first paint, using the registry that <code>vite.config.ts</code> injects. <code>Layout.tsx</code> keeps <code>&lt;meta name="theme-color"&gt;</code> in step with the felt color.</p>
+    <p>The header is always felt and pinned to the top. Installed on iOS, the app draws under a transparent status bar (<code>black-translucent</code>, <code>viewport-fit=cover</code>) and the header pads by <code>env(safe-area-inset-top)</code>, so the status bar shows the theme's felt with no seam. Page gutters use the <code>safe-x</code> utility to clear the notch in landscape.</p>
 
     <h2>PWA and icons</h2>
     <p>The manifest and service worker are configured in <code>vite.config.ts</code>. Install icons are generated from <code>public/pwa-icon.png</code> with <code>npm run generate-pwa-assets</code>. The header logo is a separate transparent image, <code>public/app-logo.png</code>.</p>

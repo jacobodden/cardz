@@ -212,4 +212,23 @@
 html {
   touch-action: manipulation;
   background-color: var(--page);
+  /* Pulling past the top (iOS rubber-banding) shows felt, like the header;
+     past the bottom shows the page. The app covers this everywhere else. */
+  background-image: linear-gradient(to bottom, var(--felt) 50%, var(--page) 50%);
+}
+
+/*
+ * Page gutters that also clear the notch in landscape (viewport-fit=cover).
+ * Same widths as px-4 / sm:px-6 / lg:px-8.
+ */
+@utility safe-x {
+  --gutter: 1rem;
+  padding-left: max(var(--gutter), env(safe-area-inset-left));
+  padding-right: max(var(--gutter), env(safe-area-inset-right));
+  @variant sm {
+    --gutter: 1.5rem;
+  }
+  @variant lg {
+    --gutter: 2rem;
+  }
 }
