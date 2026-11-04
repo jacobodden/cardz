@@ -478,7 +478,7 @@ test('mobile: home page has no horizontal overflow with long names', async ({ pa
   await expectNoHorizontalOverflow(page)
 })
 
-test('Home: the felt band shows only on the home page', async ({ page }) => {
+test('Home: New game opens the new-game page in its own felt band', async ({ page }) => {
   await page.goto('/')
   const appBar = page.getByTestId('app-bar')
   await expect(appBar).toHaveAttribute('data-felt', 'true')
@@ -486,8 +486,40 @@ test('Home: the felt band shows only on the home page', async ({ page }) => {
 
   await appBar.getByRole('link', { name: 'New game' }).click()
   await expect(page).toHaveURL(/\/sessions\/new$/)
-  await expect(appBar).not.toHaveAttribute('data-felt')
+  await expect(appBar).toHaveAttribute('data-felt', 'true')
+  await expect(appBar.getByRole('heading', { name: 'New game' })).toBeVisible()
   await expect(appBar.getByRole('heading', { name: 'Games' })).toHaveCount(0)
+})
+
+test('New game: picker marks the chosen game and Start explains what is missing', async ({ page }) => {
+  await page.goto('/sessions/new')
+  const upAndDown = page.locator('[data-testid="game-option"][data-game-slug="up-and-down"]')
+  await expect(upAndDown).toHaveAttribute('aria-pressed', 'false')
+  await upAndDown.click()
+  await expect(upAndDown).toHaveAttribute('aria-pressed', 'true')
+
+  const start = page.getByTestId('start-game')
+  await expect(start).toHaveText('Start Up & Down The River')
+  await expect(start).toBeDisabled()
+  await expect(page.getByText('Add 3 more players to start')).toBeVisible()
+
+  await page.getByTestId('add-player').click()
+  for (const [i, name] of ['Alice', 'Bob', 'Carol'].entries()) {
+    await page.getByTestId('player-name-input').nth(i).fill(name)
+  }
+  await expect(start).toBeEnabled()
+
+  await page.getByRole('button', { name: 'Remove player 3' }).click()
+  await expect(page.getByTestId('player-name-input')).toHaveCount(2)
+  await expect(page.getByText('Add 1 more player to start')).toBeVisible()
+})
+
+test('mobile: new-game page has no horizontal overflow', async ({ page }) => {
+  await page.goto('/sessions/new')
+  await page.locator('[data-game-slug="up-and-down"]').click()
+  await page.getByTestId('player-name-input').first().fill('Bartholomew-Maximilian')
+  await expect(page.getByTestId('first-dealer')).toBeVisible()
+  await expectNoHorizontalOverflow(page)
 })
 
 test('Session: felt band shows round line, trump cards and header undo', async ({ page }) => {
