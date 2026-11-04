@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Up and Down the River — Cardz rules</title>
+  <link rel="stylesheet" href="../assets/docs.css">
+</head>
+<body>
+  <header class="band">
+    <div class="wrap">
+      <p class="crumbs"><a href="../index.html">Cardz docs</a> / <a href="index.html">Games</a></p>
+      <h1>Up and Down the River</h1>
+      <p class="lede">A trick-taking game where you bid the exact number of tricks you will win. Taking too many is as bad as taking too few.</p>
+    </div>
+  </header>
+  <main class="wrap">
+    <h2>Setup</h2>
+    <ul>
+      <li><strong>Players:</strong> 3 to 7 (best with 4 to 6).</li>
+      <li><strong>Deck:</strong> one standard 52-card deck. Aces are high, 2s are low.</li>
+      <li><strong>Going up:</strong> round 1 deals 1 card to each player, round 2 deals 2, and so on up to the peak hand size.</li>
+      <li><strong>Going down:</strong> after the peak round, the hand size drops by 1 card each round until the final round deals 1 card.</li>
+    </ul>
+
+    <h3>Peak hand size</h3>
+    <p>With <var>P</var> players, the peak is <code>floor(51 / P)</code> cards, and the game lasts <code>peak × 2 − 1</code> rounds. For example, 6 players peak at 8 cards over 15 rounds. Cardz caps the peak at 10 cards, and you can set a lower peak when starting a game.</p>
+
+    <h2>Each round</h2>
+    <p class="note">Deal cards → flip trump → players bid → play tricks → score the round.</p>
+
+    <h3>Deal cards</h3>
+    <p>The dealer deals the round's number of cards to each player, one at a time.</p>
+
+    <h3>Flip trump</h3>
+    <p>The dealer places the remaining deck in the center and flips the top card face up. Its suit is trump for the round. If the cards run out on the peak round, play that round with no trump.</p>
+
+    <h3>Bid</h3>
+    <p>Starting at the dealer's left, each player bids the exact number of tricks they think they will win. The scorekeeper records the bids.</p>
+
+    <h3>The hook rule</h3>
+    <p>The dealer may not bid a number that makes the total of all bids equal the number of tricks available, so at least one player must miss. Some tables treat this as optional; Cardz always enforces it and won't accept a round whose bids add up to the hand size.</p>
+
+    <h3>Play tricks</h3>
+    <ul>
+      <li>The player at the dealer's left leads the first trick.</li>
+      <li>Players must follow suit if they can.</li>
+      <li>A player who cannot follow suit may play a trump to try to win, or discard any other card.</li>
+      <li>The highest trump wins the trick; if no trump was played, the highest card of the led suit wins.</li>
+      <li>The winner of a trick leads the next one.</li>
+    </ul>
+
+    <h2>Scoring</h2>
+    <p>Scoring rewards precision, not just winning tricks.</p>
+    <ul>
+      <li><strong>Make your bid:</strong> win exactly the number of tricks you bid to score 10 points plus 1 per trick. Bidding 3 and winning 3 scores 13; bidding 0 and winning 0 scores 10.</li>
+      <li><strong>Miss your bid:</strong> win more or fewer tricks than you bid and you score 0 for the round.</li>
+    </ul>
+    <p>The highest total after the whole up-and-down cycle wins.</p>
+
+    <h2>Strategy</h2>
+    <h3>Bidding zero</h3>
+    <p>Low cards (2s, 3s and 4s) make a zero bid safer. Lead them early to shed them before other players run out of a suit.</p>
+    <h3>The power of the lead</h3>
+    <p>Winning a trick gives you the lead, which forces you to choose the next suit. Once you have made your bid, avoid winning more tricks by playing your lowest legal cards.</p>
+    <h3>Watch the trump count</h3>
+    <p>Keep track of how many trumps have been played. An average trump can become the highest one left once the top trumps are gone.</p>
+  </main>
+</body>
+</html>

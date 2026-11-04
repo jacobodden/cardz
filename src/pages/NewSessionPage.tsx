@@ -14,16 +14,54 @@ const INPUT =
   'h-12 w-full rounded-xl border border-line-strong bg-surface px-3.5 text-base text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent-ink'
 const SECTION_HEADING = 'mb-2 text-[13px] font-bold text-muted'
 
+function clamp(value: number, min?: number, max?: number): number {
+  if (!Number.isFinite(value)) return min ?? 0
+  return Math.min(max ?? Infinity, Math.max(min ?? -Infinity, Math.round(value)))
+}
+
+/**
+ * Scroll `section` to the top of the screen for a just-focused `input`.
+ * Centering would be measured before the on-screen keyboard opens and then
+ * end up behind it; at the top, the keyboard opening below can't cover it.
+ * If the visible area still shrinks the field out of view (the keyboard
+ * animating in, or the browser's own scroll fighting ours), reveal it once
+ * more.
+ */
+function revealAboveKeyboard(input: HTMLElement, section: HTMLElement): void {
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  section.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' })
+
+  const viewport = window.visualViewport
+  if (!viewport) return
+  const stop = () => {
+    viewport.removeEventListener('resize', onResize)
+    window.clearTimeout(timer)
+  }
+  const onResize = () => {
+    if (document.activeElement !== input) return stop()
+    const rect = input.getBoundingClientRect()
+    const top = viewport.offsetTop
+    if (rect.top < top || rect.bottom > top + viewport.height) {
+      stop()
+      section.scrollIntoView({ behavior: 'auto', block: 'start' })
+    }
+  }
+  const timer = window.setTimeout(stop, 1500)
+  viewport.addEventListener('resize', onResize)
+}
+
 export default function NewSessionPage() {
   const navigate = useNavigate()
   const games = useLiveQuery(() => db.games.toArray(), [])
   const [selectedGame, setSelectedGame] = useState<Game | null>(null)
   const [title, setTitle] = useState('')
-  const [config, setConfig] = useState<Record<string, number>>({})
+  // null = the user cleared the field; the suggested value is used instead.
+  const [config, setConfig] = useState<Record<string, number | null>>({})
   const [playerNames, setPlayerNames] = useState<string[]>(['', ''])
   const [firstDealerIndex, setFirstDealerIndex] = useState(0)
   const [creating, setCreating] = useState(false)
   const titleInput = useRef<HTMLInputElement>(null)
+  const titleSection = useRef<HTMLDivElement>(null)
 
   const validCount = playerNames.filter(Boolean).length
   const gameImpl = selectedGame ? getGame(selectedGame.slug) : undefined
@@ -60,14 +98,32 @@ export default function NewSessionPage() {
     // iOS only opens the keyboard for focus() calls made during a user gesture.
     flushSync(() => setSelectedGame(g))
     const input = titleInput.current
-    if (!input) return
+    const section = titleSection.current
+    if (!input || !section) return
     input.focus({ preventScroll: true })
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    input.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' })
+    revealAboveKeyboard(input, section)
   }
 
-  function updateConfig(key: string, value: number) {
-    setConfig((prev) => ({ ...prev, [key]: value }))
+  function updateConfig(key: string, raw: string) {
+    setConfig((prev) => ({ ...prev, [key]: raw === '' ? null : Number(raw) }))
+  }
+
+  function clampConfig(key: string) {
+    const field = selectedGame?.config_schema.find((f) => f.key === key)
+    const value = config[key]
+    if (!field || value == null) return
+    const clamped = clamp(value, field.min, field.max)
+    if (clamped !== value) setConfig((prev) => ({ ...prev, [key]: clamped }))
+  }
+
+  /** Config to start with: cleared fields take the suggested value, all within range. */
+  function resolvedConfig(): Record<string, number> {
+    const resolved: Record<string, number> = {}
+    for (const field of selectedGame?.config_schema ?? []) {
+      const value = config[field.key] ?? defaults[field.key] ?? field.defaultValue
+      resolved[field.key] = clamp(value, field.min, field.max)
+    }
+    return resolved
   }
 
   function addPlayer() {
@@ -88,8 +144,8 @@ export default function NewSessionPage() {
     if (!selectedGame) return
     setCreating(true)
     const sessionConfig = usesDealer
-      ? { ...config, first_dealer_index: firstDealerIndex }
-      : { ...config }
+      ? { ...resolvedConfig(), first_dealer_index: firstDealerIndex }
+      : resolvedConfig()
 
     const session = await createSession(selectedGame.id!, title || undefined)
     for (const name of playerNames.filter(Boolean)) {
@@ -170,10 +226,12 @@ export default function NewSessionPage() {
       </section>
 
       {selectedGame && (
-        <>
+        // On touch screens the form is at least a screen tall, so picking a
+        // game can scroll the title to the top, clear of the keyboard.
+        <div className="pointer-coarse:flex pointer-coarse:min-h-dvh pointer-coarse:flex-col">
           {/* Session title & game config */}
           <section className="mb-6 space-y-4">
-            <div>
+            <div ref={titleSection} className="scroll-mt-3">
               <label htmlFor="session-title" className={`block ${SECTION_HEADING}`}>
                 Title
               </label>
@@ -191,7 +249,9 @@ export default function NewSessionPage() {
             </div>
             {selectedGame.config_schema.map((field) => {
               const autoValue = playerCountDefaults?.[field.key] ?? null
-              const isManuallyEdited = autoValue !== null && config[field.key] !== autoValue
+              const value = config[field.key]
+              const suggested = autoValue ?? field.defaultValue
+              const isManuallyEdited = autoValue !== null && value != null && value !== autoValue
               return (
                 <div key={field.key}>
                   <label htmlFor={`config-${field.key}`} className={`block ${SECTION_HEADING}`}>
@@ -201,8 +261,10 @@ export default function NewSessionPage() {
                     <input
                       id={`config-${field.key}`}
                       type="number"
-                      value={config[field.key] ?? field.defaultValue}
-                      onChange={(e) => updateConfig(field.key, Number(e.target.value))}
+                      value={value ?? ''}
+                      placeholder={String(suggested)}
+                      onChange={(e) => updateConfig(field.key, e.target.value)}
+                      onBlur={() => clampConfig(field.key)}
                       min={field.min}
                       max={field.max}
                       inputMode="numeric"
@@ -299,6 +361,7 @@ export default function NewSessionPage() {
             </section>
           )}
 
+          <div aria-hidden="true" className="hidden flex-1 pointer-coarse:block" />
           <div className="sticky bottom-0 z-10 -mx-4 mt-4 -mb-4 border-t border-line bg-page/90 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur sm:-mb-6">
             {startHint && <p className="mb-2 text-center text-[13px] text-muted">{startHint}</p>}
             <button
@@ -311,7 +374,7 @@ export default function NewSessionPage() {
               {creating ? 'Starting...' : `Start ${selectedGame.name}`}
             </button>
           </div>
-        </>
+        </div>
       )}
     </div>
   )

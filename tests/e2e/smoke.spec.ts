@@ -401,6 +401,54 @@ test('New game: picking a game focuses the session title', async ({ page }) => {
   await expect(title).toHaveValue('Quick Game')
 })
 
+test('New game: the title stays visible when the keyboard shrinks the screen', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'Only touch screens have an on-screen keyboard')
+  const size = page.viewportSize()!
+  await page.goto('/sessions/new')
+  await page.locator('[data-game-slug="up-and-down"]').click()
+  const title = page.getByTestId('session-title')
+  await expect(title).toBeFocused()
+  // The title section goes to the top, leaving the lower part for the keyboard.
+  await expect
+    .poll(async () => (await title.boundingBox())!.y)
+    .toBeLessThan(size.height * 0.4)
+
+  // An on-screen keyboard takes roughly the bottom half.
+  await page.setViewportSize({ width: size.width, height: Math.round(size.height * 0.5) })
+  await expect(title).toBeInViewport({ ratio: 1 })
+})
+
+test('New game: the peak field can be cleared and falls back to the suggested value', async ({ page }) => {
+  await page.goto('/sessions/new')
+  await page.locator('[data-game-slug="up-and-down"]').click()
+  for (const [i, name] of ['Ann', 'Ben', 'Cal'].entries()) {
+    if (i >= 2) await page.getByTestId('add-player').click()
+    await page.getByTestId('player-name-input').nth(i).fill(name)
+  }
+  const peak = page.getByTestId('config-peak')
+  await expect(peak).toHaveValue('10')
+
+  // Clearing leaves it empty (no stray 0), showing the suggestion as a placeholder.
+  await peak.fill('')
+  await expect(peak).toHaveValue('')
+  await expect(peak).toHaveAttribute('placeholder', '10')
+  await peak.press('Tab')
+  await expect(peak).toHaveValue('')
+
+  // Out-of-range values snap into range when leaving the field.
+  await peak.fill('0')
+  await peak.press('Tab')
+  await expect(peak).toHaveValue('1')
+  await peak.fill('25')
+  await peak.press('Tab')
+  await expect(peak).toHaveValue('10')
+
+  // Starting with the field empty uses the suggested peak of 10: 19 rounds.
+  await peak.fill('')
+  await page.getByTestId('start-game').click()
+  await expect(page.getByTestId('round-number')).toHaveText('Round 1 of 19')
+})
+
 test('Session: unknown id shows not found instead of loading forever', async ({
   page,
 }) => {
@@ -739,4 +787,35 @@ test('Header logo is the transparent cards-and-pencil art, not the PWA icon', as
     return { width: c.width, corner: alpha(0, 0), center: alpha(mid, mid) }
   })
   expect(pixels).toEqual({ width: 128, corner: 0, center: 255 })
+})
+
+test('Pinch-zoom is allowed and form controls are big enough to avoid iOS auto-zoom', async ({ page }) => {
+  // iOS Safari zooms into any focused control under 16px.
+  async function expectControlsAtLeast16px({ expectSome = false } = {}) {
+    const sizes = await page
+      .locator('input:visible, select:visible, textarea:visible')
+      .evaluateAll((els) =>
+        els.map((el) => ({
+          what: el.getAttribute('aria-label') ?? el.getAttribute('data-testid') ?? el.tagName,
+          px: parseFloat(getComputedStyle(el).fontSize),
+        }))
+      )
+    if (expectSome) expect(sizes.length).toBeGreaterThan(0)
+    expect(sizes.filter((s) => s.px < 16)).toEqual([])
+  }
+
+  await page.goto('/')
+  const viewport = await page.locator('meta[name="viewport"]').getAttribute('content')
+  expect(viewport).not.toMatch(/user-scalable\s*=\s*no|maximum-scale/)
+
+  for (const gameSlug of ['up-and-down', 'pay-me', 'high-score']) {
+    await page.goto('/sessions/new')
+    await page.locator(`[data-testid="game-option"][data-game-slug="${gameSlug}"]`).click()
+    await page.getByTestId('player-name-input').first().waitFor()
+    await expectControlsAtLeast16px({ expectSome: true })
+
+    // Up and Down uses steppers; Pay Me and High Score type scores in.
+    await createSession(page, { gameSlug, players: ['Ann', 'Ben', 'Cal'] })
+    await expectControlsAtLeast16px()
+  }
 })

@@ -873,7 +873,7 @@ function RoundFieldInput({
           value={value ?? ''}
           onChange={(e) => onChange(e.target.value)}
           aria-label={field.label}
-          className="h-11 rounded-lg border border-line-strong bg-surface px-3 text-sm text-ink focus:ring-2 focus:ring-accent-ink focus:outline-none"
+          className="h-11 rounded-lg border border-line-strong bg-surface px-3 text-base text-ink focus:ring-2 focus:ring-accent-ink focus:outline-none"
         >
           <option value="" disabled>
             Select...
@@ -899,7 +899,7 @@ function RoundFieldInput({
         onChange={(e) => onChange(Number(e.target.value))}
         inputMode="numeric"
         aria-label={field.label}
-        className="h-11 w-20 rounded-lg border border-line-strong bg-surface px-3 text-sm text-ink focus:ring-2 focus:ring-accent-ink focus:outline-none"
+        className="h-11 w-20 rounded-lg border border-line-strong bg-surface px-3 text-base text-ink focus:ring-2 focus:ring-accent-ink focus:outline-none"
       />
     </label>
   )

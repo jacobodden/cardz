@@ -1,239 +1,227 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cardz — Design History</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Design history — Cardz docs</title>
+  <link rel="stylesheet" href="../assets/docs.css">
   <style>
-    :root {
-      --bg: #f4f4f1;
-      --surface: #ffffff;
-      --text: #111827;
-      --muted: #6b7280;
-      --border: #e5e7eb;
-    }
-    *, *::before, *::after { box-sizing: border-box; }
-    body {
-      margin: 0;
-      padding: 2rem 1rem 4rem;
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-    }
-    .container { max-width: 1200px; margin: 0 auto; }
-    header { text-align: center; margin-bottom: 2.5rem; }
-    header h1 { margin: 0; font-size: 2rem; letter-spacing: -.03em; }
-    header p { margin: .4rem 0 0; color: var(--muted); }
-    section { margin-bottom: 3rem; }
-    section h2 {
-      font-size: 1.1rem;
-      padding-bottom: .5rem;
-      border-bottom: 1px solid var(--border);
-    }
-    .grid {
+    .gallery {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 1rem;
-      margin-top: 1rem;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
+      gap: .75rem;
+      margin: 1rem 0 0;
     }
-    figure {
+    .gallery figure {
       margin: 0;
       background: var(--surface);
-      border: 1px solid var(--border);
+      border: 1px solid var(--line);
       border-radius: 10px;
       overflow: hidden;
     }
-    figure a { display: block; }
-    figure img {
-      display: block;
-      width: 100%;
-      height: auto;
-    }
-    figcaption {
-      padding: .5rem .65rem;
-      font-size: .75rem;
+    .gallery a { display: block; }
+    .gallery img { display: block; width: 100%; height: auto; }
+    .gallery figcaption {
+      padding: .45rem .65rem;
+      border-top: 1px solid var(--line);
       color: var(--muted);
-      border-top: 1px solid var(--border);
+      font-size: .8rem;
     }
+    details { margin: 0 0 1rem; }
+    summary { cursor: pointer; font-weight: 600; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>Cardz — Design History</h1>
-      <p>Dated captures of the current UI. Newest first. 24 images in the latest run.</p>
-    </header>
-<section>
-  <h2>2026-11-02</h2>
-  <div class="grid">
-<figure>
-  <a href="2026-11-02/home-with-session-desktop-dark.jpg"><img src="2026-11-02/home-with-session-desktop-dark.jpg" alt="home with session desktop dark" loading="lazy"></a>
-  <figcaption>home with session desktop dark</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-02/home-with-session-desktop-light.jpg"><img src="2026-11-02/home-with-session-desktop-light.jpg" alt="home with session desktop light" loading="lazy"></a>
-  <figcaption>home with session desktop light</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-02/home-with-session-mobile-dark.jpg"><img src="2026-11-02/home-with-session-mobile-dark.jpg" alt="home with session mobile dark" loading="lazy"></a>
-  <figcaption>home with session mobile dark</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-02/home-with-session-mobile-light.jpg"><img src="2026-11-02/home-with-session-mobile-light.jpg" alt="home with session mobile light" loading="lazy"></a>
-  <figcaption>home with session mobile light</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-02/new-session-picker-desktop-dark.jpg"><img src="2026-11-02/new-session-picker-desktop-dark.jpg" alt="new session picker desktop dark" loading="lazy"></a>
-  <figcaption>new session picker desktop dark</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-02/new-session-picker-desktop-light.jpg"><img src="2026-11-02/new-session-picker-desktop-light.jpg" alt="new session picker desktop light" loading="lazy"></a>
-  <figcaption>new session picker desktop light</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-02/new-session-picker-mobile-dark.jpg"><img src="2026-11-02/new-session-picker-mobile-dark.jpg" alt="new session picker mobile dark" loading="lazy"></a>
-  <figcaption>new session picker mobile dark</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-02/new-session-picker-mobile-light.jpg"><img src="2026-11-02/new-session-picker-mobile-light.jpg" alt="new session picker mobile light" loading="lazy"></a>
-  <figcaption>new session picker mobile light</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-02/points-active-desktop-dark.jpg"><img src="2026-11-02/points-active-desktop-dark.jpg" alt="points active desktop dark" loading="lazy"></a>
-  <figcaption>points active desktop dark</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-02/points-active-desktop-light.jpg"><img src="2026-11-02/points-active-desktop-light.jpg" alt="points active desktop light" loading="lazy"></a>
-  <figcaption>points active desktop light</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-02/points-active-mobile-dark.jpg"><img src="2026-11-02/points-active-mobile-dark.jpg" alt="points active mobile dark" loading="lazy"></a>
-  <figcaption>points active mobile dark</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-02/points-active-mobile-light.jpg"><img src="2026-11-02/points-active-mobile-light.jpg" alt="points active mobile light" loading="lazy"></a>
-  <figcaption>points active mobile light</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-02/points-complete-desktop-dark.jpg"><img src="2026-11-02/points-complete-desktop-dark.jpg" alt="points complete desktop dark" loading="lazy"></a>
-  <figcaption>points complete desktop dark</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-02/points-complete-desktop-light.jpg"><img src="2026-11-02/points-complete-desktop-light.jpg" alt="points complete desktop light" loading="lazy"></a>
-  <figcaption>points complete desktop light</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-02/points-complete-mobile-dark.jpg"><img src="2026-11-02/points-complete-mobile-dark.jpg" alt="points complete mobile dark" loading="lazy"></a>
-  <figcaption>points complete mobile dark</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-02/points-complete-mobile-light.jpg"><img src="2026-11-02/points-complete-mobile-light.jpg" alt="points complete mobile light" loading="lazy"></a>
-  <figcaption>points complete mobile light</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-02/session-active-desktop-dark.jpg"><img src="2026-11-02/session-active-desktop-dark.jpg" alt="session active desktop dark" loading="lazy"></a>
-  <figcaption>session active desktop dark</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-02/session-active-desktop-light.jpg"><img src="2026-11-02/session-active-desktop-light.jpg" alt="session active desktop light" loading="lazy"></a>
-  <figcaption>session active desktop light</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-02/session-active-mobile-dark.jpg"><img src="2026-11-02/session-active-mobile-dark.jpg" alt="session active mobile dark" loading="lazy"></a>
-  <figcaption>session active mobile dark</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-02/session-active-mobile-light.jpg"><img src="2026-11-02/session-active-mobile-light.jpg" alt="session active mobile light" loading="lazy"></a>
-  <figcaption>session active mobile light</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-02/session-scored-desktop-dark.jpg"><img src="2026-11-02/session-scored-desktop-dark.jpg" alt="session scored desktop dark" loading="lazy"></a>
-  <figcaption>session scored desktop dark</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-02/session-scored-desktop-light.jpg"><img src="2026-11-02/session-scored-desktop-light.jpg" alt="session scored desktop light" loading="lazy"></a>
-  <figcaption>session scored desktop light</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-02/session-scored-mobile-dark.jpg"><img src="2026-11-02/session-scored-mobile-dark.jpg" alt="session scored mobile dark" loading="lazy"></a>
-  <figcaption>session scored mobile dark</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-02/session-scored-mobile-light.jpg"><img src="2026-11-02/session-scored-mobile-light.jpg" alt="session scored mobile light" loading="lazy"></a>
-  <figcaption>session scored mobile light</figcaption>
-</figure>
-  </div>
-</section>
-<section>
-  <h2>2026-11-01-before-redesign</h2>
-  <div class="grid">
-<figure>
-  <a href="2026-11-01-before-redesign/home-with-session-desktop-dark.jpg"><img src="2026-11-01-before-redesign/home-with-session-desktop-dark.jpg" alt="home with session desktop dark" loading="lazy"></a>
-  <figcaption>home with session desktop dark</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-01-before-redesign/home-with-session-desktop-light.jpg"><img src="2026-11-01-before-redesign/home-with-session-desktop-light.jpg" alt="home with session desktop light" loading="lazy"></a>
-  <figcaption>home with session desktop light</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-01-before-redesign/home-with-session-mobile-dark.jpg"><img src="2026-11-01-before-redesign/home-with-session-mobile-dark.jpg" alt="home with session mobile dark" loading="lazy"></a>
-  <figcaption>home with session mobile dark</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-01-before-redesign/home-with-session-mobile-light.jpg"><img src="2026-11-01-before-redesign/home-with-session-mobile-light.jpg" alt="home with session mobile light" loading="lazy"></a>
-  <figcaption>home with session mobile light</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-01-before-redesign/new-session-picker-desktop-dark.jpg"><img src="2026-11-01-before-redesign/new-session-picker-desktop-dark.jpg" alt="new session picker desktop dark" loading="lazy"></a>
-  <figcaption>new session picker desktop dark</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-01-before-redesign/new-session-picker-desktop-light.jpg"><img src="2026-11-01-before-redesign/new-session-picker-desktop-light.jpg" alt="new session picker desktop light" loading="lazy"></a>
-  <figcaption>new session picker desktop light</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-01-before-redesign/new-session-picker-mobile-dark.jpg"><img src="2026-11-01-before-redesign/new-session-picker-mobile-dark.jpg" alt="new session picker mobile dark" loading="lazy"></a>
-  <figcaption>new session picker mobile dark</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-01-before-redesign/new-session-picker-mobile-light.jpg"><img src="2026-11-01-before-redesign/new-session-picker-mobile-light.jpg" alt="new session picker mobile light" loading="lazy"></a>
-  <figcaption>new session picker mobile light</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-01-before-redesign/session-active-desktop-dark.jpg"><img src="2026-11-01-before-redesign/session-active-desktop-dark.jpg" alt="session active desktop dark" loading="lazy"></a>
-  <figcaption>session active desktop dark</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-01-before-redesign/session-active-desktop-light.jpg"><img src="2026-11-01-before-redesign/session-active-desktop-light.jpg" alt="session active desktop light" loading="lazy"></a>
-  <figcaption>session active desktop light</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-01-before-redesign/session-active-mobile-dark.jpg"><img src="2026-11-01-before-redesign/session-active-mobile-dark.jpg" alt="session active mobile dark" loading="lazy"></a>
-  <figcaption>session active mobile dark</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-01-before-redesign/session-active-mobile-light.jpg"><img src="2026-11-01-before-redesign/session-active-mobile-light.jpg" alt="session active mobile light" loading="lazy"></a>
-  <figcaption>session active mobile light</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-01-before-redesign/session-scored-desktop-dark.jpg"><img src="2026-11-01-before-redesign/session-scored-desktop-dark.jpg" alt="session scored desktop dark" loading="lazy"></a>
-  <figcaption>session scored desktop dark</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-01-before-redesign/session-scored-desktop-light.jpg"><img src="2026-11-01-before-redesign/session-scored-desktop-light.jpg" alt="session scored desktop light" loading="lazy"></a>
-  <figcaption>session scored desktop light</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-01-before-redesign/session-scored-mobile-dark.jpg"><img src="2026-11-01-before-redesign/session-scored-mobile-dark.jpg" alt="session scored mobile dark" loading="lazy"></a>
-  <figcaption>session scored mobile dark</figcaption>
-</figure>
-<figure>
-  <a href="2026-11-01-before-redesign/session-scored-mobile-light.jpg"><img src="2026-11-01-before-redesign/session-scored-mobile-light.jpg" alt="session scored mobile light" loading="lazy"></a>
-  <figcaption>session scored mobile light</figcaption>
-</figure>
-  </div>
-</section>
-  </div>
+  <!-- Generated by tests/design-history/gallery.ts. Edit the template there, then run npm run design:index. -->
+  <header class="band">
+    <div class="wrap wide">
+      <p class="crumbs"><a href="../index.html">Cardz docs</a></p>
+      <h1>Design history</h1>
+      <p class="lede">Dated screenshots of the Cardz UI, newest first. 24 images in the latest capture.</p>
+    </div>
+  </header>
+  <main class="wrap wide">
+    <details class="card">
+      <summary>About these captures</summary>
+      <p>This gallery is a human-readable record of how the design changes over time. The Playwright snapshots in <code>tests/visual/</code> are the machine-enforced regression guard.</p>
+      <h3>Capturing a new milestone</h3>
+      <pre><code>npm run design:capture</code></pre>
+      <p>This writes JPEGs to <code>docs/design-history/&lt;YYYY-MM-DD&gt;/</code> and regenerates this page. Run it when a visual milestone lands, review the gallery, and commit the new dated folder with the updated page. A folder may carry a suffix (for example <code>2026-11-01-before-redesign</code>) to keep two milestones from the same day apart; every <code>YYYY-MM-DD*</code> folder is listed. The capture is not part of the normal test run or CI.</p>
+      <h3>Visual regression baselines</h3>
+      <pre><code>npm run test:visual          # compare against the committed baselines
+npm run test:visual:update   # accept an intentional change</code></pre>
+      <p>Baselines live in <code>tests/visual/current-ui.spec.ts-snapshots/</code>. Screenshots depend on font rendering, so both commands run inside the pinned Playwright container (podman or docker), the same image CI uses. Review the new images before committing them.</p>
+    </details>
+    <section>
+      <h2>2026-11-02</h2>
+      <div class="gallery">
+      <figure>
+        <a href="2026-11-02/home-with-session-desktop-dark.jpg"><img src="2026-11-02/home-with-session-desktop-dark.jpg" alt="home with session desktop dark" loading="lazy"></a>
+        <figcaption>home with session desktop dark</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-02/home-with-session-desktop-light.jpg"><img src="2026-11-02/home-with-session-desktop-light.jpg" alt="home with session desktop light" loading="lazy"></a>
+        <figcaption>home with session desktop light</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-02/home-with-session-mobile-dark.jpg"><img src="2026-11-02/home-with-session-mobile-dark.jpg" alt="home with session mobile dark" loading="lazy"></a>
+        <figcaption>home with session mobile dark</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-02/home-with-session-mobile-light.jpg"><img src="2026-11-02/home-with-session-mobile-light.jpg" alt="home with session mobile light" loading="lazy"></a>
+        <figcaption>home with session mobile light</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-02/new-session-picker-desktop-dark.jpg"><img src="2026-11-02/new-session-picker-desktop-dark.jpg" alt="new session picker desktop dark" loading="lazy"></a>
+        <figcaption>new session picker desktop dark</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-02/new-session-picker-desktop-light.jpg"><img src="2026-11-02/new-session-picker-desktop-light.jpg" alt="new session picker desktop light" loading="lazy"></a>
+        <figcaption>new session picker desktop light</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-02/new-session-picker-mobile-dark.jpg"><img src="2026-11-02/new-session-picker-mobile-dark.jpg" alt="new session picker mobile dark" loading="lazy"></a>
+        <figcaption>new session picker mobile dark</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-02/new-session-picker-mobile-light.jpg"><img src="2026-11-02/new-session-picker-mobile-light.jpg" alt="new session picker mobile light" loading="lazy"></a>
+        <figcaption>new session picker mobile light</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-02/points-active-desktop-dark.jpg"><img src="2026-11-02/points-active-desktop-dark.jpg" alt="points active desktop dark" loading="lazy"></a>
+        <figcaption>points active desktop dark</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-02/points-active-desktop-light.jpg"><img src="2026-11-02/points-active-desktop-light.jpg" alt="points active desktop light" loading="lazy"></a>
+        <figcaption>points active desktop light</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-02/points-active-mobile-dark.jpg"><img src="2026-11-02/points-active-mobile-dark.jpg" alt="points active mobile dark" loading="lazy"></a>
+        <figcaption>points active mobile dark</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-02/points-active-mobile-light.jpg"><img src="2026-11-02/points-active-mobile-light.jpg" alt="points active mobile light" loading="lazy"></a>
+        <figcaption>points active mobile light</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-02/points-complete-desktop-dark.jpg"><img src="2026-11-02/points-complete-desktop-dark.jpg" alt="points complete desktop dark" loading="lazy"></a>
+        <figcaption>points complete desktop dark</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-02/points-complete-desktop-light.jpg"><img src="2026-11-02/points-complete-desktop-light.jpg" alt="points complete desktop light" loading="lazy"></a>
+        <figcaption>points complete desktop light</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-02/points-complete-mobile-dark.jpg"><img src="2026-11-02/points-complete-mobile-dark.jpg" alt="points complete mobile dark" loading="lazy"></a>
+        <figcaption>points complete mobile dark</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-02/points-complete-mobile-light.jpg"><img src="2026-11-02/points-complete-mobile-light.jpg" alt="points complete mobile light" loading="lazy"></a>
+        <figcaption>points complete mobile light</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-02/session-active-desktop-dark.jpg"><img src="2026-11-02/session-active-desktop-dark.jpg" alt="session active desktop dark" loading="lazy"></a>
+        <figcaption>session active desktop dark</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-02/session-active-desktop-light.jpg"><img src="2026-11-02/session-active-desktop-light.jpg" alt="session active desktop light" loading="lazy"></a>
+        <figcaption>session active desktop light</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-02/session-active-mobile-dark.jpg"><img src="2026-11-02/session-active-mobile-dark.jpg" alt="session active mobile dark" loading="lazy"></a>
+        <figcaption>session active mobile dark</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-02/session-active-mobile-light.jpg"><img src="2026-11-02/session-active-mobile-light.jpg" alt="session active mobile light" loading="lazy"></a>
+        <figcaption>session active mobile light</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-02/session-scored-desktop-dark.jpg"><img src="2026-11-02/session-scored-desktop-dark.jpg" alt="session scored desktop dark" loading="lazy"></a>
+        <figcaption>session scored desktop dark</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-02/session-scored-desktop-light.jpg"><img src="2026-11-02/session-scored-desktop-light.jpg" alt="session scored desktop light" loading="lazy"></a>
+        <figcaption>session scored desktop light</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-02/session-scored-mobile-dark.jpg"><img src="2026-11-02/session-scored-mobile-dark.jpg" alt="session scored mobile dark" loading="lazy"></a>
+        <figcaption>session scored mobile dark</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-02/session-scored-mobile-light.jpg"><img src="2026-11-02/session-scored-mobile-light.jpg" alt="session scored mobile light" loading="lazy"></a>
+        <figcaption>session scored mobile light</figcaption>
+      </figure>
+      </div>
+    </section>
+    <section>
+      <h2>2026-11-01-before-redesign</h2>
+      <div class="gallery">
+      <figure>
+        <a href="2026-11-01-before-redesign/home-with-session-desktop-dark.jpg"><img src="2026-11-01-before-redesign/home-with-session-desktop-dark.jpg" alt="home with session desktop dark" loading="lazy"></a>
+        <figcaption>home with session desktop dark</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-01-before-redesign/home-with-session-desktop-light.jpg"><img src="2026-11-01-before-redesign/home-with-session-desktop-light.jpg" alt="home with session desktop light" loading="lazy"></a>
+        <figcaption>home with session desktop light</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-01-before-redesign/home-with-session-mobile-dark.jpg"><img src="2026-11-01-before-redesign/home-with-session-mobile-dark.jpg" alt="home with session mobile dark" loading="lazy"></a>
+        <figcaption>home with session mobile dark</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-01-before-redesign/home-with-session-mobile-light.jpg"><img src="2026-11-01-before-redesign/home-with-session-mobile-light.jpg" alt="home with session mobile light" loading="lazy"></a>
+        <figcaption>home with session mobile light</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-01-before-redesign/new-session-picker-desktop-dark.jpg"><img src="2026-11-01-before-redesign/new-session-picker-desktop-dark.jpg" alt="new session picker desktop dark" loading="lazy"></a>
+        <figcaption>new session picker desktop dark</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-01-before-redesign/new-session-picker-desktop-light.jpg"><img src="2026-11-01-before-redesign/new-session-picker-desktop-light.jpg" alt="new session picker desktop light" loading="lazy"></a>
+        <figcaption>new session picker desktop light</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-01-before-redesign/new-session-picker-mobile-dark.jpg"><img src="2026-11-01-before-redesign/new-session-picker-mobile-dark.jpg" alt="new session picker mobile dark" loading="lazy"></a>
+        <figcaption>new session picker mobile dark</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-01-before-redesign/new-session-picker-mobile-light.jpg"><img src="2026-11-01-before-redesign/new-session-picker-mobile-light.jpg" alt="new session picker mobile light" loading="lazy"></a>
+        <figcaption>new session picker mobile light</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-01-before-redesign/session-active-desktop-dark.jpg"><img src="2026-11-01-before-redesign/session-active-desktop-dark.jpg" alt="session active desktop dark" loading="lazy"></a>
+        <figcaption>session active desktop dark</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-01-before-redesign/session-active-desktop-light.jpg"><img src="2026-11-01-before-redesign/session-active-desktop-light.jpg" alt="session active desktop light" loading="lazy"></a>
+        <figcaption>session active desktop light</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-01-before-redesign/session-active-mobile-dark.jpg"><img src="2026-11-01-before-redesign/session-active-mobile-dark.jpg" alt="session active mobile dark" loading="lazy"></a>
+        <figcaption>session active mobile dark</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-01-before-redesign/session-active-mobile-light.jpg"><img src="2026-11-01-before-redesign/session-active-mobile-light.jpg" alt="session active mobile light" loading="lazy"></a>
+        <figcaption>session active mobile light</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-01-before-redesign/session-scored-desktop-dark.jpg"><img src="2026-11-01-before-redesign/session-scored-desktop-dark.jpg" alt="session scored desktop dark" loading="lazy"></a>
+        <figcaption>session scored desktop dark</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-01-before-redesign/session-scored-desktop-light.jpg"><img src="2026-11-01-before-redesign/session-scored-desktop-light.jpg" alt="session scored desktop light" loading="lazy"></a>
+        <figcaption>session scored desktop light</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-01-before-redesign/session-scored-mobile-dark.jpg"><img src="2026-11-01-before-redesign/session-scored-mobile-dark.jpg" alt="session scored mobile dark" loading="lazy"></a>
+        <figcaption>session scored mobile dark</figcaption>
+      </figure>
+      <figure>
+        <a href="2026-11-01-before-redesign/session-scored-mobile-light.jpg"><img src="2026-11-01-before-redesign/session-scored-mobile-light.jpg" alt="session scored mobile light" loading="lazy"></a>
+        <figcaption>session scored mobile light</figcaption>
+      </figure>
+      </div>
+    </section>
+  </main>
 </body>
 </html>

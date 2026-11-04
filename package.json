@@ -13,10 +13,11 @@
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
     "test:e2e": "playwright test tests/e2e",
-    "test:visual": "playwright test tests/visual",
-    "test:visual:update": "playwright test tests/visual --update-snapshots",
+    "test:visual": "sh scripts/playwright-container.sh tests/visual",
+    "test:visual:update": "sh scripts/playwright-container.sh tests/visual --update-snapshots",
     "test:ui": "playwright test --ui",
-    "design:capture": "playwright test --config playwright.design.config.ts"
+    "design:capture": "playwright test --config playwright.design.config.ts",
+    "design:index": "node tests/design-history/gallery.ts"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.2",
