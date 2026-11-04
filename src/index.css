@@ -209,6 +209,88 @@
   --avatar-3: #263559;
 }
 
+/*
+ * Ocean: deep teal band over sea-glass neutrals, with sandy gold for the
+ * leader and coral reds for suits. Cards stay light, as in Felt.
+ */
+:root[data-palette="ocean"] {
+  color-scheme: light;
+  --page: #eef6f7;
+  --surface: #ffffff;
+  --surface-2: #e5f0f2;
+  --line: #d9e8eb;
+  --line-strong: #b4cdd3;
+  --ink: #0c2230;
+  --muted: #4c6572;
+  --felt: #0c5f73;
+  --on-felt: #ffffff;
+  --accent: #0a7a8f;
+  --on-accent: #ffffff;
+  --accent-ink: #086578;
+  --accent-soft: #e0f3f6;
+  --lead-bg: #f8eed6;
+  --lead-border: #dcba68;
+  --lead-label: #7f5a00;
+  --win-bg: #f8eed6;
+  --win-fg: #7f5a00;
+  --warn: #7f5a00;
+  --red-suit: #c0322a;
+  --danger: #b3261e;
+  --danger-solid: #b3261e;
+  --on-danger: #ffffff;
+  --yes-bg: #ddf3e8;
+  --yes-fg: #17653f;
+  --no-bg: #fbe5e1;
+  --no-fg: #a3281f;
+  --card-face: #ffffff;
+  --card-edge: #cfe0e4;
+  --card-black: #0c2230;
+  --card-red: #c0322a;
+  --card-ring: #f0c46a;
+  --avatar-1: #d2eef2;
+  --avatar-2: #fbe0d8;
+  --avatar-3: #d9e2f5;
+}
+
+:root.dark[data-palette="ocean"] {
+  color-scheme: dark;
+  --page: #07151d;
+  --surface: #0f2330;
+  --surface-2: #17313f;
+  --line: #1d3a49;
+  --line-strong: #2c5063;
+  --ink: #e6f3f6;
+  --muted: #94b3be;
+  --felt: #0a3d4f;
+  --on-felt: #e6f3f6;
+  --accent: #3cc0d0;
+  --on-accent: #052029;
+  --accent-ink: #78dbe8;
+  --accent-soft: #11323f;
+  --lead-bg: #382e17;
+  --lead-border: #86672a;
+  --lead-label: #f0c46a;
+  --win-bg: #382e17;
+  --win-fg: #f0c46a;
+  --warn: #f0c46a;
+  --red-suit: #ff7f70;
+  --danger: #ff8a7d;
+  --danger-solid: #b3261e;
+  --on-danger: #ffffff;
+  --yes-bg: #14382c;
+  --yes-fg: #7fdba8;
+  --no-bg: #3d1e1f;
+  --no-fg: #ff9d90;
+  --card-face: #f2f1ea;
+  --card-edge: #f2f1ea;
+  --card-black: #14191c;
+  --card-red: #c8372d;
+  --card-ring: #f0c46a;
+  --avatar-1: #1a4553;
+  --avatar-2: #4a2a2a;
+  --avatar-3: #26385f;
+}
+
 html {
   touch-action: manipulation;
   background-color: var(--page);
