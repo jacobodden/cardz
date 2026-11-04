@@ -67,20 +67,50 @@ export async function createSession(
   await expect(page.getByTestId('round-number')).toBeVisible()
 }
 
-export function playerCard(page: Page, playerName: string) {
+/** A player's input row for the current round on the session page. */
+export function playerRow(page: Page, playerName: string) {
   return page.locator(
-    `[data-testid="player-card"][data-player-name="${playerName}"]`
+    `[data-testid="player-row"][data-player-name="${playerName}"]`
   )
+}
+
+/** A player's tile in the session standings strip. */
+export function playerStanding(page: Page, playerName: string) {
+  return page.locator(
+    `[data-testid="player-standing"][data-player-name="${playerName}"]`
+  )
+}
+
+/**
+ * Set a −/+ stepper (e.g. "Alice Bid") to `value`. The first − sets the
+ * minimum (0), then + counts up.
+ */
+export async function setStepper(
+  page: Page,
+  label: string,
+  value: number
+): Promise<void> {
+  const group = page.getByRole('group', { name: label, exact: true })
+  const shown = group.getByTestId('stepper-value')
+  const decrease = group.getByRole('button', { name: `Decrease ${label}` })
+  const increase = group.getByRole('button', { name: `Increase ${label}` })
+
+  if ((await shown.textContent()) === '–') await decrease.click()
+  let current = Number(await shown.textContent())
+  while (current > value) {
+    await decrease.click()
+    current--
+  }
+  while (current < value) {
+    await increase.click()
+    current++
+  }
+  await expect(shown).toHaveText(String(value))
 }
 
 /** A session card on the home page, found by its displayed title. */
 export function sessionCard(page: Page, title: string) {
   return page.locator(`[data-testid="session-card"][data-session-title="${title}"]`)
-}
-
-/** @deprecated Use playerCard(). */
-export function playerRow(page: Page, playerName: string) {
-  return playerCard(page, playerName)
 }
 
 export async function expectPlayerTotal(
@@ -89,7 +119,7 @@ export async function expectPlayerTotal(
   total: number | string
 ): Promise<void> {
   await expect(
-    playerCard(page, playerName).getByTestId('player-total')
+    playerStanding(page, playerName).getByTestId('player-total')
   ).toHaveText(String(total))
 }
 
@@ -115,9 +145,8 @@ export async function submitUpAndDownRound(
   await page.getByRole('button', { name: `Trump ${input.trump}` }).click()
 
   for (const bid of input.bids) {
-    const card = playerCard(page, bid.player)
-    await card.getByLabel(`${bid.player} Bid`).fill(String(bid.bid))
-    await card
+    await setStepper(page, `${bid.player} Bid`, bid.bid)
+    await playerRow(page, bid.player)
       .getByRole('button', {
         name: `${bid.player} Made Bid? ${bid.success ? 'yes' : 'no'}`,
       })
@@ -140,8 +169,7 @@ export async function submitPayMeRound(
   await expectRound(page, roundNumber)
 
   for (const entry of cardValues) {
-    const card = playerCard(page, entry.player)
-    await card
+    await playerRow(page, entry.player)
       .getByLabel(`${entry.player} Cards Left (value)`)
       .fill(String(entry.value))
   }
@@ -162,8 +190,7 @@ export async function submitPointsRound(
   await expectRound(page, roundNumber)
 
   for (const entry of points) {
-    const card = playerCard(page, entry.player)
-    await card
+    await playerRow(page, entry.player)
       .getByRole('spinbutton', { name: `${entry.player} Points` })
       .fill(String(entry.points))
   }
@@ -181,16 +208,10 @@ export async function finishGame(page: Page): Promise<void> {
   await expect(page.getByTestId('round-number')).toHaveText('Game complete')
 }
 
-export async function expandHistory(
-  page: Page,
-  playerName: string
-): Promise<void> {
-  await playerCard(page, playerName)
-    .getByRole('button', { name: `Show all rounds for ${playerName}` })
-    .click()
-  await expect(
-    playerCard(page, playerName).getByTestId('round-history')
-  ).toBeVisible()
+/** Open the full round-by-round table on the session page. */
+export async function expandHistory(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'All rounds' }).click()
+  await expect(page.getByTestId('round-history')).toBeVisible()
 }
 
 export async function resetScroll(page: Page): Promise<void> {

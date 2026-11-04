@@ -40,6 +40,7 @@
   --color-card-edge: var(--card-edge);
   --color-card-black: var(--card-black);
   --color-card-red: var(--card-red);
+  --color-card-ring: var(--card-ring);
   --color-avatar-1: var(--avatar-1);
   --color-avatar-2: var(--avatar-2);
   --color-avatar-3: var(--avatar-3);
@@ -79,6 +80,7 @@
   --card-edge: #cbd5ce;
   --card-black: #12211a;
   --card-red: #c0352b;
+  --card-ring: #f2c76a;
   --avatar-1: #d4e9dc;
   --avatar-2: #f6dcd8;
   --avatar-3: #dce3f5;
@@ -119,6 +121,7 @@
   --card-edge: #f4f1ea;
   --card-black: #1a1a1a;
   --card-red: #c0352b;
+  --card-ring: #f2c76a;
   --avatar-1: #24503b;
   --avatar-2: #5a2b27;
   --avatar-3: #2b3a5e;
