@@ -683,3 +683,42 @@ test('Startup script applies dark mode and its theme color before first paint', 
   await page.goto('/')
   expect(await page.evaluate(() => (window as any).__startup)).toEqual({ dark: true, color: '#174a36' })
 })
+
+test('Theme picker: switching to Midnight recolors the app and survives a reload', async ({ page }) => {
+  await page.goto('/')
+  const html = page.locator('html')
+  const appBar = page.getByTestId('app-bar')
+  const themeColor = page.locator('meta[name="theme-color"]')
+  await expect(appBar).toHaveCSS('background-color', 'rgb(30, 107, 78)')
+
+  await page.getByRole('button', { name: 'Color theme' }).click()
+  await page.getByRole('menuitemradio', { name: 'Midnight' }).click()
+  await expect(html).toHaveAttribute('data-palette', 'midnight')
+  await expect(appBar).toHaveCSS('background-color', 'rgb(107, 63, 224)')
+  await expect(themeColor).toHaveAttribute('content', '#6b3fe0')
+
+  // Light/dark is separate and works with Midnight too.
+  await page.getByRole('button', { name: 'Switch to dark mode' }).click()
+  await expect(appBar).toHaveCSS('background-color', 'rgb(58, 42, 122)')
+  await expect(themeColor).toHaveAttribute('content', '#3a2a7a')
+
+  // The startup script restores both before first paint.
+  await page.addInitScript(() => {
+    document.addEventListener('DOMContentLoaded', () => {
+      ;(window as any).__startup = {
+        palette: document.documentElement.getAttribute('data-palette'),
+        dark: document.documentElement.classList.contains('dark'),
+        color: document.querySelector('meta[name="theme-color"]')?.getAttribute('content'),
+      }
+    })
+  })
+  await page.reload()
+  expect(await page.evaluate(() => (window as any).__startup)).toEqual({
+    palette: 'midnight',
+    dark: true,
+    color: '#3a2a7a',
+  })
+  await page.getByRole('button', { name: 'Color theme' }).click()
+  await expect(page.getByRole('menuitemradio', { name: 'Midnight' })).toHaveAttribute('aria-checked', 'true')
+  await expect(page.getByRole('menuitemradio', { name: 'Felt' })).toHaveAttribute('aria-checked', 'false')
+})
