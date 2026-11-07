@@ -50,6 +50,14 @@ export async function setPalette(page: Page, palette: string): Promise<void> {
 }
 
 /**
+ * Save `id` as the newest What's new entry this player has seen (see
+ * src/changelog.ts), as a copy that ran an earlier build would have.
+ */
+export async function setSeenUpdate(page: Page, id: string): Promise<void> {
+  await seedStorage(page, 'lastSeenUpdate', id)
+}
+
+/**
  * Create a session through the UI and wait for the session screen to be ready.
  */
 export async function createSession(

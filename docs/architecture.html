@@ -32,11 +32,13 @@
 ├── main.tsx, App.tsx      app entry, router, 404 redirect restore
 ├── index.css              Tailwind setup and theme tokens
 ├── themes.ts              color theme registry
+├── changelog.ts           What's new entries (drive the update toast)
 ├── components/            Layout (header + felt band), ThemePicker,
 │                          FeltHero/HeaderActions portals, CardTile,
-│                          ReloadPrompt, Celebration
+│                          ReloadPrompt, Celebration, UpdateToast
 ├── celebration/           winner burst particles (pure)
-├── pages/                 HomePage, NewSessionPage, SessionPage
+├── pages/                 HomePage, NewSessionPage, SessionPage,
+│                          ChangelogPage
 ├── games/                 one pure module per game + registry
 │   ├── types.ts           the CardGame interface
 │   ├── upanddown.ts, payme.ts, points.ts (High/Low Score)
@@ -60,6 +62,7 @@ tests/
           <tr><td><code>/</code></td><td><code>HomePage</code></td><td>Active and finished sessions</td></tr>
           <tr><td><code>/sessions/new</code></td><td><code>NewSessionPage</code></td><td>Pick a game, add players, set options</td></tr>
           <tr><td><code>/sessions/:id</code></td><td><code>SessionPage</code></td><td>Standings, current round entry, round history</td></tr>
+          <tr><td><code>/changelog</code></td><td><code>ChangelogPage</code></td><td>What's new: entries from <code>src/changelog.ts</code></td></tr>
         </tbody>
       </table>
     </div>
@@ -91,7 +94,7 @@ scores    ++id, round_id, player_id, score, data_json</code></pre>
     <p>When a game ends on screen (Finish, or the last Up &amp; Down round), <code>SessionPage</code> pops a burst from the winner's trophy. The particles are pure functions in <code>src/celebration/particles.ts</code> (unit tested), drawn on a full-screen canvas by <code>components/Celebration.tsx</code>. A theme's <code>celebration</code> field picks the burst: confetti by default, seeds for Bagel, footballs for Skol. Opening a game that already finished does not pop; tapping the trophy pops again. The automatic pop is skipped under <code>prefers-reduced-motion</code>, which the visual tests turn on so snapshots stay still.</p>
 
     <h2>PWA and icons</h2>
-    <p>The manifest and service worker are configured in <code>vite.config.ts</code>. Install icons are generated from <code>public/pwa-icon.png</code> with <code>npm run generate-pwa-assets</code>. The header logo is a separate transparent image, <code>public/app-logo.png</code>.</p>
+    <p>The manifest and service worker are configured in <code>vite.config.ts</code>. After the auto-updating service worker installs a new build and reloads, <code>UpdateToast</code> shows "Cardz updated" once, with a link to What's new, when <code>src/changelog.ts</code> has a newer top entry than the one saved in <code>localStorage('lastSeenUpdate')</code>. Fresh installs see no toast, and builds with no new entry update quietly. Install icons are generated from <code>public/pwa-icon.png</code> with <code>npm run generate-pwa-assets</code>. The header logo is a separate transparent image, <code>public/app-logo.png</code>.</p>
 
     <h2>Tests and CI</h2>
     <div class="table-scroll">

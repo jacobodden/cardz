@@ -60,8 +60,13 @@ Game definitions (name, description, player limits, config schema) live in the g
 | `/` | `HomePage` | `src/pages/HomePage.tsx` |
 | `/sessions/new` | `NewSessionPage` | `src/pages/NewSessionPage.tsx` |
 | `/sessions/:id` | `SessionPage` | `src/pages/SessionPage.tsx` |
+| `/changelog` | `ChangelogPage` (What's new) | `src/pages/ChangelogPage.tsx` |
 
 All routes use `BrowserRouter` with `basename={import.meta.env.BASE_URL}` to support the `/cardz/` subpath on GitHub Pages.
+
+## What's new and the update toast
+
+`src/changelog.ts` lists user-facing changes, newest first, in plain words for players; the What's new page (`/changelog`, linked from the bottom of Home) shows them. **When a change is something players would notice, add an entry at the top** (`id` = release date, with a suffix for a second one that day; never change a shipped id). After the service worker auto-updates and reloads, `UpdateToast` compares the top entry's id with `localStorage('lastSeenUpdate')` and shows "Cardz updated" once if it's newer. Fresh installs record the latest id without a toast; builds with no new entry update quietly. `tests/unit/changelog.test.ts` checks ids are unique and the list is newest first.
 
 ## GitHub Pages deployment
 

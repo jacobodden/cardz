@@ -101,6 +101,7 @@ export default function Celebration({
     particles.current.push(...createBurst(kind, x, y))
     setActive(true)
     // Only a new pop starts a burst; `kind` and the origin are read then.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pops])
 
   useEffect(() => {
