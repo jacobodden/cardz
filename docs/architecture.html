@@ -66,6 +66,7 @@ tests/
         </tbody>
       </table>
     </div>
+    <p>Pages can fill a bar stuck to the bottom of the screen with <code>PageFooter</code> (Home uses it for What's new); the page scrolls behind it. The app shell is <code>min-h-dvh</code>, not <code>100vh</code>, which in mobile Safari is taller than the visible area.</p>
     <p>The router uses <code>basename={import.meta.env.BASE_URL}</code>. GitHub Pages has no SPA fallback, so <code>public/404.html</code> stores the requested path in <code>sessionStorage</code> and redirects to <code>/cardz/</code>, where the app restores it.</p>
 
     <h2>Data model</h2>

@@ -1,6 +1,6 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import { CHANGELOG } from '../../src/changelog'
-import { setSeenUpdate, setTheme } from '../helpers/app'
+import { createSession, sessionCard, setSeenUpdate, setTheme } from '../helpers/app'
 
 const latest = CHANGELOG[0]
 const toast = (page: import('@playwright/test').Page) => page.getByTestId('update-toast')
@@ -51,12 +51,38 @@ test('What\'s new is linked from the Games screen', async ({ page }) => {
   await expect(page.getByTestId('changelog-entry').first()).toBeVisible()
 })
 
-test("What's new sits at the bottom of a short Games screen", async ({ page }) => {
+/** The What's new bar's top and bottom, and the viewport height. */
+async function barBox(page: Page) {
+  const box = (await page.locator('footer').boundingBox())!
+  return { top: box.y, bottom: box.y + box.height, viewport: page.viewportSize()!.height }
+}
+
+test("What's new is a bar on the bottom edge of a short Games screen", async ({ page }) => {
   await page.goto('/')
-  const link = page.getByRole('link', { name: "What's new" })
-  await expect(link).toBeVisible()
-  const box = (await link.boundingBox())!
-  const viewport = page.viewportSize()!
-  // Bottom padding is 1rem; the link's box is 44px tall.
-  expect(viewport.height - (box.y + box.height)).toBeLessThanOrEqual(24)
+  await expect(page.getByRole('link', { name: "What's new" })).toBeVisible()
+  const bar = await barBox(page)
+  expect(Math.abs(bar.bottom - bar.viewport)).toBeLessThanOrEqual(1)
+})
+
+test("a long game list scrolls behind the What's new bar and its end clears it", async ({ page }) => {
+  const titles = ['Game One', 'Game Two', 'Game Three', 'Game Four']
+  for (const title of titles) {
+    await createSession(page, { gameSlug: 'high-score', title, players: ['Alice', 'Bob'] })
+  }
+  await page.setViewportSize({ width: page.viewportSize()!.width, height: 420 })
+  await page.goto('/')
+  await expect(sessionCard(page, titles[0])).toBeVisible()
+
+  // At the top the list runs on under the bar, which stays on the bottom edge.
+  let bar = await barBox(page)
+  expect(Math.abs(bar.bottom - bar.viewport)).toBeLessThanOrEqual(1)
+  const last = sessionCard(page, titles[0]) // newest first, so the first created is last
+  expect((await last.boundingBox())!.y).toBeGreaterThan(bar.top)
+
+  // Scrolled to the end, the last game sits fully above the bar.
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
+  bar = await barBox(page)
+  expect(Math.abs(bar.bottom - bar.viewport)).toBeLessThanOrEqual(1)
+  const box = (await last.boundingBox())!
+  expect(box.y + box.height).toBeLessThanOrEqual(bar.top)
 })
