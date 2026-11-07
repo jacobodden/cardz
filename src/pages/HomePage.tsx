@@ -156,6 +156,12 @@ export default function HomePage() {
           </div>
         </>
       )}
+
+      <p className="mt-10 text-center">
+        <Link to="/changelog" className="text-sm font-semibold text-accent-ink underline-offset-4 hover:underline">
+          What's new
+        </Link>
+      </p>
     </>
   )
 }
