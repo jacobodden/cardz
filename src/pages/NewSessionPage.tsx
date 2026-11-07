@@ -320,7 +320,7 @@ export default function NewSessionPage() {
               onClick={handleStart}
               disabled={!canStart || creating}
               data-testid="start-game"
-              className="h-[52px] w-full rounded-[14px] bg-felt text-[17px] font-extrabold text-on-felt transition hover:opacity-90 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-55"
+              className="h-[52px] w-full rounded-[14px] bg-action text-[17px] font-extrabold text-on-action transition hover:opacity-90 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-55"
             >
               {creating ? 'Starting...' : `Start ${selectedGame.name}`}
             </button>

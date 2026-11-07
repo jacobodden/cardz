@@ -15,6 +15,9 @@ import type { InputField, PlayerScoreInput, RoundInfoChip, ScoreDirection } from
 import FeltHero from '../components/FeltHero'
 import HeaderActions from '../components/HeaderActions'
 import { HeroSlotContext } from '../components/heroSlot'
+import BagelSuit from '../components/BagelSuit'
+import { useTheme } from '../components/themeContext'
+import type { Suit } from '../games/types'
 
 const SUIT_SYMBOLS = new Set(['♠', '♥', '♣', '♦'])
 const RED_SUITS = new Set(['♥', '♦'])
@@ -336,7 +339,7 @@ export default function SessionPage() {
               className="mt-2.5 h-[5px] overflow-hidden rounded-full bg-on-felt/25"
             >
               <div
-                className="h-full rounded-full bg-on-felt transition-all"
+                className="h-full rounded-full bg-felt-progress transition-all"
                 style={{ width: `${progressPct}%` }}
               />
             </div>
@@ -585,7 +588,7 @@ export default function SessionPage() {
               onClick={handleSubmit}
               disabled={submitting || !!ruleViolation || requiredRoundFieldMissing || successMissing}
               data-testid="submit-round"
-              className="h-[52px] min-w-0 flex-1 rounded-[14px] bg-felt text-[17px] font-extrabold text-on-felt transition hover:opacity-90 active:scale-[0.99] disabled:opacity-55"
+              className="h-[52px] min-w-0 flex-1 rounded-[14px] bg-action text-[17px] font-extrabold text-on-action transition hover:opacity-90 active:scale-[0.99] disabled:opacity-55"
             >
               {submitting ? 'Saving...' : `Submit round ${round.round_number}`}
             </button>
@@ -606,11 +609,31 @@ function SuitCards({
   value: string | number | undefined
   onChange: (v: string) => void
 }) {
+  const { suitArt } = useTheme()
   return (
     <div role="group" aria-label={field.label} className="mt-3.5 flex items-center gap-2.5">
       <span className="w-[50px] shrink-0 text-[13px] font-bold text-on-felt/90">{field.label}</span>
       {field.options!.map((opt) => {
         const selected = value === opt
+        const tone = RED_SUITS.has(opt) ? 'text-card-red' : 'text-card-black'
+        if (suitArt === 'bagel') {
+          return (
+            <button
+              key={opt}
+              type="button"
+              onClick={() => onChange(opt)}
+              aria-label={`${field.label} ${opt}`}
+              aria-pressed={selected}
+              className={`rounded-full transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-felt ${tone} ${
+                selected
+                  ? '-translate-y-1 shadow-lg ring-3 ring-card-ring'
+                  : 'shadow-[0_2px_4px_rgb(0_0_0/0.25)] active:translate-y-0.5'
+              }`}
+            >
+              <BagelSuit suit={opt as Suit} size={58} className="block" />
+            </button>
+          )
+        }
         return (
           <button
             key={opt}
@@ -618,9 +641,7 @@ function SuitCards({
             onClick={() => onChange(opt)}
             aria-label={`${field.label} ${opt}`}
             aria-pressed={selected}
-            className={`flex h-[60px] w-[52px] items-center justify-center rounded-lg bg-card-face text-[26px] leading-none transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-felt ${
-              RED_SUITS.has(opt) ? 'text-card-red' : 'text-card-black'
-            } ${
+            className={`flex h-[60px] w-[52px] items-center justify-center rounded-lg bg-card-face text-[26px] leading-none transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-felt ${tone} ${
               selected
                 ? '-translate-y-1 shadow-lg ring-3 ring-card-ring'
                 : 'shadow-[0_2px_4px_rgb(0_0_0/0.25)] active:translate-y-0.5'

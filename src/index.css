@@ -44,6 +44,23 @@
   --color-avatar-1: var(--avatar-1);
   --color-avatar-2: var(--avatar-2);
   --color-avatar-3: var(--avatar-3);
+  --color-band-stripe: var(--band-stripe);
+  --color-felt-progress: var(--felt-progress);
+  --color-action: var(--action);
+  --color-on-action: var(--on-action);
+}
+
+/*
+ * Optional tokens: a theme sets these only to differ from the default.
+ * band-stripe: a line under the felt band (transparent = none).
+ * felt-progress: the round progress bar's fill on felt.
+ * action / on-action: the main action button (Submit round).
+ */
+:root {
+  --band-stripe: transparent;
+  --felt-progress: var(--on-felt);
+  --action: var(--felt);
+  --on-action: var(--on-felt);
 }
 
 :root,
@@ -450,6 +467,170 @@
   --avatar-1: #33353a;
   --avatar-2: #4a2b2c;
   --avatar-3: #2c3748;
+}
+
+:root[data-palette="bagel"] {
+  color-scheme: light;
+  --page: #f7efe2;
+  --surface: #fffaf2;
+  --surface-2: #f3e7d3;
+  --line: #eadbc3;
+  --line-strong: #d6bf9a;
+  --ink: #2b1d10;
+  --muted: #6e5a44;
+  --felt: #8c5220;
+  --on-felt: #ffffff;
+  --accent: #8a4f1c;
+  --on-accent: #ffffff;
+  --accent-ink: #8a4f1c;
+  --accent-soft: #f6e6cc;
+  --lead-bg: #fbebc8;
+  --lead-border: #e2b45c;
+  --lead-label: #7a4d00;
+  --win-bg: #fbebc8;
+  --win-fg: #7a4d00;
+  --warn: #8a5a00;
+  --red-suit: #b8322a;
+  --danger: #a8281f;
+  --danger-solid: #a8281f;
+  --on-danger: #ffffff;
+  --yes-bg: #e3eed9;
+  --yes-fg: #3f6b1d;
+  --no-bg: #f7ddd6;
+  --no-fg: #a12a20;
+  --card-face: #ffffff;
+  --card-edge: #dccbb0;
+  --card-black: #2b1d10;
+  --card-red: #b8322a;
+  --card-ring: #f2c76a;
+  --avatar-1: #f1dfc0;
+  --avatar-2: #f5d5cb;
+  --avatar-3: #e2e6cf;
+}
+
+:root.dark[data-palette="bagel"] {
+  color-scheme: dark;
+  --page: #1a120b;
+  --surface: #241910;
+  --surface-2: #2e2116;
+  --line: #3a2a1b;
+  --line-strong: #54402a;
+  --ink: #f5eadb;
+  --muted: #bfa88c;
+  --felt: #5e3714;
+  --on-felt: #f5eadb;
+  --accent: #e3a95c;
+  --on-accent: #1a120b;
+  --accent-ink: #e8b56f;
+  --accent-soft: #3a2815;
+  --lead-bg: #3a2a15;
+  --lead-border: #8a6a22;
+  --lead-label: #f0c06a;
+  --win-bg: #3a2a15;
+  --win-fg: #f0c06a;
+  --warn: #f0c06a;
+  --red-suit: #ff7a6e;
+  --danger: #ff8a7e;
+  --danger-solid: #a8281f;
+  --on-danger: #ffffff;
+  --yes-bg: #26331a;
+  --yes-fg: #a9d67f;
+  --no-bg: #43201d;
+  --no-fg: #ff9a8f;
+  --card-face: #f4ecdd;
+  --card-edge: #f4ecdd;
+  --card-black: #2b1d10;
+  --card-red: #b8322a;
+  --card-ring: #f2c76a;
+  --avatar-1: #4a3420;
+  --avatar-2: #5a2e26;
+  --avatar-3: #3a3e26;
+}
+
+:root[data-palette="skol"] {
+  color-scheme: light;
+  --page: #f5f2f9;
+  --surface: #ffffff;
+  --surface-2: #ede7f5;
+  --line: #e3dcef;
+  --line-strong: #c5b8dc;
+  --ink: #1d1230;
+  --muted: #5c5070;
+  --felt: #4f2683;
+  --on-felt: #ffffff;
+  --accent: #4f2683;
+  --on-accent: #ffffff;
+  --accent-ink: #4f2683;
+  --accent-soft: #efe8f8;
+  --lead-bg: #fff4d1;
+  --lead-border: #ffc62f;
+  --lead-label: #6b4a00;
+  --win-bg: #fff1c7;
+  --win-fg: #6b4a00;
+  --warn: #7a5200;
+  --red-suit: #c0352b;
+  --danger: #b3261e;
+  --danger-solid: #b3261e;
+  --on-danger: #ffffff;
+  --yes-bg: #ddf0e2;
+  --yes-fg: #1d6b3a;
+  --no-bg: #f9dedb;
+  --no-fg: #a12a20;
+  --card-face: #ffffff;
+  --card-edge: #d6cde6;
+  --card-black: #1d1230;
+  --card-red: #c0352b;
+  --card-ring: #ffc62f;
+  --avatar-1: #e6dcf5;
+  --avatar-2: #ffedb8;
+  --avatar-3: #dce3f5;
+  --band-stripe: #ffc62f;
+  --felt-progress: #ffc62f;
+  --action: #ffc62f;
+  --on-action: #1d1230;
+}
+
+:root.dark[data-palette="skol"] {
+  color-scheme: dark;
+  --page: #120a1e;
+  --surface: #1c1230;
+  --surface-2: #251a3d;
+  --line: #2f2349;
+  --line-strong: #463866;
+  --ink: #f1ecf8;
+  --muted: #aea3c4;
+  --felt: #3b1c63;
+  --on-felt: #ffffff;
+  --accent: #ffc62f;
+  --on-accent: #1d1230;
+  --accent-ink: #ffd45e;
+  --accent-soft: #2a2140;
+  --lead-bg: #3a2e10;
+  --lead-border: #b08a1e;
+  --lead-label: #ffd45e;
+  --win-bg: #3a2e10;
+  --win-fg: #ffd45e;
+  --warn: #ffd45e;
+  --red-suit: #ff7a6e;
+  --danger: #ff8a7e;
+  --danger-solid: #b3261e;
+  --on-danger: #ffffff;
+  --yes-bg: #1e3a27;
+  --yes-fg: #7fd69a;
+  --no-bg: #43201d;
+  --no-fg: #ff9a8f;
+  --card-face: #f4f1ea;
+  --card-edge: #f4f1ea;
+  --card-black: #1a1a1a;
+  --card-red: #c0352b;
+  --card-ring: #ffc62f;
+  --avatar-1: #3e2a63;
+  --avatar-2: #4f3d12;
+  --avatar-3: #2b3a5e;
+  --band-stripe: #ffc62f;
+  --felt-progress: #ffc62f;
+  --action: #ffc62f;
+  --on-action: #1d1230;
 }
 
 html {
