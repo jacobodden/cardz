@@ -1,4 +1,4 @@
-import { useContext, useEffect, useMemo, useState } from 'react'
+import { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { finishSession, getSession } from '../db/sessions'
@@ -16,6 +16,8 @@ import FeltHero from '../components/FeltHero'
 import HeaderActions from '../components/HeaderActions'
 import { HeroSlotContext } from '../components/heroSlot'
 import BagelSuit from '../components/BagelSuit'
+import Celebration from '../components/Celebration'
+import { prefersReducedMotion } from '../celebration/motion'
 import { useTheme } from '../components/themeContext'
 import type { Suit } from '../games/types'
 
@@ -196,6 +198,22 @@ export default function SessionPage() {
     [isComplete, hasScoredRounds, players, direction]
   )
 
+  // Celebrate when the game ends on screen (Finish, or the last round of a
+  // game with a set length), not when an already finished game is opened.
+  const theme = useTheme()
+  const trophyRef = useRef<HTMLButtonElement>(null)
+  const [pops, setPops] = useState(0)
+  const seen = useRef<{ id: number; complete: boolean } | null>(null)
+  const loaded = !!session
+  useEffect(() => {
+    if (!loaded) return
+    const before = seen.current
+    seen.current = { id: sessionId, complete: isComplete }
+    if (before?.id === sessionId && !before.complete && isComplete && !prefersReducedMotion()) {
+      setPops((n) => n + 1)
+    }
+  }, [loaded, sessionId, isComplete])
+
   const gameImpl = session?.game ? getGame(session.game.slug) : undefined
 
   /** The game's info chips for a round, from its stored data. */
@@ -363,9 +381,16 @@ export default function SessionPage() {
           data-testid="winner-panel"
           className="mb-3 flex items-center gap-3 rounded-2xl border border-lead-border bg-lead-bg p-4"
         >
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-surface text-lead-label">
+          <button
+            ref={trophyRef}
+            type="button"
+            onClick={() => setPops((n) => n + 1)}
+            aria-label="Celebrate again"
+            data-testid="celebrate"
+            className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-surface text-lead-label transition active:scale-[0.92]"
+          >
             <TrophyIcon />
-          </span>
+          </button>
           <div className="min-w-0">
             <p className="text-lg leading-tight font-extrabold text-ink">
               {winnerRows.length > 1
@@ -595,6 +620,8 @@ export default function SessionPage() {
           </div>
         </div>
       )}
+
+      <Celebration kind={theme.celebration ?? 'confetti'} pops={pops} originRef={trophyRef} />
     </div>
   )
 }

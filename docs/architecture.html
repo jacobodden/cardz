@@ -34,7 +34,8 @@
 ├── themes.ts              color theme registry
 ├── components/            Layout (header + felt band), ThemePicker,
 │                          FeltHero/HeaderActions portals, CardTile,
-│                          ReloadPrompt
+│                          ReloadPrompt, Celebration
+├── celebration/           winner burst particles (pure)
 ├── pages/                 HomePage, NewSessionPage, SessionPage
 ├── games/                 one pure module per game + registry
 │   ├── types.ts           the CardGame interface
@@ -86,6 +87,8 @@ scores    ++id, round_id, player_id, score, data_json</code></pre>
     <h2>Themes</h2>
     <p>Light/dark mode and the color theme are independent. Mode is the <code>.dark</code> class on <code>&lt;html&gt;</code>, stored in <code>localStorage('theme')</code>. The color theme is <code>data-palette</code> on <code>&lt;html&gt;</code>, stored in <code>localStorage('palette')</code>, with each theme's tokens in <code>src/index.css</code> and its entry in <code>src/themes.ts</code>. A startup script in <code>index.html</code> applies both before first paint, using the registry that <code>vite.config.ts</code> injects. <code>Layout.tsx</code> keeps <code>&lt;meta name="theme-color"&gt;</code> in step with the felt color.</p>
     <p>The header is always felt and pinned to the top. Installed on iOS, the app draws under a transparent status bar (<code>black-translucent</code>, <code>viewport-fit=cover</code>) and the header pads by <code>env(safe-area-inset-top)</code>, so the status bar shows the theme's felt with no seam. Page gutters use the <code>safe-x</code> utility to clear the notch in landscape.</p>
+    <h3>Winner celebration</h3>
+    <p>When a game ends on screen (Finish, or the last Up &amp; Down round), <code>SessionPage</code> pops a burst from the winner's trophy. The particles are pure functions in <code>src/celebration/particles.ts</code> (unit tested), drawn on a full-screen canvas by <code>components/Celebration.tsx</code>. A theme's <code>celebration</code> field picks the burst: confetti by default, seeds for Bagel, footballs for Skol. Opening a game that already finished does not pop; tapping the trophy pops again. The automatic pop is skipped under <code>prefers-reduced-motion</code>, which the visual tests turn on so snapshots stay still.</p>
 
     <h2>PWA and icons</h2>
     <p>The manifest and service worker are configured in <code>vite.config.ts</code>. Install icons are generated from <code>public/pwa-icon.png</code> with <code>npm run generate-pwa-assets</code>. The header logo is a separate transparent image, <code>public/app-logo.png</code>.</p>
