@@ -64,7 +64,7 @@ export default function Layout() {
   return (
     <ThemeContext.Provider value={theme}>
       <HeroSlotContext.Provider value={heroSlot}>
-        <div className="flex min-h-screen flex-col bg-page text-ink">
+        <div className="flex min-h-dvh flex-col bg-page text-ink">
           {/*
             Pinned felt header. It extends up under the iOS status bar
             (black-translucent, see index.html), so the bar shows the theme's
@@ -113,10 +113,11 @@ export default function Layout() {
           <main className="safe-x max-w-7xl mx-auto w-full flex-1 py-4 sm:py-6">
             <Outlet />
           </main>
-          {/* Pages pin content to the bottom here (see PageFooter); hidden when unused. */}
+          {/* A bar stuck to the bottom of the screen that pages fill (see
+              PageFooter); content scrolls behind it. Hidden when unused. */}
           <footer
             ref={setFooterTarget}
-            className="safe-x max-w-7xl mx-auto w-full pb-[calc(1rem+env(safe-area-inset-bottom))] text-center empty:hidden"
+            className="safe-x sticky bottom-0 z-20 w-full border-t border-line bg-page/90 pb-[env(safe-area-inset-bottom)] text-center backdrop-blur-md empty:hidden"
           />
         </div>
       </HeroSlotContext.Provider>
