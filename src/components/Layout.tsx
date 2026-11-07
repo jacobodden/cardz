@@ -27,13 +27,14 @@ export default function Layout() {
 
   const [heroTarget, setHeroTarget] = useState<HTMLElement | null>(null)
   const [actionsTarget, setActionsTarget] = useState<HTMLElement | null>(null)
+  const [footerTarget, setFooterTarget] = useState<HTMLElement | null>(null)
   const [felt, setFelt] = useState(false)
   // The header is always felt, so its buttons always use the on-felt colors.
   const iconButton =
     'w-11 h-11 flex items-center justify-center rounded-lg transition active:scale-[0.95] disabled:opacity-50 text-on-felt hover:bg-on-felt/10'
   const heroSlot = useMemo(
-    () => ({ target: heroTarget, actions: actionsTarget, iconButton, setFelt }),
-    [heroTarget, actionsTarget]
+    () => ({ target: heroTarget, actions: actionsTarget, footer: footerTarget, iconButton, setFelt }),
+    [heroTarget, actionsTarget, footerTarget]
   )
 
   useEffect(() => {
@@ -63,7 +64,7 @@ export default function Layout() {
   return (
     <ThemeContext.Provider value={theme}>
       <HeroSlotContext.Provider value={heroSlot}>
-        <div className="min-h-screen bg-page text-ink">
+        <div className="flex min-h-screen flex-col bg-page text-ink">
           {/*
             Pinned felt header. It extends up under the iOS status bar
             (black-translucent, see index.html), so the bar shows the theme's
@@ -109,9 +110,14 @@ export default function Layout() {
             {/* Pages render their hero (see FeltHero) here, in the felt band under the header. */}
             <div ref={setHeroTarget} className="safe-x max-w-7xl mx-auto" />
           </div>
-          <main className="safe-x max-w-7xl mx-auto py-4 sm:py-6">
+          <main className="safe-x max-w-7xl mx-auto w-full flex-1 py-4 sm:py-6">
             <Outlet />
           </main>
+          {/* Pages pin content to the bottom here (see PageFooter); hidden when unused. */}
+          <footer
+            ref={setFooterTarget}
+            className="safe-x max-w-7xl mx-auto w-full pb-[calc(1rem+env(safe-area-inset-bottom))] text-center empty:hidden"
+          />
         </div>
       </HeroSlotContext.Provider>
     </ThemeContext.Provider>

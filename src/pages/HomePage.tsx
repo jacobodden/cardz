@@ -6,6 +6,7 @@ import type { SessionSummary } from '../db/sessions'
 import { getGame } from '../games'
 import CardTile from '../components/CardTile'
 import FeltHero from '../components/FeltHero'
+import PageFooter from '../components/PageFooter'
 
 interface Section {
   key: string
@@ -157,11 +158,14 @@ export default function HomePage() {
         </>
       )}
 
-      <p className="mt-10 text-center">
-        <Link to="/changelog" className="text-sm font-semibold text-accent-ink underline-offset-4 hover:underline">
+      <PageFooter>
+        <Link
+          to="/changelog"
+          className="inline-flex min-h-11 items-center px-3 text-sm font-semibold text-accent-ink underline-offset-4 hover:underline"
+        >
           What's new
         </Link>
-      </p>
+      </PageFooter>
     </>
   )
 }
