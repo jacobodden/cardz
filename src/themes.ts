@@ -4,7 +4,8 @@
  * (dark). Light/dark is a separate choice that works with every theme.
  *
  * To add a theme: add an entry here and its two token blocks in index.css.
- * A theme can also swap the header logo and the suit art (see `logo`, `suitArt`).
+ * A theme can also swap the header logo, the suit art and the winner
+ * celebration (see `logo`, `suitArt`, `celebration`).
  * This file is also read by vite.config.ts, which injects the theme colors
  * into index.html's startup script, so keep it free of browser APIs.
  */
@@ -23,7 +24,11 @@ export interface Theme {
   logo?: string
   /** Suit art on mini cards and the trump picker. Defaults to plain symbols. */
   suitArt?: 'bagel'
+  /** What bursts from the trophy when a game ends. Defaults to confetti. */
+  celebration?: CelebrationKind
 }
+
+export type CelebrationKind = 'confetti' | 'seeds' | 'footballs'
 
 /** Header logo file (in public/) for every theme without its own. */
 export const DEFAULT_LOGO = 'app-logo.png'
@@ -71,6 +76,7 @@ export const THEMES: readonly Theme[] = [
     themeColor: { light: '#8c5220', dark: '#5e3714' },
     logo: 'logo-bagel.svg',
     suitArt: 'bagel',
+    celebration: 'seeds',
   },
   {
     id: 'skol',
@@ -78,6 +84,7 @@ export const THEMES: readonly Theme[] = [
     swatch: '#4f2683',
     themeColor: { light: '#4f2683', dark: '#3b1c63' },
     logo: 'logo-skol.svg',
+    celebration: 'footballs',
   },
 ]
 
