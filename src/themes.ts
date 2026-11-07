@@ -4,6 +4,7 @@
  * (dark). Light/dark is a separate choice that works with every theme.
  *
  * To add a theme: add an entry here and its two token blocks in index.css.
+ * A theme can also swap the header logo and the suit art (see `logo`, `suitArt`).
  * This file is also read by vite.config.ts, which injects the theme colors
  * into index.html's startup script, so keep it free of browser APIs.
  */
@@ -18,7 +19,14 @@ export interface Theme {
   swatch: string
   /** `<meta name="theme-color">` per mode: the header band's color. */
   themeColor: Record<Mode, string>
+  /** Header logo, a file in public/. Defaults to the app logo. */
+  logo?: string
+  /** Suit art on mini cards and the trump picker. Defaults to plain symbols. */
+  suitArt?: 'bagel'
 }
+
+/** Header logo file (in public/) for every theme without its own. */
+export const DEFAULT_LOGO = 'app-logo.png'
 
 export const DEFAULT_THEME_ID = 'felt'
 
@@ -55,6 +63,21 @@ export const THEMES: readonly Theme[] = [
     name: 'Graphite',
     swatch: '#34373d',
     themeColor: { light: '#34373d', dark: '#26282d' },
+  },
+  {
+    id: 'bagel',
+    name: 'Bagel',
+    swatch: '#8c5220',
+    themeColor: { light: '#8c5220', dark: '#5e3714' },
+    logo: 'logo-bagel.svg',
+    suitArt: 'bagel',
+  },
+  {
+    id: 'skol',
+    name: 'Skol',
+    swatch: '#4f2683',
+    themeColor: { light: '#4f2683', dark: '#3b1c63' },
+    logo: 'logo-skol.svg',
   },
 ]
 

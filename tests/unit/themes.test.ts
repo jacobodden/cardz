@@ -1,21 +1,31 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_THEME_ID, THEMES, getTheme, themeColorMap } from '../../src/themes'
+import { DEFAULT_LOGO, DEFAULT_THEME_ID, THEMES, getTheme, themeColorMap } from '../../src/themes'
 
 // Comments are dropped so a comment above a rule isn't read as part of its selector.
 const css = readFileSync(new URL('../../src/index.css', import.meta.url), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
 
 /** The body of the CSS rule whose selector list includes `selector`. */
-function ruleBody(selector: string): string | null {
+function ruleBody(selector: string, only = false): string | null {
   for (const match of css.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
     const selectors = match[1].split(',').map((s) => s.trim())
-    if (selectors.includes(selector)) return match[2]
+    if (only ? selectors.length === 1 && selectors[0] === selector : selectors.includes(selector)) return match[2]
   }
   return null
 }
 
-function token(body: string, name: string): string | undefined {
+function rawToken(body: string, name: string): string | undefined {
   return body.match(new RegExp(`--${name}:\\s*([^;]+);`))?.[1].trim().toLowerCase()
+}
+
+/** Optional tokens' defaults, which every theme inherits unless it sets them. */
+const defaults = ruleBody(':root', true) ?? ''
+
+/** A token's color in `body`, following the `:root` defaults and `var(--x)` references. */
+function token(body: string, name: string): string | undefined {
+  const value = rawToken(body, name) ?? rawToken(defaults, name)
+  const ref = value?.match(/^var\(--([\w-]+)\)$/)
+  return ref ? token(body, ref[1]) : value
 }
 
 function channels(hex: string): number[] {
@@ -42,7 +52,7 @@ const TEXT_PAIRS: [fg: string, bg: string, alpha?: number][] = [
   ['muted', 'page'], ['muted', 'surface'], ['muted', 'surface-2'], ['muted', 'accent-soft'],
   ['accent-ink', 'page'], ['accent-ink', 'surface'], ['accent-ink', 'accent-soft'], ['accent-ink', 'lead-bg'],
   ['on-felt', 'felt'], ['on-felt', 'felt', 0.85], ['on-felt', 'felt', 0.8], ['felt', 'on-felt'],
-  ['on-accent', 'accent'], ['on-danger', 'danger-solid'],
+  ['on-accent', 'accent'], ['on-danger', 'danger-solid'], ['on-action', 'action'],
   ['lead-label', 'lead-bg'], ['win-fg', 'win-bg'], ['warn', 'page'],
   ['danger', 'page'], ['danger', 'surface'],
   ['yes-fg', 'yes-bg'], ['no-fg', 'no-bg'],
@@ -71,6 +81,14 @@ describe('theme registry', () => {
     for (const t of THEMES) expect(map[t.id]).toEqual(t.themeColor)
   })
 
+  it('defaults the optional tokens to the felt band colors', () => {
+    const felt = ruleBody(':root[data-palette="felt"]')!
+    expect(token(felt, 'action')).toBe(token(felt, 'felt'))
+    expect(token(felt, 'on-action')).toBe(token(felt, 'on-felt'))
+    expect(token(felt, 'felt-progress')).toBe(token(felt, 'on-felt'))
+    expect(token(felt, 'band-stripe')).toBe('transparent')
+  })
+
   describe.each(THEMES.map((t) => [t.id, t] as const))('%s', (id, theme) => {
     it('defines light and dark tokens in index.css', () => {
       expect(ruleBody(`:root[data-palette="${id}"]`), 'light block').not.toBeNull()
@@ -90,6 +108,11 @@ describe('theme registry', () => {
         return ratio < 4.5 ? [`${fg}${alpha ? `/${alpha * 100}` : ''} on ${bg}: ${ratio.toFixed(2)}`] : []
       })
       expect(failures).toEqual([])
+    })
+
+    it('has its logo file in public/', () => {
+      const logo = theme.logo ?? DEFAULT_LOGO
+      expect(existsSync(new URL(`../../public/${logo}`, import.meta.url)), logo).toBe(true)
     })
 
     it('uses its felt color for the browser theme color', () => {
