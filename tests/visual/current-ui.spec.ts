@@ -11,6 +11,10 @@ import {
 
 const players = ['Alice', 'Bob', 'Carol']
 
+// Keep the winner celebration (skipped under reduced motion) out of the
+// completed-session snapshots.
+test.use({ reducedMotion: 'reduce' })
+
 test.beforeEach(async ({ page }) => {
   await setTheme(page, 'light')
 })

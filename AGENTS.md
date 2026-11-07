@@ -36,7 +36,7 @@ Theme preference is stored in `localStorage('theme')` and the `.dark` class is t
 
 ## Color themes
 
-Themes are separate from light/dark. `src/themes.ts` lists them (id, name, swatch, theme-color per mode); each theme's tokens live in `src/index.css` under `:root[data-palette="<id>"]` and `:root.dark[data-palette="<id>"]`. The choice is stored in `localStorage('palette')`; unknown ids fall back to `felt`. `index.html`'s startup script applies the theme and mode before first paint, using the registry that `vite.config.ts` injects in place of `__THEMES__`. The picker is `src/components/ThemePicker.tsx`. To add a theme, add a registry entry and both token blocks; `tests/unit/themes.test.ts` checks they exist, match the registry, and that text pairs pass 4.5:1 contrast. Add visual snapshots for the new theme too.
+Themes are separate from light/dark. `src/themes.ts` lists them (id, name, swatch, theme-color per mode); each theme's tokens live in `src/index.css` under `:root[data-palette="<id>"]` and `:root.dark[data-palette="<id>"]`. The choice is stored in `localStorage('palette')`; unknown ids fall back to `felt`. `index.html`'s startup script applies the theme and mode before first paint, using the registry that `vite.config.ts` injects in place of `__THEMES__`. The picker is `src/components/ThemePicker.tsx`. A theme can also set `logo`, `suitArt` and `celebration` (what bursts from the trophy when a game ends: `confetti` by default, `seeds`, `footballs`; see `src/celebration/particles.ts`). To add a theme, add a registry entry and both token blocks; `tests/unit/themes.test.ts` checks they exist, match the registry, and that text pairs pass 4.5:1 contrast. Add visual snapshots for the new theme too.
 
 ## Database Schema (Dexie)
 
