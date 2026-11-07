@@ -50,3 +50,13 @@ test('What\'s new is linked from the Games screen', async ({ page }) => {
   await expect(page).toHaveURL(/\/changelog$/)
   await expect(page.getByTestId('changelog-entry').first()).toBeVisible()
 })
+
+test("What's new sits at the bottom of a short Games screen", async ({ page }) => {
+  await page.goto('/')
+  const link = page.getByRole('link', { name: "What's new" })
+  await expect(link).toBeVisible()
+  const box = (await link.boundingBox())!
+  const viewport = page.viewportSize()!
+  // Bottom padding is 1rem; the link's box is 44px tall.
+  expect(viewport.height - (box.y + box.height)).toBeLessThanOrEqual(24)
+})
