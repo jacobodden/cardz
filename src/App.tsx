@@ -2,6 +2,8 @@ import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom'
 import Layout from './components/Layout'
 import ReloadPrompt from './components/ReloadPrompt'
+import UpdateToast from './components/UpdateToast'
+import ChangelogPage from './pages/ChangelogPage'
 import HomePage from './pages/HomePage'
 import NewSessionPage from './pages/NewSessionPage'
 import SessionPage from './pages/SessionPage'
@@ -36,9 +38,11 @@ function InnerApp() {
           <Route path="/" element={<HomePage />} />
           <Route path="/sessions/new" element={<NewSessionPage />} />
           <Route path="/sessions/:id" element={<SessionPage />} />
+          <Route path="/changelog" element={<ChangelogPage />} />
         </Route>
       </Routes>
       <ReloadPrompt />
+      <UpdateToast />
     </>
   )
 }

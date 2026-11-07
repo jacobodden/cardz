@@ -4,6 +4,7 @@ import {
   finishGame,
   resetScroll,
   setPalette,
+  setSeenUpdate,
   setTheme,
   submitPointsRound,
   submitUpAndDownRound,
@@ -198,6 +199,19 @@ test('dark mode active session', async ({ page }) => {
 
   await resetScroll(page)
   await expect(page).toHaveScreenshot('session-up-and-down-dark.png')
+})
+
+test("what's new page", async ({ page }) => {
+  await page.goto('/changelog')
+  await expect(page.getByTestId('changelog-entry').first()).toBeVisible()
+  await expect(page).toHaveScreenshot('whats-new.png', { fullPage: true })
+})
+
+test('update toast after an update', async ({ page }) => {
+  await setSeenUpdate(page, '2000-01-01')
+  await page.goto('/')
+  await expect(page.getByTestId('update-toast')).toBeVisible()
+  await expect(page).toHaveScreenshot('update-toast.png')
 })
 
 test('theme picker menu open', async ({ page }) => {
