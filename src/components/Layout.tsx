@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { Outlet, Link } from 'react-router-dom'
 import { HeroSlotContext } from './heroSlot'
 import ThemePicker from './ThemePicker'
-import { THEME_STORAGE_KEY, getTheme } from '../themes'
+import { ThemeContext } from './themeContext'
+import { DEFAULT_LOGO, THEME_STORAGE_KEY, getTheme } from '../themes'
 
 function readStorage(key: string): string | null {
   try {
@@ -56,60 +57,64 @@ export default function Layout() {
     if (meta && color) meta.setAttribute('content', color)
   }, [dark, palette])
 
+  const theme = getTheme(palette)
   const toggleLabel = dark ? 'Switch to light mode' : 'Switch to dark mode'
 
   return (
-    <HeroSlotContext.Provider value={heroSlot}>
-      <div className="min-h-screen bg-page text-ink">
-        {/*
-          Pinned felt header. It extends up under the iOS status bar
-          (black-translucent, see index.html), so the bar shows the theme's
-          felt with no seam, and scrolled content never sits behind the clock.
-        */}
-        <div className="sticky top-0 z-30 bg-felt text-on-felt pt-[env(safe-area-inset-top)]">
-          <header className="safe-x max-w-7xl mx-auto py-1.5 sm:py-2 flex items-center justify-between">
-            <Link
-              to="/"
-              aria-label="Cardz home"
-              className={`-ml-1 ${iconButton}`}
-            >
-              <img
-                src={`${import.meta.env.BASE_URL}app-logo.png`}
-                alt=""
-                width={32}
-                height={32}
-                className="w-8 h-8 drop-shadow-sm"
-              />
-            </Link>
-            <div className="-mr-1 flex items-center gap-1">
-              {/* Pages add icon buttons here (see HeaderActions). */}
-              <div ref={setActionsTarget} className="contents" />
-              <ThemePicker value={palette} onChange={setPalette} buttonClass={iconButton} />
-              <button
-                onClick={() => setDark(!dark)}
-                data-testid="theme-toggle"
-                className={iconButton}
-                title={toggleLabel}
-                aria-label={toggleLabel}
+    <ThemeContext.Provider value={theme}>
+      <HeroSlotContext.Provider value={heroSlot}>
+        <div className="min-h-screen bg-page text-ink">
+          {/*
+            Pinned felt header. It extends up under the iOS status bar
+            (black-translucent, see index.html), so the bar shows the theme's
+            felt with no seam, and scrolled content never sits behind the clock.
+          */}
+          <div className={`sticky top-0 z-30 bg-felt text-on-felt pt-[env(safe-area-inset-top)] ${felt ? '' : 'shadow-[0_4px_0_var(--band-stripe)]'}`}>
+            <header className="safe-x max-w-7xl mx-auto py-1.5 sm:py-2 flex items-center justify-between">
+              <Link
+                to="/"
+                aria-label="Cardz home"
+                className={`-ml-1 ${iconButton}`}
               >
-                {dark ? <SunIcon /> : <MoonIcon />}
-              </button>
-            </div>
-          </header>
+                <img
+                  src={`${import.meta.env.BASE_URL}${theme.logo ?? DEFAULT_LOGO}`}
+                  data-testid="app-logo"
+                  alt=""
+                  width={32}
+                  height={32}
+                  className="w-8 h-8 drop-shadow-sm"
+                />
+              </Link>
+              <div className="-mr-1 flex items-center gap-1">
+                {/* Pages add icon buttons here (see HeaderActions). */}
+                <div ref={setActionsTarget} className="contents" />
+                <ThemePicker value={palette} onChange={setPalette} buttonClass={iconButton} />
+                <button
+                  onClick={() => setDark(!dark)}
+                  data-testid="theme-toggle"
+                  className={iconButton}
+                  title={toggleLabel}
+                  aria-label={toggleLabel}
+                >
+                  {dark ? <SunIcon /> : <MoonIcon />}
+                </button>
+              </div>
+            </header>
+          </div>
+          <div
+            data-testid="app-bar"
+            data-felt={felt || undefined}
+            className={felt ? 'bg-felt text-on-felt rounded-b-[28px] shadow-[0_4px_0_var(--band-stripe)]' : undefined}
+          >
+            {/* Pages render their hero (see FeltHero) here, in the felt band under the header. */}
+            <div ref={setHeroTarget} className="safe-x max-w-7xl mx-auto" />
+          </div>
+          <main className="safe-x max-w-7xl mx-auto py-4 sm:py-6">
+            <Outlet />
+          </main>
         </div>
-        <div
-          data-testid="app-bar"
-          data-felt={felt || undefined}
-          className={felt ? 'bg-felt text-on-felt rounded-b-[28px]' : undefined}
-        >
-          {/* Pages render their hero (see FeltHero) here, in the felt band under the header. */}
-          <div ref={setHeroTarget} className="safe-x max-w-7xl mx-auto" />
-        </div>
-        <main className="safe-x max-w-7xl mx-auto py-4 sm:py-6">
-          <Outlet />
-        </main>
-      </div>
-    </HeroSlotContext.Provider>
+      </HeroSlotContext.Provider>
+    </ThemeContext.Provider>
   )
 }
 
