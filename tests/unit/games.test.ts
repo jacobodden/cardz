@@ -3,6 +3,7 @@ import { getAllGames, getGame } from '../../src/games'
 import { canSplitMissedTricks, upAndDown } from '../../src/games/upanddown'
 import { payMe } from '../../src/games/payme'
 import { highScore, lowScore } from '../../src/games/points'
+import { nextDealerId } from '../../src/games/dealer'
 import { getDefaultConfig, type RoundMeta } from '../../src/games/types'
 
 const meta = (hand_size = 0): RoundMeta => ({ round_number: 1, hand_size, data: {} })
@@ -289,9 +290,33 @@ describe('getRoundInfo', () => {
     expect(wilds).toEqual(['3s', '4s', '5s', '6s', '7s', '8s', '9s', '10s', 'Jacks', 'Queens', 'Kings'])
     expect(payMe.getRoundInfo!(rounds[0], { players })[0]).toMatchObject({ label: 'Wilds' })
   })
+})
 
-  it('points games have no round info', () => {
-    expect(highScore.getRoundInfo).toBeUndefined()
-    expect(lowScore.getRoundInfo).toBeUndefined()
+describe('dealer', () => {
+  const seats = [
+    { id: 7, order_index: 2 },
+    { id: 5, order_index: 0 },
+    { id: 9, order_index: 1 },
+  ]
+
+  it('passes to the next seat by order, wrapping around', () => {
+    expect(nextDealerId(seats, 5)).toBe(9)
+    expect(nextDealerId(seats, 9)).toBe(7)
+    expect(nextDealerId(seats, 7)).toBe(5)
+  })
+
+  it('has no next dealer without a seated current one', () => {
+    expect(nextDealerId(seats, undefined)).toBeUndefined()
+    expect(nextDealerId(seats, 42)).toBeUndefined()
+  })
+
+  it('High and Low Score show the round dealer as a chip', () => {
+    const players = [{ id: 5, name: 'Ann' }]
+    for (const game of [highScore, lowScore]) {
+      expect(game.usesDealer).toBe(true)
+      const info = game.getRoundInfo!({ round_number: 1, hand_size: 0, data: { dealer_player_id: 5 } }, { players })
+      expect(info).toEqual([{ key: 'dealer', label: 'Dealer', value: 'Ann' }])
+      expect(game.getRoundInfo!({ round_number: 1, hand_size: 0, data: {} }, { players })).toEqual([])
+    }
   })
 })

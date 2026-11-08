@@ -86,6 +86,7 @@ scores    ++id, round_id, player_id, score, data_json</code></pre>
       <li><code>computeScore(meta, inputs)</code>: turn inputs into scores.</li>
       <li>Optional <code>validateRound</code> (e.g. the hook rule), <code>getRoundInfo</code> (chips like trump or wilds) and <code>getDefaultConfig</code>.</li>
     </ul>
+    <p><code>usesDealer</code> games store each round's dealer as <code>data.dealer_player_id</code> (helpers in <code>src/games/dealer.ts</code>), starting from the New game <strong>First dealer</strong>. Fixed games set every round's dealer up front. Open games pass the deal to the next seat when a round is submitted, and <code>setDealer</code> (<code>src/db/rounds.ts</code>) moves it for the round in play: the Session page's <strong>D</strong> chip on each player card. Undo restores the dealer with the round.</p>
     <p>To add a game: write the module, register it, add unit tests in <code>tests/unit/</code> and a rules page in <a href="games/index.html"><code>docs/games/</code></a>.</p>
 
     <h2>Themes</h2>
