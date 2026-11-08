@@ -23,6 +23,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    id: '2026-11-08',
+    date: '2026-11-08',
+    title: 'A dealer chip for High Score and Low Score',
+    items: [
+      "Pick the first dealer when you start; a D on their card marks who's dealing.",
+      'The deal passes to the next player each round. Tap the faint D on anyone else to make them the dealer.',
+    ],
+  },
+  {
     id: '2026-11-07',
     date: '2026-11-07',
     title: "Winner celebrations, and What's new",

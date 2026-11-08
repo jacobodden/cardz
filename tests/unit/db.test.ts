@@ -12,7 +12,7 @@ import {
   listSessions,
   startSession,
 } from '../../src/db/sessions'
-import { getCurrentRound, getScoreboard, submitRound, undoLastRound } from '../../src/db/rounds'
+import { getCurrentRound, getScoreboard, setDealer, submitRound, undoLastRound } from '../../src/db/rounds'
 import { gameId, resetDb, startGame } from './db-helpers'
 
 beforeEach(resetDb)
@@ -338,5 +338,70 @@ describe('getScoreboard', () => {
     expect(board.players[0].scores).toHaveLength(11)
     expect(board.players[0].scores.slice(0, 3)).toEqual([10, 4, null])
     expect(board.players.map((p) => p.total)).toEqual([14, 6])
+  })
+})
+
+describe('points game dealer', () => {
+  const dealerOf = async (sessionId: number) => (await getCurrentRound(sessionId)).data_json.dealer_player_id
+
+  it('starts with the chosen first dealer (the first seat by default)', async () => {
+    const a = await startGame('high-score', ['A', 'B', 'C'])
+    expect(await dealerOf(a.sessionId)).toBe(a.playerIds[0])
+    const b = await startGame('low-score', ['A', 'B', 'C'], { first_dealer_index: 2 })
+    expect(await dealerOf(b.sessionId)).toBe(b.playerIds[2])
+  })
+
+  it('passes the deal to the next seat each round, wrapping around', async () => {
+    const { sessionId, playerIds } = await startGame('high-score', ['A', 'B', 'C'], { first_dealer_index: 1 })
+    await submitRound(sessionId, pointsRound(playerIds, [1, 2, 3]))
+    expect(await dealerOf(sessionId)).toBe(playerIds[2])
+    await submitRound(sessionId, pointsRound(playerIds, [1, 2, 3]))
+    expect(await dealerOf(sessionId)).toBe(playerIds[0])
+  })
+
+  it('records who dealt each scored round', async () => {
+    const { sessionId, playerIds } = await startGame('high-score', ['A', 'B'])
+    await submitRound(sessionId, pointsRound(playerIds, [1, 2]))
+    const round1 = await db.rounds.where({ session_id: sessionId, round_number: 1 }).first()
+    expect(round1?.data_json.dealer_player_id).toBe(playerIds[0])
+  })
+
+  it('can be moved at will, and the deal passes on from the new dealer', async () => {
+    const { sessionId, playerIds } = await startGame('high-score', ['A', 'B', 'C', 'D'])
+    await setDealer(sessionId, playerIds[2])
+    expect(await dealerOf(sessionId)).toBe(playerIds[2])
+    await submitRound(sessionId, pointsRound(playerIds, [1, 2, 3, 4]))
+    expect(await dealerOf(sessionId)).toBe(playerIds[3])
+  })
+
+  it('undo brings back the undone round and its dealer', async () => {
+    const { sessionId, playerIds } = await startGame('high-score', ['A', 'B', 'C'])
+    await setDealer(sessionId, playerIds[1])
+    await submitRound(sessionId, pointsRound(playerIds, [1, 2, 3]))
+    await undoLastRound(sessionId)
+    expect(await dealerOf(sessionId)).toBe(playerIds[1])
+  })
+
+  it('a game started without a dealer gets one once picked', async () => {
+    const { sessionId, playerIds } = await startGame('high-score', ['A', 'B'])
+    const current = await db.rounds.where('session_id').equals(sessionId).first()
+    await db.rounds.update(current!.id!, { data_json: {} }) // as saved before dealers existed
+    await submitRound(sessionId, pointsRound(playerIds, [1, 2]))
+    expect(await dealerOf(sessionId)).toBeUndefined()
+    await setDealer(sessionId, playerIds[1])
+    expect(await dealerOf(sessionId)).toBe(playerIds[1])
+  })
+
+  it('refuses other games, other players and finished games', async () => {
+    const ud = await startGame('up-and-down', ['A', 'B', 'C'], { peak: 3 })
+    await expect(setDealer(ud.sessionId, ud.playerIds[1])).rejects.toThrow(/can't be changed/)
+
+    const a = await startGame('high-score', ['A', 'B'])
+    const b = await startGame('high-score', ['C', 'D'])
+    await expect(setDealer(a.sessionId, b.playerIds[0])).rejects.toThrow(/not in this game/)
+
+    await submitRound(a.sessionId, pointsRound(a.playerIds, [1, 2]))
+    await finishSession(a.sessionId)
+    await expect(setDealer(a.sessionId, a.playerIds[1])).rejects.toThrow(/already complete/)
   })
 })

@@ -1,5 +1,6 @@
 import { db } from './dexie-db'
 import { getGame } from '../games'
+import { nextDealerId } from '../games/dealer'
 import type { InputField } from '../games/types'
 
 export interface ScoreboardRow {
@@ -85,7 +86,7 @@ export async function submitRound(
 ): Promise<SubmitRoundResponse> {
   // One transaction so live queries never observe a half-submitted round
   // (scores written but next round not yet created, etc.).
-  return db.transaction('rw', [db.sessions, db.games, db.rounds, db.scores], async () => {
+  return db.transaction('rw', [db.sessions, db.games, db.players, db.rounds, db.scores], async () => {
     const session = await db.sessions.get(sessionId)
     if (!session) throw new Error('Session not found')
     if (session.status !== 'active') throw new Error('Session is already complete')
@@ -146,12 +147,17 @@ export async function submitRound(
     }
 
     // Open-ended games never auto-complete; they always advance to the next
-    // round and wait for the player to press "Finish game".
+    // round and wait for the player to press "Finish game". The deal passes
+    // to the next seat.
     if (gameImpl.roundMode === 'open') {
+      const seats = gameImpl.usesDealer
+        ? (await db.players.where('session_id').equals(sessionId).toArray()).map((p) => ({ id: p.id!, order_index: p.order_index }))
+        : []
+      const dealer = nextDealerId(seats, currentData.dealer_player_id)
       await db.rounds.add({
         session_id: sessionId,
         round_number: currentRound.round_number + 1,
-        data_json: {},
+        data_json: dealer === undefined ? {} : { dealer_player_id: dealer },
       })
 
       return { scores: results, complete: false }
@@ -176,6 +182,39 @@ export async function submitRound(
     }
 
     return { scores: results, complete: false }
+  })
+}
+
+/**
+ * Make `playerId` the dealer of the round being played, in an open-ended
+ * game with a dealer. Later rounds pass the deal on from them.
+ */
+export async function setDealer(sessionId: number, playerId: number): Promise<void> {
+  await db.transaction('rw', [db.sessions, db.games, db.players, db.rounds, db.scores], async () => {
+    const session = await db.sessions.get(sessionId)
+    if (!session) throw new Error('Session not found')
+    if (session.status !== 'active') throw new Error('Session is already complete')
+
+    const game = await db.games.get(session.game_id)
+    const gameImpl = game ? getGame(game.slug) : undefined
+    if (!gameImpl?.usesDealer || gameImpl.roundMode !== 'open') {
+      throw new Error("This game's dealer can't be changed")
+    }
+
+    const player = await db.players.get(playerId)
+    if (!player || player.session_id !== sessionId) throw new Error('Player not in this game')
+
+    const rounds = await db.rounds.where('session_id').equals(sessionId).sortBy('round_number')
+    const roundIds = rounds.map((r) => r.id!).filter(Boolean)
+    const scored = new Set(
+      (roundIds.length ? await db.scores.where('round_id').anyOf(roundIds).toArray() : []).map((s) => s.round_id)
+    )
+    const current = rounds.find((r) => !scored.has(r.id!))
+    if (!current) throw new Error('No round in progress')
+
+    await db.rounds.update(current.id!, {
+      data_json: { ...current.data_json, dealer_player_id: playerId },
+    })
   })
 }
 

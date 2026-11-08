@@ -165,6 +165,18 @@ test('high score active session', async ({ page }) => {
   await expect(page).toHaveScreenshot('session-high-score-active.png')
 })
 
+test('high score session with the dealer chip in dark mode', async ({ page }) => {
+  await setTheme(page, 'dark')
+  await createSession(page, { gameSlug: 'high-score', title: 'Friday Night Game', players, firstDealerIndex: 2 })
+  await submitPointsRound(page, 1, [
+    { player: 'Alice', points: 10 },
+    { player: 'Bob', points: -5 },
+    { player: 'Carol', points: 3 },
+  ])
+  await resetScroll(page)
+  await expect(page).toHaveScreenshot('session-high-score-dealer-dark.png')
+})
+
 test('low score completed session', async ({ page }) => {
   await createSession(page, {
     gameSlug: 'low-score',
