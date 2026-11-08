@@ -5,6 +5,7 @@ import { finishSession, getSession } from '../db/sessions'
 import {
   getCurrentRound,
   getScoreboard,
+  setDealer,
   submitRound,
   undoLastRound,
 } from '../db/rounds'
@@ -163,6 +164,15 @@ export default function SessionPage() {
     setUndoing(false)
   }
 
+  async function handleSetDealer(playerId: number) {
+    setError(null)
+    try {
+      await setDealer(sessionId, playerId)
+    } catch (err: any) {
+      setError(err.message)
+    }
+  }
+
   async function handleFinish() {
     setFinishing(true)
     setError(null)
@@ -242,6 +252,9 @@ export default function SessionPage() {
   const roundNumber = round && !round.complete ? round.round_number : null
 
   const rawRoundData: Record<string, any> = round?.data_json ?? {}
+  // Open games pass the deal round to round, and players can move it.
+  const movableDealer = active && !!gameImpl?.usesDealer && gameImpl.roundMode === 'open'
+  const dealerId: number | undefined = rawRoundData.dealer_player_id
   const handSize: number = rawRoundData.handSize ?? 0
 
   // Facts for the band's round line. Chips for fields being entered (trump)
@@ -450,9 +463,18 @@ export default function SessionPage() {
             >
               <div className="flex items-start gap-3">
                 <div className="min-w-0 flex-1">
-                  <h2 data-testid="player-name" className="truncate text-base font-bold text-ink">
-                    {row.name}
-                  </h2>
+                  <div className="flex items-center gap-1.5">
+                    <h2 data-testid="player-name" className="truncate text-base font-bold text-ink">
+                      {row.name}
+                    </h2>
+                    {movableDealer && (
+                      <DealerChip
+                        name={row.name}
+                        dealing={row.player_id === dealerId}
+                        onPick={() => handleSetDealer(row.player_id)}
+                      />
+                    )}
+                  </div>
                   <p className="flex items-baseline gap-1">
                     <span
                       data-testid="player-total"
@@ -962,6 +984,40 @@ function UndoIcon() {
       <path d="M9 14L4 9l5-5" />
       <path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" />
     </svg>
+  )
+}
+
+/**
+ * The dealer button on a player card: a solid D on the dealer, and a faint
+ * dashed D on everyone else that makes them the dealer when tapped.
+ */
+function DealerChip({ name, dealing, onPick }: { name: string; dealing: boolean; onPick: () => void }) {
+  const disc = 'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] leading-none font-extrabold'
+  if (dealing) {
+    return (
+      <span
+        role="img"
+        aria-label={`${name} is the dealer`}
+        title="Dealer"
+        data-testid="dealer-chip"
+        className={`${disc} bg-ink text-surface shadow-sm`}
+      >
+        D
+      </span>
+    )
+  }
+  return (
+    <button
+      type="button"
+      onClick={onPick}
+      aria-label={`Make ${name} the dealer`}
+      title="Make dealer"
+      data-testid="make-dealer"
+      // 44px to tap, laid out at the disc's size.
+      className="-mx-2.5 -my-2.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition active:scale-[0.92]"
+    >
+      <span className={`${disc} border border-dashed border-line-strong text-muted opacity-70`}>D</span>
+    </button>
   )
 }
 

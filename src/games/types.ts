@@ -82,7 +82,11 @@ export interface CardGame {
   cardFace: CardFace
   /** Fixed games pre-generate rounds; open games create them as they are played. */
   roundMode?: RoundMode
-  /** Whether the game has a dealer that rotates each round. */
+  /**
+   * Whether the game has a dealer that rotates each round (see dealer.ts).
+   * Fixed games set every round's dealer up front; open games pass the deal
+   * to the next seat after each round, and players can move it at will.
+   */
   usesDealer?: boolean
   getRounds(playerCount: number, config?: Record<string, any>): RoundMeta[]
   getRoundSchema(round: RoundMeta): InputField[]

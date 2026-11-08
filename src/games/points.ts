@@ -1,4 +1,5 @@
 import type { CardFace, CardGame } from './types'
+import { dealerChip } from './dealer'
 
 function makePointsGame(
   slug: string,
@@ -15,7 +16,7 @@ function makePointsGame(
     scoreDirection,
     cardFace,
     roundMode: 'open',
-    usesDealer: false,
+    usesDealer: true,
 
     getConfigSchema: () => [],
 
@@ -31,6 +32,11 @@ function makePointsGame(
         scope: 'player',
       },
     ],
+
+    getRoundInfo: (meta, { players }) => {
+      const dealer = dealerChip(meta, players)
+      return dealer ? [dealer] : []
+    },
 
     computeScore: (_meta, inputs) =>
       inputs.map((input) => {

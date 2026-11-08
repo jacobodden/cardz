@@ -196,22 +196,26 @@ export async function startSession(sessionId: number, config?: Record<string, an
   const players = await db.players.where('session_id').equals(sessionId).sortBy('order_index')
   if (players.length === 0) throw new Error('Need at least one player')
 
+  const usesDealer = gameImpl.usesDealer ?? false
+  const firstDealerIndex = config?.first_dealer_index ?? 0
+
   if (gameImpl.roundMode === 'open') {
     await db.sessions.update(sessionId, {
       config_json: { ...config, total_rounds: 0, round_configs: [] },
     })
 
+    // Later rounds get their dealer as each round is submitted.
     await db.rounds.add({
       session_id: sessionId,
       round_number: 1,
-      data_json: {},
+      data_json: usesDealer
+        ? { dealer_player_id: players[firstDealerIndex % players.length].id! }
+        : {},
     })
     return
   }
 
   const allRounds = gameImpl.getRounds(players.length, config)
-  const usesDealer = gameImpl.usesDealer ?? false
-  const firstDealerIndex = config?.first_dealer_index ?? 0
 
   const roundConfigs = allRounds.map((round, index) => ({
     round_number: round.round_number,
