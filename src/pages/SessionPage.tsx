@@ -269,6 +269,11 @@ export default function SessionPage() {
   const requiredRoundFieldMissing = roundFields.some(
     (f) => f.required && (roundData[f.key] === undefined || roundData[f.key] === '')
   )
+  const requiredPlayerFieldMissing = players.some((p) =>
+    playerFields.some(
+      (f) => f.required && coerce(f, playerData[p.player_id]?.[f.key]) === undefined
+    )
+  )
   const booleanFields = playerFields.filter((f) => f.type === 'boolean')
   const successMissing =
     booleanFields.length > 0 &&
@@ -633,7 +638,13 @@ export default function SessionPage() {
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={submitting || !!ruleViolation || requiredRoundFieldMissing || successMissing}
+              disabled={
+                submitting ||
+                !!ruleViolation ||
+                requiredRoundFieldMissing ||
+                requiredPlayerFieldMissing ||
+                successMissing
+              }
               data-testid="submit-round"
               className="h-[52px] min-w-0 flex-1 rounded-[14px] bg-action text-[17px] font-extrabold text-on-action transition hover:opacity-90 active:scale-[0.99] disabled:opacity-55"
             >

@@ -42,6 +42,7 @@ export const payMe: CardGame = {
         type: 'number',
         min: 0,
         max: round.hand_size * 10,
+        required: true,
       },
     ]
   },

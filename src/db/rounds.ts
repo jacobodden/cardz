@@ -127,6 +127,8 @@ export async function submitRound(
     }
 
     // Validate before writing anything so a rejected round leaves no trace.
+    const missing = missingRequiredField(gameImpl.getRoundSchema(roundMeta), currentData, rawScores)
+    if (missing) throw new Error(missing)
     const invalid = gameImpl.validateRound?.(roundMeta, rawScores)
     if (invalid) throw new Error(invalid)
 
@@ -321,4 +323,25 @@ export async function getScoreboard(sessionId: number): Promise<ScoreboardRespon
   })
 
   return { players: scoreboard, rounds_meta: roundsMeta }
+}
+
+function isEmpty(value: unknown): boolean {
+  return value === undefined || value === null || value === ''
+}
+
+/** A message naming the first required field left empty, or `null`. */
+function missingRequiredField(
+  fields: InputField[],
+  roundData: Record<string, any>,
+  scores: { player_id: number; data: Record<string, any> }[]
+): string | null {
+  for (const f of fields) {
+    if (!f.required) continue
+    if (f.scope === 'round') {
+      if (isEmpty(roundData[f.key])) return `${f.label} is required`
+    } else if (scores.some((s) => isEmpty(s.data?.[f.key]))) {
+      return `Every player needs a ${f.label}`
+    }
+  }
+  return null
 }

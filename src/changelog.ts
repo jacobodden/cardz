@@ -23,6 +23,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    id: '2026-11-16',
+    date: '2026-11-16',
+    title: 'Pay Me waits for every score',
+    items: ["In Pay Me, Submit stays off until every player has a score for the round. Enter 0 for whoever went out."],
+  },
+  {
     id: '2026-11-08',
     date: '2026-11-08',
     title: 'A dealer chip for High Score and Low Score',
