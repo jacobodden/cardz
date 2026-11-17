@@ -14,6 +14,7 @@ Docs live in `docs/` as HTML sharing `docs/assets/docs.css` (Felt tokens, light 
 - **Hosting**: GitHub Pages at `/cardz/` base path
 - **Build**: `npm run build` (runs `tsc -b && vite build`)
 - **Tests**: `npm run test:unit` (Vitest + fake-indexeddb, `tests/unit/`), `npm run test:e2e` / `npm run test:visual` (Playwright). Visual tests run inside the pinned Playwright container (`scripts/playwright-container.sh`, podman or docker), the same image as CI, so baselines match; update them with `npm run test:visual:update`, never with a host run.
+- **Visual baselines**: before pushing any change players can see (UI, copy, game rules, a `src/changelog.ts` entry), run `npm run test:visual`. For each failure, open the diff (`test-results/.../*-diff.png`) and confirm the change is intended before updating. Update only those tests, e.g. `sh scripts/playwright-container.sh tests/visual --update-snapshots -g "<test name>"`; never regenerate the whole suite to make it pass. A new What's new entry always changes the `what's new page` baselines (desktop and mobile).
 - **Lint**: `npm run lint` (oxlint), also run in CI
 
 ## PWA
