@@ -12,6 +12,10 @@ export interface InputField {
   min?: number
   max?: number
   scope?: 'round' | 'player'
+  /**
+   * Submit stays disabled until this field has a value. On a player field,
+   * every player needs one; `submitRound` rejects the round otherwise.
+   */
   required?: boolean
   /**
    * Enter a number field with −/+ buttons instead of typing. Suits small

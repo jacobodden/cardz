@@ -188,6 +188,14 @@ test('Pay Me: create a session and submit a round', async ({ page }) => {
   const wild = page.locator('[data-testid="round-info-chip"][data-chip="wild"]')
   await expect(wild).toHaveText('Wilds 3s')
 
+  // Submit stays off until every player has a score.
+  const submit = page.getByTestId('submit-round')
+  const aliceInput = page.getByLabel('Alice Cards Left (value)')
+  await expect(submit).toBeDisabled()
+  await aliceInput.fill('15')
+  await expect(submit).toBeDisabled()
+  await aliceInput.fill('')
+
   await submitPayMeRound(page, 1, [
     { player: 'Alice', value: 15 },
     { player: 'Bob', value: 8 },

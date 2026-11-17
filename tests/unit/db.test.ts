@@ -243,6 +243,20 @@ describe('submitRound', () => {
     ).rejects.toThrow(/At least one must fail/)
   })
 
+  it('rejects a Pay Me round with a player left blank, saving nothing', async () => {
+    const { sessionId, playerIds } = await startGame('pay-me', ['A', 'B'])
+    await expect(
+      submitRound(sessionId, {
+        scores: [
+          { player_id: playerIds[0], data: { cardValue: 7 } },
+          { player_id: playerIds[1], data: {} },
+        ],
+      }),
+    ).rejects.toThrow(/Every player needs/)
+    expect(await db.scores.count()).toBe(0)
+    expect((await getCurrentRound(sessionId)).round_number).toBe(1)
+  })
+
   it('completes a fixed game after the last round', async () => {
     const { sessionId, playerIds } = await startGame('pay-me', ['A', 'B'])
     for (let i = 0; i < 10; i++) {
