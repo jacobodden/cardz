@@ -353,6 +353,31 @@ ul.tasks > li > .chip { justify-self: start; margin-top: 1px; }
 ul.tasks > li > .task > :last-child { margin-bottom: 0; }
 ul.tasks ul.tasks { margin-top: var(--space-2); }
 
+/* File trees (Mintlify: <Tree> with <Tree.Folder> and <Tree.File>). Names are text, a folder is
+   li.folder with a trailing "/" and its own ul, <mark> highlights a name, span.tree-note is a
+   muted aside (no Mintlify equivalent; it is dropped there). Lines are drawn, never typed. */
+.docs-content ul.tree, ul.tree {
+  list-style: none; margin: 0 0 var(--space-4); padding: var(--space-3) var(--space-4);
+  background: var(--raised); border: var(--border-width) solid var(--border); border-radius: var(--radius-md);
+  overflow-x: auto; font: 400 12px/24px var(--font-mono); color: var(--text);
+}
+.docs-content ul.tree ul, ul.tree ul { list-style: none; margin: 0 0 0 5px; padding: 0; }
+ul.tree li { margin: 0; white-space: nowrap; }
+ul.tree li.folder { font-weight: 600; }
+ul.tree li.folder > ul, ul.tree .tree-note { font-weight: 400; }
+ul.tree ul > li { position: relative; padding-left: 20px; }
+ul.tree ul > li::before {
+  content: ""; position: absolute; left: 0; top: 0; width: 14px; height: 12px;
+  border-left: var(--border-width) solid var(--border-strong); border-bottom: var(--border-width) solid var(--border-strong);
+}
+ul.tree ul > li::after {
+  content: ""; position: absolute; left: 0; top: 12px; bottom: 0;
+  border-left: var(--border-width) solid var(--border-strong);
+}
+ul.tree ul > li:last-child::after { display: none; }
+ul.tree .tree-note { margin-left: var(--space-3); font: 400 12px/24px var(--font-sans); color: var(--muted); }
+ul.tree mark { background: var(--primary-tint); color: var(--text); border-radius: var(--radius-sm); padding: 0 var(--space-1); }
+
 /* Pager: previous and next page, at the foot. */
 .docs-pager {
   display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3);

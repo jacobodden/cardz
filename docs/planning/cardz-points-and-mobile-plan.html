@@ -1293,15 +1293,23 @@ export default defineConfig({
 
       <h3 id="design-history">8.4 Design history gallery</h3>
       <p>The visual regression baselines are machine-oriented. For a human-readable history, a separate capture spec writes a dated gallery:</p>
-      <pre><code>docs/design-history/
-├── index.html                 # timeline, newest first
-└── 2026-11-01/
-    ├── high-score-active-mobile-light.jpg
-    ├── high-score-active-desktop-light.jpg
-    ├── high-score-expanded-mobile-light.jpg
-    ├── low-score-complete-mobile-light.jpg
-    ├── up-and-down-active-mobile-light.jpg
-    └── ...dark variants</code></pre>
+      <ul class="tree">
+  <li class="folder">docs/design-history/
+    <ul>
+      <li>index.html <span class="tree-note">timeline, newest first</span></li>
+      <li class="folder">2026-11-01/
+        <ul>
+          <li>high-score-active-mobile-light.jpg</li>
+          <li>high-score-active-desktop-light.jpg</li>
+          <li>high-score-expanded-mobile-light.jpg</li>
+          <li>low-score-complete-mobile-light.jpg</li>
+          <li>up-and-down-active-mobile-light.jpg</li>
+          <li>… <span class="tree-note">dark variants</span></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
       <ul>
         <li><code>tests/design-history/capture.spec.ts</code> uses a separate <code>playwright.design.config.ts</code> so it is excluded from the normal test run. The design config reuses the same <code>use</code>/<code>webServer</code> settings and points <code>testDir</code> at <code>./tests/design-history</code>.</li>
         <li><code>npm run design:capture</code> captures the key screens at mobile + desktop and light + dark, writes them into <code>docs/design-history/&lt;YYYY-MM-DD&gt;/</code> as JPEGs (quality ~85 to keep the repo small), and regenerates <code>docs/design-history/index.html</code>.</li>

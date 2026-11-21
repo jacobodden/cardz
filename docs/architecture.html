@@ -71,31 +71,62 @@
 </dl>
 
 <h2 id="source-layout">Source layout</h2>
-<pre><code>src/
-├── main.tsx, App.tsx      app entry, router, 404 redirect restore
-├── index.css              Tailwind setup and theme tokens
-├── themes.ts              color theme registry
-├── changelog.ts           What's new entries (drive the update toast)
-├── components/            Layout (header + felt band), ThemePicker,
-│                          FeltHero/HeaderActions/PageFooter portals, CardTile,
-│                          ReloadPrompt, Celebration, UpdateToast
-├── celebration/           winner burst particles (pure)
-├── pages/                 HomePage, NewSessionPage, SessionPage,
-│                          ChangelogPage
-├── games/                 one pure module per game + registry
-│   ├── types.ts           the CardGame interface
-│   ├── upanddown.ts, payme.ts, points.ts (High/Low Score)
-│   └── standings.ts       totals and ranking
-└── db/
-├── dexie-db.ts        CardzDB schema, the shared db instance and
-│                      dbReady (seeding on load)
-├── seed.ts            upserts game definitions by slug
-└── sessions.ts, rounds.ts   data access helpers
-tests/
-├── unit/                  games, db helpers, themes
-├── e2e/                   functional Playwright tests
-├── visual/                screenshot baselines
-└── design-history/        capture for docs/design-history</code></pre>
+<ul class="tree">
+  <li class="folder">src/
+    <ul>
+      <li>main.tsx, App.tsx <span class="tree-note">app entry, router, 404 redirect restore</span></li>
+      <li>index.css <span class="tree-note">Tailwind setup and theme tokens</span></li>
+      <li>themes.ts <span class="tree-note">color theme registry</span></li>
+      <li>changelog.ts <span class="tree-note">What&#x27;s new entries (drive the update toast)</span></li>
+      <li class="folder">components/ <span class="tree-note">Layout, ThemePicker, the felt portals, CardTile, toasts</span>
+        <ul>
+        </ul>
+      </li>
+      <li class="folder">celebration/ <span class="tree-note">winner burst particles (pure)</span>
+        <ul>
+        </ul>
+      </li>
+      <li class="folder">pages/ <span class="tree-note">HomePage, NewSessionPage, SessionPage, ChangelogPage</span>
+        <ul>
+        </ul>
+      </li>
+      <li class="folder">games/ <span class="tree-note">one pure module per game + registry</span>
+        <ul>
+          <li>types.ts <span class="tree-note">the CardGame interface</span></li>
+          <li>upanddown.ts, payme.ts, points.ts <span class="tree-note">High/Low Score</span></li>
+          <li>standings.ts <span class="tree-note">totals and ranking</span></li>
+        </ul>
+      </li>
+      <li class="folder">db/
+        <ul>
+          <li>dexie-db.ts <span class="tree-note">CardzDB schema, the shared db, dbReady (seeds on load)</span></li>
+          <li>seed.ts <span class="tree-note">upserts game definitions by slug</span></li>
+          <li>sessions.ts, rounds.ts <span class="tree-note">data access helpers</span></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li class="folder">tests/
+    <ul>
+      <li class="folder">unit/ <span class="tree-note">games, db helpers, themes</span>
+        <ul>
+        </ul>
+      </li>
+      <li class="folder">e2e/ <span class="tree-note">functional Playwright tests</span>
+        <ul>
+        </ul>
+      </li>
+      <li class="folder">visual/ <span class="tree-note">screenshot baselines</span>
+        <ul>
+        </ul>
+      </li>
+      <li class="folder">design-history/ <span class="tree-note">capture for docs/design-history</span>
+        <ul>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
 
 <h2 id="routes">Routes</h2>
 <div class="table-wrap">
