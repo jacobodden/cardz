@@ -310,6 +310,15 @@ figure.frame img {
 }
 figure.frame figcaption { margin-top: var(--space-2); font: 400 13px/20px var(--font-sans); color: var(--muted); }
 figure.frame.narrow img { max-width: 620px; }
+
+/* Diagrams (Mintlify: a mermaid code block). docs-sync draws the Mermaid source as an
+   inline SVG on the tokens; once drawn, the source is hidden. Undrawn, it shows as code. */
+figure.diagram { margin: 0 0 var(--space-5); padding: var(--space-4); background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius-lg); overflow-x: auto; }
+figure.diagram svg { display: block; height: auto; margin: 0 auto; }
+figure.diagram:has(svg) pre.mermaid { display: none; }
+figure.diagram pre.mermaid { margin: 0; }
+figure.diagram figcaption { margin-top: var(--space-3); font: 400 13px/20px var(--font-sans); color: var(--muted); }
 .frames { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--space-4); }
 .frames figure.frame { margin: 0; }
 .frames { margin: 0 0 var(--space-5); }
