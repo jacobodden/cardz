@@ -1,118 +1,231 @@
 <!doctype html>
+<!-- Generated around the content block by docs-sync (~/development/.tools).
+     Edit only between docs:content markers, then run docs-sync. -->
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Architecture — Cardz docs</title>
-  <link rel="stylesheet" href="assets/docs.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Architecture · Cardz</title>
+<meta name="description" content="A local-first scorekeeper: a static React app that keeps every session in the browser&#x27;s IndexedDB. No server, no sync, no sign-in.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap">
+<link rel="stylesheet" href="assets/docs.css">
+<script src="assets/docs.js"></script>
 </head>
 <body>
-  <header class="band">
-    <div class="wrap">
-      <p class="crumbs"><a href="index.html">Cardz docs</a></p>
-      <h1>Architecture</h1>
-      <p class="lede">A local-first scorekeeper: a static React app that keeps every session in the browser's IndexedDB. No server, no sync, no sign-in.</p>
-    </div>
-  </header>
-  <main class="wrap">
-    <p class="note"><code>AGENTS.md</code> at the repo root is the short working reference (conventions, schema, where things live). This page is the longer overview.</p>
+<a class="skip" href="#main">Skip to content</a>
+<header class="docs-header">
+  <a class="docs-brand" href="index.html"><span class="name">Cardz</span><span class="tagline">Scorekeeping for card games</span></a>
+  <span class="spacer"></span>
+  <button class="menu-button" type="button" aria-expanded="false" aria-controls="docs-nav">Menu</button>
+  <div class="segmented" role="radiogroup" aria-label="Theme">
+    <button type="button" role="radio" data-theme-choice="auto" aria-checked="true">Auto</button>
+    <button type="button" role="radio" data-theme-choice="light" aria-checked="false">Light</button>
+    <button type="button" role="radio" data-theme-choice="dark" aria-checked="false">Dark</button>
+  </div>
+</header>
+<div class="docs-shell">
+<nav class="docs-nav" id="docs-nav" aria-label="Pages">
+  <p class="group">Guide</p>
+  <ul>
+    <li><a href="index.html">Overview</a></li>
+    <li><a href="architecture.html" aria-current="page">Architecture</a></li>
+  </ul>
+  <p class="group">Games</p>
+  <ul>
+    <li><a href="games/index.html">Games</a></li>
+    <li><a href="games/up-and-down.html">Up and Down the River</a></li>
+    <li><a href="games/pay-me.html">Pay Me</a></li>
+    <li><a href="games/high-score.html">High Score</a></li>
+    <li><a href="games/low-score.html">Low Score</a></li>
+  </ul>
+  <p class="group">Project</p>
+  <ul>
+    <li><a href="design-history/index.html">Design history</a></li>
+  </ul>
+  <p class="group">Planning notes</p>
+  <ul>
+    <li><a href="planning/cardz-points-and-mobile-plan.html">Points games and mobile plan</a></li>
+    <li><a href="planning/idb-vs-dexie-comparison.html">idb vs Dexie.js comparison</a></li>
+    <li><a href="planning/storage-refactor-comparison.html">Storage refactor comparison</a></li>
+  </ul>
+</nav>
+<main class="docs-page" id="main">
+<article class="docs-content">
+<!-- docs:content -->
+<h1>Architecture</h1>
+<p class="lede">A local-first scorekeeper: a static React app that keeps every session in the browser's IndexedDB. No server, no sync, no sign-in.</p>
+<div class="callout note"><span class="label">Note</span>
+<p><code>AGENTS.md</code> at the repo root is the short working reference (conventions, schema, where things live). This page is the longer overview.</p>
+</div>
 
-    <h2>Stack</h2>
-    <dl class="facts">
-      <dt>UI</dt><dd>Vite, React 19, React Router, Tailwind CSS v4 (<code>@theme</code> tokens, no config file)</dd>
-      <dt>Storage</dt><dd>Dexie.js over IndexedDB; components read with <code>useLiveQuery</code></dd>
-      <dt>Offline</dt><dd>PWA via <code>vite-plugin-pwa</code>, auto-updating service worker that precaches the build</dd>
-      <dt>Hosting</dt><dd>GitHub Pages under the <code>/cardz/</code> base path</dd>
-      <dt>Tests</dt><dd>Vitest + fake-indexeddb (unit), Playwright (e2e and visual)</dd>
-      <dt>Lint</dt><dd>oxlint</dd>
-    </dl>
+<h2 id="stack">Stack</h2>
+<dl>
+  <dt>UI</dt><dd>Vite, React 19, React Router, Tailwind CSS v4 (<code>@theme</code> tokens, no config file)</dd>
+  <dt>Storage</dt><dd>Dexie.js over IndexedDB; components read with <code>useLiveQuery</code></dd>
+  <dt>Offline</dt><dd>PWA via <code>vite-plugin-pwa</code>, auto-updating service worker that precaches the build</dd>
+  <dt>Hosting</dt><dd>GitHub Pages under the <code>/cardz/</code> base path</dd>
+  <dt>Tests</dt><dd>Vitest + fake-indexeddb (unit), Playwright (e2e and visual)</dd>
+  <dt>Lint</dt><dd>oxlint</dd>
+</dl>
 
-    <h2>Source layout</h2>
-<pre><code>src/
-├── main.tsx, App.tsx      app entry, router, 404 redirect restore
-├── index.css              Tailwind setup and theme tokens
-├── themes.ts              color theme registry
-├── changelog.ts           What's new entries (drive the update toast)
-├── components/            Layout (header + felt band), ThemePicker,
-│                          FeltHero/HeaderActions/PageFooter portals, CardTile,
-│                          ReloadPrompt, Celebration, UpdateToast
-├── celebration/           winner burst particles (pure)
-├── pages/                 HomePage, NewSessionPage, SessionPage,
-│                          ChangelogPage
-├── games/                 one pure module per game + registry
-│   ├── types.ts           the CardGame interface
-│   ├── upanddown.ts, payme.ts, points.ts (High/Low Score)
-│   └── standings.ts       totals and ranking
-└── db/
-    ├── dexie-db.ts        CardzDB schema, the shared db instance and
-    │                      dbReady (seeding on load)
-    ├── seed.ts            upserts game definitions by slug
-    └── sessions.ts, rounds.ts   data access helpers
-tests/
-├── unit/                  games, db helpers, themes
-├── e2e/                   functional Playwright tests
-├── visual/                screenshot baselines
-└── design-history/        capture for docs/design-history</code></pre>
+<h2 id="source-layout">Source layout</h2>
+<ul class="tree">
+  <li class="folder">src/
+    <ul>
+      <li>main.tsx, App.tsx <span class="tree-note">app entry, router, 404 redirect restore</span></li>
+      <li>index.css <span class="tree-note">Tailwind setup and theme tokens</span></li>
+      <li>themes.ts <span class="tree-note">color theme registry</span></li>
+      <li>changelog.ts <span class="tree-note">What&#x27;s new entries (drive the update toast)</span></li>
+      <li class="folder">components/ <span class="tree-note">Layout, ThemePicker, the felt portals, CardTile, toasts</span>
+        <ul>
+        </ul>
+      </li>
+      <li class="folder">celebration/ <span class="tree-note">winner burst particles (pure)</span>
+        <ul>
+        </ul>
+      </li>
+      <li class="folder">pages/ <span class="tree-note">HomePage, NewSessionPage, SessionPage, ChangelogPage</span>
+        <ul>
+        </ul>
+      </li>
+      <li class="folder">games/ <span class="tree-note">one pure module per game + registry</span>
+        <ul>
+          <li>types.ts <span class="tree-note">the CardGame interface</span></li>
+          <li>upanddown.ts, payme.ts, points.ts <span class="tree-note">High/Low Score</span></li>
+          <li>standings.ts <span class="tree-note">totals and ranking</span></li>
+        </ul>
+      </li>
+      <li class="folder">db/
+        <ul>
+          <li>dexie-db.ts <span class="tree-note">CardzDB schema, the shared db, dbReady (seeds on load)</span></li>
+          <li>seed.ts <span class="tree-note">upserts game definitions by slug</span></li>
+          <li>sessions.ts, rounds.ts <span class="tree-note">data access helpers</span></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li class="folder">tests/
+    <ul>
+      <li class="folder">unit/ <span class="tree-note">games, db helpers, themes</span>
+        <ul>
+        </ul>
+      </li>
+      <li class="folder">e2e/ <span class="tree-note">functional Playwright tests</span>
+        <ul>
+        </ul>
+      </li>
+      <li class="folder">visual/ <span class="tree-note">screenshot baselines</span>
+        <ul>
+        </ul>
+      </li>
+      <li class="folder">design-history/ <span class="tree-note">capture for docs/design-history</span>
+        <ul>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
 
-    <h2>Routes</h2>
-    <div class="table-scroll">
-      <table>
-        <thead><tr><th>Path</th><th>Page</th><th>What it does</th></tr></thead>
-        <tbody>
-          <tr><td><code>/</code></td><td><code>HomePage</code></td><td>Active and finished sessions</td></tr>
-          <tr><td><code>/sessions/new</code></td><td><code>NewSessionPage</code></td><td>Pick a game, add players, set options</td></tr>
-          <tr><td><code>/sessions/:id</code></td><td><code>SessionPage</code></td><td>Standings, current round entry, round history</td></tr>
-          <tr><td><code>/changelog</code></td><td><code>ChangelogPage</code></td><td>What's new: entries from <code>src/changelog.ts</code></td></tr>
-        </tbody>
-      </table>
-    </div>
-    <p>Pages can fill a bar stuck to the bottom of the screen with <code>PageFooter</code> (Home uses it for What's new); the page scrolls behind it. The app shell is <code>min-h-dvh</code>, not <code>100vh</code>, which in mobile Safari is taller than the visible area.</p>
-    <p>The router uses <code>basename={import.meta.env.BASE_URL}</code>. GitHub Pages has no SPA fallback, so <code>public/404.html</code> stores the requested path in <code>sessionStorage</code> and redirects to <code>/cardz/</code>, where the app restores it.</p>
+<h2 id="routes">Routes</h2>
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Path</th><th>Page</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td><code>/</code></td><td><code>HomePage</code></td><td>Active and finished sessions</td></tr>
+      <tr><td><code>/sessions/new</code></td><td><code>NewSessionPage</code></td><td>Pick a game, add players, set options</td></tr>
+      <tr><td><code>/sessions/:id</code></td><td><code>SessionPage</code></td><td>Standings, current round entry, round history</td></tr>
+      <tr><td><code>/changelog</code></td><td><code>ChangelogPage</code></td><td>What's new: entries from <code>src/changelog.ts</code></td></tr>
+    </tbody>
+  </table>
+</div>
+<p>Pages can fill a bar stuck to the bottom of the screen with <code>PageFooter</code> (Home uses it for What's new); the page scrolls behind it. The app shell is <code>min-h-dvh</code>, not <code>100vh</code>, which in mobile Safari is taller than the visible area.</p>
+<p>The router uses <code>basename={import.meta.env.BASE_URL}</code>. GitHub Pages has no SPA fallback, so <code>public/404.html</code> stores the requested path in <code>sessionStorage</code> and redirects to <code>/cardz/</code>, where the app restores it.</p>
 
-    <h2>Data model</h2>
-    <p>One Dexie database, <code>cardz</code>, with five tables:</p>
+<h2 id="data-model">Data model</h2>
+<p>One Dexie database, <code>cardz</code>, with five tables:</p>
 <pre><code>games     ++id, &amp;slug, name, description, min_players, max_players, config_schema
 sessions  ++id, game_id, title, status, config_json, created_at
 players   ++id, session_id, name, order_index
 rounds    ++id, session_id, round_number, data_json
 scores    ++id, round_id, player_id, score, data_json</code></pre>
-    <p>A session belongs to a game and has players and rounds; each round has one score per player. <code>data_json</code> holds game-specific values, such as a round's trump or a player's bid. Game definitions live in code, and <code>seed.ts</code> upserts them into <code>games</code> on every load so updates reach installed copies.</p>
+<p>A session belongs to a game and has players and rounds; each round has one score per player. <code>data_json</code> holds game-specific values, such as a round's trump or a player's bid. Game definitions live in code, and <code>seed.ts</code> upserts them into <code>games</code> on every load so updates reach installed copies.</p>
 
-    <h2>Games</h2>
-    <p>Each game is a pure module implementing <code>CardGame</code> (<code>src/games/types.ts</code>) and registered by slug in <code>src/games/index.ts</code>. The main hooks:</p>
-    <ul>
-      <li><code>getRounds(playerCount, config)</code>: the round plan. Fixed games (Up and Down, Pay Me) generate every round up front; open games (High and Low Score) add rounds as they are played.</li>
-      <li><code>getRoundSchema(round)</code>: the inputs to collect per player or per round.</li>
-      <li><code>computeScore(meta, inputs)</code>: turn inputs into scores.</li>
-      <li>Optional <code>validateRound</code> (e.g. the hook rule), <code>getRoundInfo</code> (chips like trump or wilds) and <code>getDefaultConfig</code>.</li>
-    </ul>
-    <p><code>usesDealer</code> games store each round's dealer as <code>data.dealer_player_id</code> (helpers in <code>src/games/dealer.ts</code>), starting from the New game <strong>First dealer</strong>. Fixed games set every round's dealer up front. Open games pass the deal to the next seat when a round is submitted, and <code>setDealer</code> (<code>src/db/rounds.ts</code>) moves it for the round in play: the Session page's <strong>D</strong> chip on each player card. Undo restores the dealer with the round.</p>
-    <p>To add a game: write the module, register it, add unit tests in <code>tests/unit/</code> and a rules page in <a href="games/index.html"><code>docs/games/</code></a>.</p>
+<h2 id="games">Games</h2>
+<p>Each game is a pure module implementing <code>CardGame</code> (<code>src/games/types.ts</code>) and registered by slug in <code>src/games/index.ts</code>. The main hooks:</p>
+<ul>
+  <li><code>getRounds(playerCount, config)</code>: the round plan. Fixed games (Up and Down, Pay Me) generate every round up front; open games (High and Low Score) add rounds as they are played.</li>
+  <li><code>getRoundSchema(round)</code>: the inputs to collect per player or per round.</li>
+  <li><code>computeScore(meta, inputs)</code>: turn inputs into scores.</li>
+  <li>Optional <code>validateRound</code> (e.g. the hook rule), <code>getRoundInfo</code> (chips like trump or wilds) and <code>getDefaultConfig</code>.</li>
+</ul>
+<p><code>usesDealer</code> games store each round's dealer as <code>data.dealer_player_id</code> (helpers in <code>src/games/dealer.ts</code>), starting from the New game <strong>First dealer</strong>. Fixed games set every round's dealer up front. Open games pass the deal to the next seat when a round is submitted, and <code>setDealer</code> (<code>src/db/rounds.ts</code>) moves it for the round in play: the Session page's <strong>D</strong> chip on each player card. Undo restores the dealer with the round.</p>
+<p>To add a game: write the module, register it, add unit tests in <code>tests/unit/</code> and a rules page in <a href="games/index.html"><code>docs/games/</code></a>.</p>
 
-    <h2>Themes</h2>
-    <p>Light/dark mode and the color theme are independent. Mode is the <code>.dark</code> class on <code>&lt;html&gt;</code>, stored in <code>localStorage('theme')</code>. The color theme is <code>data-palette</code> on <code>&lt;html&gt;</code>, stored in <code>localStorage('palette')</code>, with each theme's tokens in <code>src/index.css</code> and its entry in <code>src/themes.ts</code>. A startup script in <code>index.html</code> applies both before first paint, using the registry that <code>vite.config.ts</code> injects. <code>Layout.tsx</code> keeps <code>&lt;meta name="theme-color"&gt;</code> in step with the felt color.</p>
-    <p>The header is always felt and pinned to the top. Installed on iOS, the app draws under a transparent status bar (<code>black-translucent</code>, <code>viewport-fit=cover</code>) and the header pads by <code>env(safe-area-inset-top)</code>, so the status bar shows the theme's felt with no seam. Page gutters use the <code>safe-x</code> utility to clear the notch in landscape.</p>
-    <h3>Winner celebration</h3>
-    <p>When a game ends on screen (Finish, or the last Up &amp; Down round), <code>SessionPage</code> pops a burst from the winner's trophy. The particles are pure functions in <code>src/celebration/particles.ts</code> (unit tested), drawn on a full-screen canvas by <code>components/Celebration.tsx</code>. A theme's <code>celebration</code> field picks the burst: confetti by default, seeds for Bagel, footballs for Skol. Opening a game that already finished does not pop; tapping the trophy pops again. The automatic pop is skipped under <code>prefers-reduced-motion</code>, which the visual tests turn on so snapshots stay still.</p>
+<h2 id="design">Design</h2>
+<p>The UI is the <strong>Card Table</strong> design: a felt band across the top holds the page title and the current round, with the standings and score entry below it on the table. It is built for phones first and also works on desktop.</p>
+<ul>
+<li><strong>Light and dark mode</strong>: follows the system by default; the moon/sun button in the header switches it.</li>
+<li><strong>Color themes</strong>: Felt (green) and Midnight (violet), picked from the palette button in the header. Mode and theme are independent and remembered on the device.</li>
+<li><strong>Design history</strong>: dated screenshots of how the app has looked over time are in the <a href="design-history/index.html">design history</a>.</li>
+</ul>
+<div class="callout note"><span class="label">Note</span>
+<p>The app has its own themes (Felt, Midnight). These docs use the Worn Hoodie docs kit shared by all the projects' docs; the app's look is not tied to it.</p>
+</div>
+<h2 id="themes">Themes</h2>
+<p>Light/dark mode and the color theme are independent. Mode is the <code>.dark</code> class on <code>&lt;html&gt;</code>, stored in <code>localStorage('theme')</code>. The color theme is <code>data-palette</code> on <code>&lt;html&gt;</code>, stored in <code>localStorage('palette')</code>, with each theme's tokens in <code>src/index.css</code> and its entry in <code>src/themes.ts</code>. A startup script in <code>index.html</code> applies both before first paint, using the registry that <code>vite.config.ts</code> injects. <code>Layout.tsx</code> keeps <code>&lt;meta name="theme-color"&gt;</code> in step with the felt color.</p>
+<p>The header is always felt and pinned to the top. Installed on iOS, the app draws under a transparent status bar (<code>black-translucent</code>, <code>viewport-fit=cover</code>) and the header pads by <code>env(safe-area-inset-top)</code>, so the status bar shows the theme's felt with no seam. Page gutters use the <code>safe-x</code> utility to clear the notch in landscape.</p>
+<h3 id="winner-celebration">Winner celebration</h3>
+<p>When a game ends on screen (Finish, or the last Up &amp; Down round), <code>SessionPage</code> pops a burst from the winner's trophy. The particles are pure functions in <code>src/celebration/particles.ts</code> (unit tested), drawn on a full-screen canvas by <code>components/Celebration.tsx</code>. A theme's <code>celebration</code> field picks the burst: confetti by default, seeds for Bagel, footballs for Skol. Opening a game that already finished does not pop; tapping the trophy pops again. The automatic pop is skipped under <code>prefers-reduced-motion</code>, which the visual tests turn on so snapshots stay still.</p>
 
-    <h2>PWA and icons</h2>
-    <p>The manifest and service worker are configured in <code>vite.config.ts</code>. After the auto-updating service worker installs a new build and reloads, <code>UpdateToast</code> shows "Cardz updated" once, with a link to What's new, when <code>src/changelog.ts</code> has a newer top entry than the one saved in <code>localStorage('lastSeenUpdate')</code>. Fresh installs see no toast, and builds with no new entry update quietly. Install icons are generated from <code>public/pwa-icon.png</code> with <code>npm run generate-pwa-assets</code>. The header logo is a separate transparent image, <code>public/app-logo.png</code>.</p>
+<h2 id="pwa-and-icons">PWA and icons</h2>
+<p>The manifest and service worker are configured in <code>vite.config.ts</code>. After the auto-updating service worker installs a new build and reloads, <code>UpdateToast</code> shows "Cardz updated" once, with a link to What's new, when <code>src/changelog.ts</code> has a newer top entry than the one saved in <code>localStorage('lastSeenUpdate')</code>. Fresh installs see no toast, and builds with no new entry update quietly. Install icons are generated from <code>public/pwa-icon.png</code> with <code>npm run generate-pwa-assets</code>. The header logo is a separate transparent image, <code>public/app-logo.png</code>.</p>
 
-    <h2>Tests and CI</h2>
-    <div class="table-scroll">
-      <table>
-        <thead><tr><th>Suite</th><th>Command</th><th>Covers</th></tr></thead>
-        <tbody>
-          <tr><td>Unit</td><td><code>npm run test:unit</code></td><td>Scoring, standings, db helpers, theme registry and contrast</td></tr>
-          <tr><td>E2E</td><td><code>npm run test:e2e</code></td><td>Flows on a phone and a desktop viewport</td></tr>
-          <tr><td>Visual</td><td><code>npm run test:visual</code></td><td>Screenshot baselines, run in the pinned Playwright container</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <p><code>.github/workflows/test.yml</code> runs lint, unit, build and e2e on every pull request and push to <code>main</code>, plus the visual suite inside the same container image used locally, so baselines match.</p>
+<h2 id="scripts">Scripts</h2>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Command</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>npm run dev</code></td><td>Start the dev server at <code>localhost:5173</code></td></tr>
+<tr><td><code>npm run build</code></td><td>Type-check and build to <code>dist/</code></td></tr>
+<tr><td><code>npm run preview</code></td><td>Serve the production build</td></tr>
+<tr><td><code>npm run lint</code></td><td>Run oxlint</td></tr>
+<tr><td><code>npm run test:unit</code></td><td>Unit tests (Vitest)</td></tr>
+<tr><td><code>npm run test:unit:watch</code></td><td>Unit tests in watch mode</td></tr>
+<tr><td><code>npm run test:e2e</code></td><td>Functional tests (Playwright, phone and desktop)</td></tr>
+<tr><td><code>npm run test:visual</code></td><td>Screenshot tests, inside the Playwright container (needs podman or docker)</td></tr>
+<tr><td><code>npm run test:visual:update</code></td><td>Accept intentional screenshot changes, also in the container</td></tr>
+<tr><td><code>npm test</code></td><td>All Playwright tests on the host (visual ones may differ from the container baselines)</td></tr>
+<tr><td><code>npm run test:ui</code></td><td>Playwright UI mode</td></tr>
+<tr><td><code>npm run design:capture</code></td><td>Capture a dated design-history milestone</td></tr>
+<tr><td><code>npm run design:index</code></td><td>Rebuild the design-history page without capturing</td></tr>
+<tr><td><code>npm run generate-pwa-assets</code></td><td>Regenerate install icons and favicons from <code>public/pwa-icon.png</code></td></tr>
+</tbody>
+</table></div>
+<h2 id="tests-and-ci">Tests and CI</h2>
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Suite</th><th>Command</th><th>Covers</th></tr></thead>
+    <tbody>
+      <tr><td>Unit</td><td><code>npm run test:unit</code></td><td>Scoring, standings, db helpers, theme registry and contrast</td></tr>
+      <tr><td>E2E</td><td><code>npm run test:e2e</code></td><td>Flows on a phone and a desktop viewport</td></tr>
+      <tr><td>Visual</td><td><code>npm run test:visual</code></td><td>Screenshot baselines, run in the pinned Playwright container</td></tr>
+    </tbody>
+  </table>
+</div>
+<p><code>.github/workflows/test.yml</code> runs lint, unit, build and e2e on every pull request and push to <code>main</code>, plus the visual suite inside the same container image used locally, so baselines match.</p>
 
-    <h2>Deployment</h2>
-    <p><code>.github/workflows/deploy.yml</code> builds on every push to <code>main</code> and publishes <code>dist/</code> to GitHub Pages (Settings → Pages → Source: GitHub Actions).</p>
-  </main>
+<h2 id="deployment">Deployment</h2>
+<p><code>.github/workflows/deploy.yml</code> builds on every push to <code>main</code> and publishes <code>dist/</code> to GitHub Pages (Settings → Pages → Source: GitHub Actions).</p>
+<!-- /docs:content -->
+<nav class="docs-pager" aria-label="Previous and next">
+<a class="prev" href="index.html"><span class="dir">Previous</span>Overview</a>
+<a class="next" href="games/index.html"><span class="dir">Next</span>Games</a>
+</nav>
+</article>
+<aside class="docs-toc" aria-label="On this page"></aside>
+</main>
+</div>
 </body>
 </html>

@@ -1,142 +1,68 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="light">
+<!doctype html>
+<!-- Generated around the content block by docs-sync (~/development/.tools).
+     Edit only between docs:content markers, then run docs-sync. -->
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cardz — Points Games &amp; Mobile Scoreboard Plan</title>
-  <style>
-    :root {
-      --bg: #f4f4f1;
-      --surface: #ffffff;
-      --surface-2: #f9fafb;
-      --text: #111827;
-      --muted: #6b7280;
-      --faint: #9ca3af;
-      --border: #e5e7eb;
-      --border-strong: #d1d5db;
-      --accent: #2563eb;
-      --accent-soft: #dbeafe;
-      --accent-text: #1e40af;
-      --green: #059669;
-      --green-soft: #d1fae5;
-      --green-text: #065f46;
-      --amber: #d97706;
-      --amber-soft: #fef3c7;
-      --amber-text: #92400e;
-      --red: #dc2626;
-      --red-soft: #fee2e2;
-      --red-text: #991b1b;
-      --shadow: 0 1px 2px rgba(0,0,0,.05), 0 8px 24px rgba(0,0,0,.06);
-      --phone-border: #1f2937;
-      --code-bg: #0f172a;
-      --code-text: #e2e8f0;
-    }
-    [data-theme="dark"] {
-      --bg: #0b0f17;
-      --surface: #111827;
-      --surface-2: #1f2937;
-      --text: #f3f4f6;
-      --muted: #9ca3af;
-      --faint: #6b7280;
-      --border: #1f2937;
-      --border-strong: #374151;
-      --accent: #60a5fa;
-      --accent-soft: rgba(37, 99, 235, .2);
-      --accent-text: #93c5fd;
-      --green: #34d399;
-      --green-soft: rgba(5, 150, 105, .2);
-      --green-text: #6ee7b7;
-      --amber: #fbbf24;
-      --amber-soft: rgba(217, 119, 6, .2);
-      --amber-text: #fcd34d;
-      --red: #f87171;
-      --red-soft: rgba(220, 38, 38, .2);
-      --red-text: #fca5a5;
-      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
-      --phone-border: #030712;
-      --code-bg: #020617;
-      --code-text: #e2e8f0;
-    }
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
-    body {
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.65;
-      padding: 2rem 1rem 5rem;
-      transition: background .2s, color .2s;
-    }
-    .container { max-width: 1180px; margin: 0 auto; }
-
-    .theme-toggle {
-      position: fixed;
-      top: 1rem;
-      right: 1rem;
-      z-index: 50;
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      color: var(--text);
-      font-size: 1.15rem;
-      cursor: pointer;
-      box-shadow: var(--shadow);
-    }
-    .theme-toggle:hover { border-color: var(--border-strong); }
-
-    header.page-head { text-align: center; margin-bottom: 2.5rem; }
-    header.page-head .eyebrow {
-      display: inline-block;
-      font-size: .72rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .09em;
-      color: var(--accent-text);
-      background: var(--accent-soft);
-      padding: .25rem .65rem;
-      border-radius: 999px;
-      margin-bottom: .85rem;
-    }
-    header.page-head h1 {
-      font-size: clamp(1.7rem, 4vw, 2.4rem);
-      font-weight: 750;
-      letter-spacing: -.03em;
-      line-height: 1.15;
-    }
-    header.page-head p { color: var(--muted); margin-top: .6rem; font-size: 1.02rem; }
-    header.page-head .meta { margin-top: .75rem; font-size: .82rem; color: var(--faint); }
-
-    nav.toc {
-      display: flex;
-      flex-wrap: wrap;
-      gap: .5rem;
-      justify-content: center;
-      margin: 0 auto 2.5rem;
-      max-width: 900px;
-    }
-    nav.toc a {
-      font-size: .82rem;
-      text-decoration: none;
-      color: var(--muted);
-      border: 1px solid var(--border);
-      background: var(--surface);
-      padding: .35rem .7rem;
-      border-radius: 999px;
-    }
-    nav.toc a:hover { color: var(--accent); border-color: var(--accent); }
-
-    section { margin-bottom: 3rem; scroll-margin-top: 1rem; }
-    h2 {
-      font-size: 1.35rem;
-      font-weight: 700;
-      letter-spacing: -.02em;
-      margin-bottom: .35rem;
-      padding-bottom: .55rem;
-      border-bottom: 1px solid var(--border);
-    }
-    h2 .num {
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Points games and mobile plan · Cardz</title>
+<meta name="description" content="Two open-ended scorekeeping games, plus a card-first session screen that works on a phone.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap">
+<link rel="stylesheet" href="../assets/docs.css">
+<script src="../assets/docs.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="docs-header">
+  <a class="docs-brand" href="../index.html"><span class="name">Cardz</span><span class="tagline">Scorekeeping for card games</span></a>
+  <span class="spacer"></span>
+  <button class="menu-button" type="button" aria-expanded="false" aria-controls="docs-nav">Menu</button>
+  <div class="segmented" role="radiogroup" aria-label="Theme">
+    <button type="button" role="radio" data-theme-choice="auto" aria-checked="true">Auto</button>
+    <button type="button" role="radio" data-theme-choice="light" aria-checked="false">Light</button>
+    <button type="button" role="radio" data-theme-choice="dark" aria-checked="false">Dark</button>
+  </div>
+</header>
+<div class="docs-shell">
+<nav class="docs-nav" id="docs-nav" aria-label="Pages">
+  <p class="group">Guide</p>
+  <ul>
+    <li><a href="../index.html">Overview</a></li>
+    <li><a href="../architecture.html">Architecture</a></li>
+  </ul>
+  <p class="group">Games</p>
+  <ul>
+    <li><a href="../games/index.html">Games</a></li>
+    <li><a href="../games/up-and-down.html">Up and Down the River</a></li>
+    <li><a href="../games/pay-me.html">Pay Me</a></li>
+    <li><a href="../games/high-score.html">High Score</a></li>
+    <li><a href="../games/low-score.html">Low Score</a></li>
+  </ul>
+  <p class="group">Project</p>
+  <ul>
+    <li><a href="../design-history/index.html">Design history</a></li>
+  </ul>
+  <p class="group">Planning notes</p>
+  <ul>
+    <li><a href="../planning/cardz-points-and-mobile-plan.html" aria-current="page">Points games and mobile plan</a></li>
+    <li><a href="../planning/idb-vs-dexie-comparison.html">idb vs Dexie.js comparison</a></li>
+    <li><a href="../planning/storage-refactor-comparison.html">Storage refactor comparison</a></li>
+  </ul>
+</nav>
+<main class="docs-page" id="main">
+<article class="docs-content">
+<!-- docs:content -->
+<h1>Points games and mobile plan</h1>
+<p class="lede">Two open-ended scorekeeping games, plus a card-first session screen that works on a phone.</p>
+<p>Cardz · drafted Nov 2026 · for visual iteration in build mode</p>
+<div class="callout note"><span class="label">Archived</span>
+<p>A write-up from an earlier decision, kept for reference. It describes the options at the time, not necessarily the current code.</p>
+</div>
+<style>
+.legacy *::before, .legacy *::after { box-sizing: border-box; margin: 0; padding: 0; }
+.legacy h2 .num {
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -144,49 +70,22 @@
       height: 1.65rem;
       margin-right: .5rem;
       border-radius: 8px;
-      background: var(--accent);
-      color: #fff;
+      background: var(--secondary);
+      color: var(--surface);
       font-size: .8rem;
       vertical-align: .12em;
     }
-    h3 { font-size: 1rem; font-weight: 700; margin: 1.5rem 0 .55rem; }
-    p { margin-bottom: .75rem; }
-    ul, ol { margin: 0 0 .9rem 1.25rem; }
-    li { margin-bottom: .3rem; }
-    strong { font-weight: 650; }
-    code {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-size: .86em;
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      padding: .1rem .3rem;
-      border-radius: 5px;
-    }
-    pre {
-      background: var(--code-bg);
-      color: var(--code-text);
-      padding: 1rem 1.1rem;
-      border-radius: 10px;
-      overflow-x: auto;
-      font-size: .82rem;
-      line-height: 1.55;
-      margin: .6rem 0 1rem;
-    }
-    pre code { background: none; border: 0; padding: 0; font-size: inherit; color: inherit; }
-
-    .callout {
-      border-left: 4px solid var(--accent);
-      background: var(--accent-soft);
+.legacy .wp-callout {
+      background: var(--secondary-hover);
       padding: .8rem 1rem;
       border-radius: 0 8px 8px 0;
       margin: .8rem 0 1rem;
       font-size: .92rem;
     }
-    .callout.green { border-left-color: var(--green); background: var(--green-soft); }
-    .callout.amber { border-left-color: var(--amber); background: var(--amber-soft); }
-    .callout.red { border-left-color: var(--red); background: var(--red-soft); }
-
-    table.data {
+.legacy .wp-callout.green { background: var(--success-tint); }
+.legacy .wp-callout.amber { background: var(--warning-tint); }
+.legacy .wp-callout.red { background: var(--danger-tint); }
+.legacy table.data {
       width: 100%;
       border-collapse: collapse;
       font-size: .88rem;
@@ -196,23 +95,22 @@
       overflow: hidden;
       box-shadow: 0 0 0 1px var(--border);
     }
-    table.data th, table.data td {
+.legacy table.data th, .legacy table.data td {
       text-align: left;
       padding: .6rem .75rem;
       border-bottom: 1px solid var(--border);
       vertical-align: top;
     }
-    table.data th {
+.legacy table.data th {
       font-size: .72rem;
       text-transform: uppercase;
       letter-spacing: .05em;
       color: var(--muted);
-      background: var(--surface-2);
+      background: var(--raised);
       font-weight: 700;
     }
-    table.data tr:last-child td { border-bottom: 0; }
-
-    .pill {
+.legacy table.data tr:last-child td { border-bottom: 0; }
+.legacy .pill {
       display: inline-block;
       font-size: .68rem;
       font-weight: 700;
@@ -222,69 +120,65 @@
       border-radius: 999px;
       white-space: nowrap;
     }
-    .pill.high { background: var(--green-soft); color: var(--green-text); }
-    .pill.low { background: var(--amber-soft); color: var(--amber-text); }
-    .pill.open { background: var(--accent-soft); color: var(--accent-text); }
-    .pill.fixed { background: var(--surface-2); color: var(--muted); border: 1px solid var(--border); }
-
-    /* Mockup area */
-    .mockup-row {
+.legacy .pill.high { background: var(--success-tint); color: var(--success); }
+.legacy .pill.low { background: var(--warning-tint); color: var(--warning); }
+.legacy .pill.open { background: var(--secondary-hover); color: var(--secondary); }
+.legacy .pill.fixed { background: var(--raised); color: var(--muted); border: 1px solid var(--border); }
+.legacy .mockup-row {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 1.5rem;
       align-items: start;
       margin: 1rem 0 1.5rem;
     }
-    .mockup-item { display: flex; flex-direction: column; align-items: center; gap: .7rem; }
-    .mockup-caption { text-align: center; font-size: .82rem; color: var(--muted); max-width: 360px; }
-    .mockup-caption strong { color: var(--text); display: block; font-size: .88rem; }
-
-    .phone {
+.legacy .mockup-item { display: flex; flex-direction: column; align-items: center; gap: .7rem; }
+.legacy .mockup-caption { text-align: center; font-size: .82rem; color: var(--muted); max-width: 360px; }
+.legacy .mockup-caption strong { color: var(--text); display: block; font-size: .88rem; }
+.legacy .phone {
       width: 100%;
       max-width: 360px;
-      border: 7px solid var(--phone-border);
+      border: 7px solid var(--border-strong);
       border-radius: 34px;
       background: var(--bg);
-      box-shadow: var(--shadow);
+      box-shadow: none;
       overflow: hidden;
     }
-    .phone-screen {
+.legacy .phone-screen {
       background: var(--bg);
       padding: 12px 12px 0;
       display: flex;
       flex-direction: column;
       min-height: 620px;
     }
-    .app-bar {
+.legacy .app-bar {
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: .2rem .2rem .7rem;
     }
-    .app-bar .brand { font-weight: 750; font-size: 1rem; letter-spacing: -.02em; }
-    .app-bar .app-actions { display: flex; gap: .4rem; }
-    .app-bar .mini-btn {
+.legacy .app-bar .brand { font-weight: 750; font-size: 1rem; letter-spacing: -.02em; }
+.legacy .app-bar .app-actions { display: flex; gap: .4rem; }
+.legacy .app-bar .mini-btn {
       width: 30px; height: 30px;
       display: inline-flex; align-items: center; justify-content: center;
       border: 1px solid var(--border); border-radius: 8px;
       background: var(--surface); color: var(--muted); font-size: .8rem;
     }
-    .session-head { padding: .1rem .15rem .7rem; }
-    .session-head h4 { font-size: 1.12rem; font-weight: 750; letter-spacing: -.02em; line-height: 1.2; }
-    .session-head .game-name { font-size: .76rem; color: var(--muted); margin-top: .1rem; }
-
-    .round-bar {
+.legacy .session-head { padding: .1rem .15rem .7rem; }
+.legacy .session-head h4 { font-size: 1.12rem; font-weight: 750; letter-spacing: -.02em; line-height: 1.2; }
+.legacy .session-head .game-name { font-size: .76rem; color: var(--muted); margin-top: .1rem; }
+.legacy .round-bar {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: .5rem;
       padding: .55rem .15rem .7rem;
     }
-    .round-label { display: flex; align-items: baseline; gap: .4rem; min-width: 0; }
-    .round-label .round-num { font-size: .95rem; font-weight: 700; white-space: nowrap; }
-    .round-label .round-sub { font-size: .7rem; color: var(--muted); white-space: nowrap; }
-    .round-actions { display: flex; gap: .35rem; }
-    .tool-btn {
+.legacy .round-label { display: flex; align-items: baseline; gap: .4rem; min-width: 0; }
+.legacy .round-label .round-num { font-size: .95rem; font-weight: 700; white-space: nowrap; }
+.legacy .round-label .round-sub { font-size: .7rem; color: var(--muted); white-space: nowrap; }
+.legacy .round-actions { display: flex; gap: .35rem; }
+.legacy .tool-btn {
       font-size: .7rem;
       font-weight: 600;
       padding: .35rem .55rem;
@@ -294,71 +188,67 @@
       color: var(--muted);
       white-space: nowrap;
     }
-    .tool-btn.danger { color: var(--red-text); border-color: var(--red-soft); background: var(--red-soft); }
-
-    .progress-track {
+.legacy .tool-btn.danger { color: var(--danger); border-color: var(--danger-tint); background: var(--danger-tint); }
+.legacy .progress-track {
       height: 5px;
       border-radius: 999px;
       background: var(--border);
       overflow: hidden;
       margin: 0 .15rem .85rem;
     }
-    .progress-fill { height: 100%; width: 55%; background: var(--accent); border-radius: inherit; }
-
-    .round-settings {
+.legacy .progress-fill { height: 100%; width: 55%; background: var(--secondary); border-radius: inherit; }
+.legacy .round-settings {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 10px;
       padding: .6rem .7rem;
       margin-bottom: .7rem;
     }
-    .round-settings .settings-label {
+.legacy .round-settings .settings-label {
       font-size: .62rem; text-transform: uppercase; letter-spacing: .07em;
-      color: var(--faint); font-weight: 700; margin-bottom: .35rem;
+      color: var(--muted); font-weight: 700; margin-bottom: .35rem;
     }
-    .suit-row { display: flex; gap: .35rem; }
-    .suit-btn {
+.legacy .suit-row { display: flex; gap: .35rem; }
+.legacy .suit-btn {
       width: 38px; height: 38px; border-radius: 8px; border: 2px solid var(--border);
-      background: var(--surface-2); display: inline-flex; align-items: center; justify-content: center;
+      background: var(--raised); display: inline-flex; align-items: center; justify-content: center;
       font-size: 1.05rem; color: var(--muted);
     }
-    .suit-btn.active { border-color: var(--accent); background: var(--accent-soft); color: var(--text); }
-    .suit-btn.red { color: var(--red); }
-
-    .player-grid { display: grid; gap: .65rem; }
-    .player-card {
+.legacy .suit-btn.active { border-color: var(--secondary); background: var(--secondary-hover); color: var(--text); }
+.legacy .suit-btn.red { color: var(--danger); }
+.legacy .player-grid { display: grid; gap: .65rem; }
+.legacy .player-card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: .75rem .8rem .7rem;
     }
-    .player-card.leader { border-color: var(--amber); box-shadow: 0 0 0 1px var(--amber) inset; }
-    .player-card.winner { border-color: var(--amber); background: linear-gradient(180deg, var(--amber-soft), var(--surface) 55%); }
-    .player-top { display: flex; align-items: flex-start; justify-content: space-between; gap: .5rem; }
-    .player-name { font-size: .86rem; font-weight: 700; line-height: 1.2; }
-    .player-total { display: flex; align-items: baseline; gap: .25rem; margin-top: .05rem; }
-    .player-total .total-num { font-size: 1.75rem; font-weight: 800; letter-spacing: -.03em; line-height: 1.1; }
-    .player-total .total-unit { font-size: .68rem; color: var(--muted); font-weight: 600; }
-    .leader-pill {
+.legacy .player-card.leader { border-color: var(--warning); box-shadow: 0 0 0 1px var(--warning) inset; }
+.legacy .player-card.winner { border-color: var(--warning); background: linear-gradient(180deg, var(--warning-tint), var(--surface) 55%); }
+.legacy .player-top { display: flex; align-items: flex-start; justify-content: space-between; gap: .5rem; }
+.legacy .player-name { font-size: .86rem; font-weight: 700; line-height: 1.2; }
+.legacy .player-total { display: flex; align-items: baseline; gap: .25rem; margin-top: .05rem; }
+.legacy .player-total .total-num { font-size: 1.75rem; font-weight: 800; letter-spacing: -.03em; line-height: 1.1; }
+.legacy .player-total .total-unit { font-size: .68rem; color: var(--muted); font-weight: 600; }
+.legacy .leader-pill {
       font-size: .6rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
-      color: var(--amber-text); background: var(--amber-soft); padding: .12rem .4rem; border-radius: 999px;
+      color: var(--warning); background: var(--warning-tint); padding: .12rem .4rem; border-radius: 999px;
       white-space: nowrap;
     }
-    .crown { font-size: 1rem; line-height: 1; }
-
-    .this-round {
+.legacy .crown { font-size: 1rem; line-height: 1; }
+.legacy .this-round {
       margin-top: .55rem;
       padding-top: .55rem;
       border-top: 1px dashed var(--border);
     }
-    .this-round-label {
+.legacy .this-round-label {
       display: flex; align-items: center; justify-content: space-between;
       font-size: .66rem; text-transform: uppercase; letter-spacing: .06em;
       color: var(--muted); font-weight: 700; margin-bottom: .3rem;
     }
-    .this-round-label .round-tag { color: var(--faint); letter-spacing: 0; text-transform: none; font-weight: 600; }
-    .input-row { display: flex; align-items: center; gap: .5rem; }
-    .score-input {
+.legacy .this-round-label .round-tag { color: var(--muted); letter-spacing: 0; text-transform: none; font-weight: 600; }
+.legacy .input-row { display: flex; align-items: center; gap: .5rem; }
+.legacy .score-input {
       flex: 1;
       min-width: 0;
       height: 44px;
@@ -371,37 +261,35 @@
       padding: 0 .7rem;
       outline: none;
     }
-    .score-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-    .score-input::placeholder { color: var(--faint); font-weight: 400; }
-    .bid-row { display: flex; gap: .45rem; align-items: center; flex-wrap: wrap; }
-    .bid-row .score-input { flex: 0 1 78px; }
-    .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 9px; overflow: hidden; height: 44px; }
-    .seg button {
-      width: 44px; border: 0; background: var(--surface); color: var(--faint);
+.legacy .score-input:focus { border-color: var(--secondary); box-shadow: 0 0 0 3px var(--secondary-hover); }
+.legacy .score-input::placeholder { color: var(--muted); font-weight: 400; }
+.legacy .bid-row { display: flex; gap: .45rem; align-items: center; flex-wrap: wrap; }
+.legacy .bid-row .score-input { flex: 0 1 78px; }
+.legacy .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 9px; overflow: hidden; height: 44px; }
+.legacy .seg button {
+      width: 44px; border: 0; background: var(--surface); color: var(--muted);
       font-size: .9rem; font-weight: 700;
     }
-    .seg button.no.on { background: var(--red-soft); color: var(--red-text); }
-    .seg button.yes.on { background: var(--green-soft); color: var(--green-text); }
-    .seg button + button { border-left: 1px solid var(--border); }
-
-    .recent-row { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-top: .55rem; }
-    .recent-chips { display: flex; gap: .3rem; flex-wrap: wrap; }
-    .chip {
+.legacy .seg button.no.on { background: var(--danger-tint); color: var(--danger); }
+.legacy .seg button.yes.on { background: var(--success-tint); color: var(--success); }
+.legacy .seg button + button { border-left: 1px solid var(--border); }
+.legacy .recent-row { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-top: .55rem; }
+.legacy .recent-chips { display: flex; gap: .3rem; flex-wrap: wrap; }
+.legacy .wp-chip {
       font-size: .68rem;
       color: var(--muted);
-      background: var(--surface-2);
+      background: var(--raised);
       border: 1px solid var(--border);
       padding: .12rem .4rem;
       border-radius: 6px;
       white-space: nowrap;
     }
-    .chip b { color: var(--text); font-weight: 700; }
-    .expand-btn {
-      border: 0; background: none; color: var(--accent); font-size: .68rem; font-weight: 700;
+.legacy .wp-chip b { color: var(--text); font-weight: 700; }
+.legacy .expand-btn {
+      border: 0; background: none; color: var(--secondary); font-size: .68rem; font-weight: 700;
       padding: .2rem 0; white-space: nowrap;
     }
-
-    .history-grid {
+.legacy .history-grid {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: .3rem;
@@ -409,20 +297,19 @@
       padding-top: .55rem;
       border-top: 1px dashed var(--border);
     }
-    .history-cell {
+.legacy .history-cell {
       text-align: center;
-      background: var(--surface-2);
+      background: var(--raised);
       border: 1px solid var(--border);
       border-radius: 6px;
       padding: .22rem .1rem;
       font-size: .66rem;
-      color: var(--faint);
+      color: var(--muted);
       line-height: 1.25;
     }
-    .history-cell b { display: block; color: var(--text); font-size: .74rem; }
-    .history-cell.current { border-style: dashed; border-color: var(--accent); color: var(--accent-text); background: var(--accent-soft); }
-
-    .submit-dock {
+.legacy .history-cell b { display: block; color: var(--text); font-size: .74rem; }
+.legacy .history-cell.current { border-style: dashed; border-color: var(--secondary); color: var(--secondary); background: var(--secondary-hover); }
+.legacy .submit-dock {
       margin-top: auto;
       position: sticky;
       bottom: 0;
@@ -434,71 +321,68 @@
       flex-direction: column;
       gap: .35rem;
     }
-    .submit-btn {
+.legacy .submit-btn {
       width: 100%;
       height: 46px;
       border: 0;
       border-radius: 10px;
-      background: var(--accent);
-      color: #fff;
+      background: var(--secondary);
+      color: var(--surface);
       font-size: .88rem;
       font-weight: 700;
       letter-spacing: .01em;
     }
-    .submit-btn:disabled { opacity: .5; }
-    .submit-hint { text-align: center; font-size: .65rem; color: var(--faint); }
-
-    .complete-banner {
-      background: linear-gradient(135deg, var(--green-soft), var(--surface));
-      border: 1px solid var(--green);
+.legacy .submit-btn:disabled { opacity: .5; }
+.legacy .submit-hint { text-align: center; font-size: .65rem; color: var(--muted); }
+.legacy .complete-banner {
+      background: linear-gradient(135deg, var(--success-tint), var(--surface));
+      border: 1px solid var(--success);
       border-radius: 12px;
       padding: .8rem .9rem;
       margin-bottom: .7rem;
     }
-    .complete-banner .banner-title { font-size: .95rem; font-weight: 750; color: var(--green-text); }
-    .complete-banner .banner-sub { font-size: .75rem; color: var(--muted); margin-top: .1rem; }
-    .final-line { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; margin-top: .45rem; }
-    .final-line .final-name { font-size: .82rem; font-weight: 650; }
-    .final-line .final-score { font-size: .82rem; font-weight: 750; }
-
-    .desktop-frame {
+.legacy .complete-banner .banner-title { font-size: .95rem; font-weight: 750; color: var(--success); }
+.legacy .complete-banner .banner-sub { font-size: .75rem; color: var(--muted); margin-top: .1rem; }
+.legacy .final-line { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; margin-top: .45rem; }
+.legacy .final-line .final-name { font-size: .82rem; font-weight: 650; }
+.legacy .final-line .final-score { font-size: .82rem; font-weight: 750; }
+.legacy .desktop-frame {
       width: 100%;
       border: 1px solid var(--border-strong);
       border-radius: 14px;
       background: var(--surface);
-      box-shadow: var(--shadow);
+      box-shadow: none;
       overflow: hidden;
     }
-    .desktop-chrome {
+.legacy .desktop-chrome {
       display: flex; align-items: center; gap: .35rem;
       padding: .55rem .8rem;
-      background: var(--surface-2);
+      background: var(--raised);
       border-bottom: 1px solid var(--border);
     }
-    .desktop-chrome .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--border-strong); }
-    .desktop-body { padding: 1rem; }
-    .desktop-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-bottom: .8rem; }
-    .desktop-head h4 { font-size: 1.1rem; font-weight: 750; letter-spacing: -.02em; }
-    .desktop-head p { font-size: .75rem; color: var(--muted); margin: 0; }
-    .desktop-grid { display: grid; grid-template-columns: 1fr; gap: .75rem; max-width: 640px; margin: 0 auto; }
-    .desktop-dock {
+.legacy .desktop-chrome .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--border-strong); }
+.legacy .desktop-body { padding: 1rem; }
+.legacy .desktop-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-bottom: .8rem; }
+.legacy .desktop-head h4 { font-size: 1.1rem; font-weight: 750; letter-spacing: -.02em; }
+.legacy .desktop-head p { font-size: .75rem; color: var(--muted); margin: 0; }
+.legacy .desktop-grid { display: grid; grid-template-columns: 1fr; gap: .75rem; max-width: 640px; margin: 0 auto; }
+.legacy .desktop-dock {
       margin-top: .8rem;
       display: flex; justify-content: flex-end; gap: .5rem;
       padding-top: .75rem; border-top: 1px solid var(--border);
     }
-    .desktop-dock .ghost-btn {
+.legacy .desktop-dock .ghost-btn {
       height: 40px; padding: 0 1rem; border-radius: 9px; border: 1px solid var(--border);
       background: var(--surface); color: var(--muted); font-size: .8rem; font-weight: 600;
     }
-    .desktop-dock .submit-btn { width: auto; padding: 0 1.4rem; height: 40px; }
-
-    .checklist { list-style: none; margin-left: 0; }
-    .checklist li {
+.legacy .desktop-dock .submit-btn { width: auto; padding: 0 1.4rem; height: 40px; }
+.legacy .checklist { list-style: none; margin-left: 0; }
+.legacy .checklist li {
       position: relative;
       padding-left: 1.75rem;
       margin-bottom: .5rem;
     }
-    .checklist li::before {
+.legacy .checklist li::before {
       content: "";
       position: absolute;
       left: 0;
@@ -509,58 +393,32 @@
       border-radius: 4px;
       background: var(--surface);
     }
-    .checklist li.done::before {
+.legacy .checklist li.done::before {
       content: "✓";
       display: flex; align-items: center; justify-content: center;
-      background: var(--green); border-color: var(--green); color: #fff;
+      background: var(--success); border-color: var(--success); color: var(--surface);
       font-size: .65rem; font-weight: 800;
     }
-
-    .two-col { display: grid; grid-template-columns: 1fr; gap: 1rem; }
-    @media (min-width: 760px) { .two-col { grid-template-columns: 1fr 1fr; } }
-
-    .footer-note {
+.legacy .two-col { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+@media (min-width: 760px) {
+.legacy .two-col { grid-template-columns: 1fr 1fr; }
+}
+.legacy .footer-note {
       text-align: center;
       font-size: .78rem;
-      color: var(--faint);
+      color: var(--muted);
       border-top: 1px solid var(--border);
       padding-top: 1.25rem;
       margin-top: 3rem;
     }
-
-    @media (max-width: 480px) {
-      body { padding: 1.25rem .75rem 4rem; }
-      .phone-screen { min-height: 0; }
-      .desktop-grid { grid-template-columns: 1fr; }
-    }
-  </style>
-</head>
-<body>
-  <button class="theme-toggle" id="themeToggle" title="Toggle light/dark preview" aria-label="Toggle light/dark preview">☾</button>
-
-  <div class="container">
-    <header class="page-head">
-      <span class="eyebrow">Draft · Plan mode</span>
-      <h1>Points Games &amp; Mobile Scoreboard</h1>
-      <p>Two open-ended scorekeeping games, plus a card-first session screen that works on a phone.</p>
-      <p class="meta">Cardz · drafted Nov 2026 · for visual iteration in build mode</p>
-    </header>
-
-    <nav class="toc">
-      <a href="#summary">Summary</a>
-      <a href="#games">New games</a>
-      <a href="#engine">Engine changes</a>
-      <a href="#lifecycle">Round lifecycle</a>
-      <a href="#ui">Mobile UI</a>
-      <a href="#mockups">Mockups</a>
-      <a href="#implementation">Implementation</a>
-      <a href="#testing">Testing</a>
-      <a href="#design-history">Design history</a>
-      <a href="#risks">Risks</a>
-    </nav>
-
-    <section id="summary">
-      <h2><span class="num">1</span>Summary &amp; decisions</h2>
+@media (max-width: 480px) {
+.legacy .phone-screen { min-height: 0; }
+.legacy .desktop-grid { grid-template-columns: 1fr; }
+}
+</style>
+<div class="legacy">
+<section id="summary">
+      <h2 id="1summary-decisions"><span class="num">1</span>Summary &amp; decisions</h2>
       <p>This plan adds two generic point-keeping games and replaces the wide round table on the session page with a mobile-first card layout.</p>
 
       <table class="data">
@@ -578,13 +436,13 @@
         </tbody>
       </table>
 
-      <div class="callout green">
+      <div class="callout check"><span class="label">Decided</span>
         <strong>What stays the same:</strong> Up &amp; Down and Pay Me keep their existing scoring rules, inputs, and auto-completion. The new card layout renders whatever player fields a game defines, so all four games share one session screen.
       </div>
     </section>
 
     <section id="games">
-      <h2><span class="num">2</span>The two new games</h2>
+      <h2 id="2the-two-new-games"><span class="num">2</span>The two new games</h2>
 
       <table class="data">
         <thead>
@@ -610,13 +468,13 @@
         </tbody>
       </table>
 
-      <h3>Picker copy</h3>
+      <h3 id="picker-copy">Picker copy</h3>
       <ul>
         <li><strong>High Score</strong> — “Keep score for any game where the highest total wins. Enter points each round, then finish whenever you like.”</li>
         <li><strong>Low Score</strong> — “Keep score for any game where the lowest total wins. Enter points each round, then finish whenever you like.”</li>
       </ul>
 
-      <h3>Implementation shape</h3>
+      <h3 id="implementation-shape">Implementation shape</h3>
       <p>Both games are the same module with a different win direction. A small factory keeps them in sync:</p>
       <pre><code>// src/games/points.ts
 function makePointsGame(
@@ -643,15 +501,15 @@ function makePointsGame(
 export const highScore = makePointsGame('high-score', 'high')
 export const lowScore  = makePointsGame('low-score',  'low')</code></pre>
 
-      <div class="callout amber">
+      <div class="callout warning"><span class="label">Caution</span>
         <strong>No config needed.</strong> Open-ended games do not need a round count at setup. The session starts at round 1 and the user decides when to stop.
       </div>
     </section>
 
     <section id="engine">
-      <h2><span class="num">3</span>Engine &amp; data changes</h2>
+      <h2 id="3engine-data-changes"><span class="num">3</span>Engine &amp; data changes</h2>
 
-      <h3>3.1 Game capability flags</h3>
+      <h3 id="3-1-game-capability-flags">3.1 Game capability flags</h3>
       <p>Add three optional capabilities to <code>CardGame</code> so the UI stops hardcoding game slugs:</p>
       <pre><code>// src/games/types.ts
 export interface CardGame {
@@ -670,7 +528,7 @@ export interface CardGame {
         <li><code>usesDealer</code> stops generic games from showing a meaningless dealer name. Existing games set it explicitly (Up &amp; Down: true).</li>
       </ul>
 
-      <h3>3.2 Session start</h3>
+      <h3 id="3-2-session-start">3.2 Session start</h3>
       <p><code>startSession</code> branches on <code>roundMode</code>:</p>
       <pre><code>if (gameImpl.roundMode === 'open') {
   // no round_configs, no total_rounds
@@ -683,7 +541,7 @@ export interface CardGame {
 }</code></pre>
       <p>Dealer assignment only happens when <code>gameImpl.usesDealer</code> is true.</p>
 
-      <h3>3.3 Finish game</h3>
+      <h3 id="3-3-finish-game">3.3 Finish game</h3>
       <p>New helper in <code>src/db/sessions.ts</code>:</p>
       <pre><code>export async function finishSession(sessionId: number): Promise&lt;void&gt; {
   // 1. Delete the trailing unscored round (if any).
@@ -695,7 +553,7 @@ export interface CardGame {
         <li>The Finish button is available for every active session, not just the new games. It is disabled until at least one round has been scored.</li>
       </ul>
 
-      <h3>3.4 Round submission</h3>
+      <h3 id="3-4-round-submission">3.4 Round submission</h3>
       <pre><code>// src/db/rounds.ts — after scores are inserted
 if (gameImpl.roundMode === 'open') {
   await db.rounds.add({
@@ -709,25 +567,25 @@ if (gameImpl.roundMode === 'open') {
 // fixed games: existing auto-complete / next-round logic</code></pre>
       <p><code>getCurrentRound</code> returns <code>{ complete: true }</code> immediately when <code>session.status === 'completed'</code>.</p>
 
-      <h3>3.5 Scoreboard query</h3>
+      <h3 id="3-5-scoreboard-query">3.5 Scoreboard query</h3>
       <ul>
         <li><code>maxRounds</code> becomes <code>Math.max(totalRounds, roundConfigs.length, rounds.length)</code> so open games still build score arrays.</li>
         <li>Load all scores for the session’s rounds in <strong>one query</strong> instead of one query per player per round. Open-ended games can grow long, so this keeps the screen fast.</li>
       </ul>
 
-      <h3>3.6 Seeding for existing installs</h3>
+      <h3 id="3-6-seeding-for-existing-installs">3.6 Seeding for existing installs</h3>
       <p><code>seedGames</code> currently returns early when the games table is non-empty, so existing users would never see the new games. Change it to insert only missing slugs:</p>
       <pre><code>const existing = await db.games.toArray()
 const existingSlugs = new Set(existing.map((g) =&gt; g.slug))
 const missing = GAME_SEEDS.filter((g) =&gt; !existingSlugs.has(g.slug))
 if (missing.length) await db.games.bulkAdd(missing)</code></pre>
-      <div class="callout">
+      <div class="callout note"><span class="label">Note</span>
         <strong>No Dexie schema bump needed.</strong> Win direction and round mode live in the game implementation registry, not in the database. The games table only gains two rows.
       </div>
     </section>
 
     <section id="lifecycle">
-      <h2><span class="num">4</span>Open-ended round lifecycle</h2>
+      <h2 id="4open-ended-round-lifecycle"><span class="num">4</span>Open-ended round lifecycle</h2>
       <p>Every open game keeps exactly one unscored “current” round in the database:</p>
       <ol>
         <li><strong>Start</strong> — round 1 is created with empty data.</li>
@@ -748,15 +606,15 @@ if (missing.length) await db.games.bulkAdd(missing)</code></pre>
         </tbody>
       </table>
 
-      <div class="callout amber">
+      <div class="callout warning"><span class="label">Caution</span>
         <strong>Edge case:</strong> finishing with zero scored rounds is blocked in the UI. Undo is available after completion so a mis-tap on Finish is recoverable.
       </div>
     </section>
 
     <section id="ui">
-      <h2><span class="num">5</span>Mobile-first card UI</h2>
+      <h2 id="5mobile-first-card-ui"><span class="num">5</span>Mobile-first card UI</h2>
 
-      <h3>5.1 Screen anatomy</h3>
+      <h3 id="5-1-screen-anatomy">5.1 Screen anatomy</h3>
       <ol>
         <li><strong>Session header</strong> — title and game name.</li>
         <li><strong>Round bar</strong> — “Round 7” (or “Round 7 of 11” for fixed games), plus <strong>Undo</strong> and <strong>Finish</strong> actions. Fixed games also get a thin progress bar.</li>
@@ -765,7 +623,7 @@ if (missing.length) await db.games.bulkAdd(missing)</code></pre>
         <li><strong>Sticky submit dock</strong> — one shared “Submit Round” button that stays reachable while entering scores.</li>
       </ol>
 
-      <h3>5.2 Player card</h3>
+      <h3 id="5-2-player-card">5.2 Player card</h3>
       <ul>
         <li><strong>Name + total</strong> — total is the visual anchor (large, bold).</li>
         <li><strong>This round</strong> — the game’s player-scope fields, rendered as large touch targets:
@@ -781,17 +639,17 @@ if (missing.length) await db.games.bulkAdd(missing)</code></pre>
         <li><strong>Winner</strong> — crown and amber card treatment when the game is complete. During play, the leader gets a subtle “Leading” pill (optional; see visual notes).</li>
       </ul>
 
-      <h3>5.3 Why this fixes the scrolling problem</h3>
+      <h3 id="5-3-why-this-fixes-the-scrolling-problem">5.3 Why this fixes the scrolling problem</h3>
       <div class="two-col">
-        <div class="callout red">
+        <div class="callout danger"><span class="label">Risk</span>
           <strong>Today:</strong> every round is a table column. An 11-round game is wider than a phone; a 20-round home game is much worse. The current round inputs also sit below the table, so users scroll sideways and vertically.
         </div>
-        <div class="callout green">
+        <div class="callout check"><span class="label">Decided</span>
           <strong>Proposed:</strong> rounds become per-player history inside a card. The current round is always the input in the card. Only the expanded history grows, and it wraps into rows instead of extending sideways.
         </div>
       </div>
 
-      <h3>5.4 Interaction details</h3>
+      <h3 id="5-4-interaction-details">5.4 Interaction details</h3>
       <ul>
         <li><strong>Sticky submit:</strong> <code>position: sticky; bottom: 0</code> with a blurred surface, safe-area bottom padding, and the error message above the button. It disappears when the game is complete.</li>
         <li><strong>Expand state:</strong> local to each card. Tapping “All rounds” toggles that player only; other cards stay compact.</li>
@@ -804,7 +662,7 @@ if (missing.length) await db.games.bulkAdd(missing)</code></pre>
     </section>
 
     <section id="mockups">
-      <h2><span class="num">6</span>Static mockups</h2>
+      <h2 id="6static-mockups"><span class="num">6</span>Static mockups</h2>
       <p>These are HTML approximations of the intended React layout, not final styling. Use the theme button in the top-right to compare light and dark.</p>
 
       <div class="mockup-row">
@@ -850,7 +708,7 @@ if (missing.length) await db.games.bulkAdd(missing)</code></pre>
                     </div>
                   </div>
                   <div class="recent-row">
-                    <div class="recent-chips"><span class="chip">R5 <b>5</b></span><span class="chip">R6 <b>12</b></span></div>
+                    <div class="recent-chips"><span class="wp-chip">R5 <b>5</b></span><span class="wp-chip">R6 <b>12</b></span></div>
                     <button class="expand-btn">All rounds ›</button>
                   </div>
                 </div>
@@ -869,7 +727,7 @@ if (missing.length) await db.games.bulkAdd(missing)</code></pre>
                     </div>
                   </div>
                   <div class="recent-row">
-                    <div class="recent-chips"><span class="chip">R5 <b>7</b></span><span class="chip">R6 <b>9</b></span></div>
+                    <div class="recent-chips"><span class="wp-chip">R5 <b>7</b></span><span class="wp-chip">R6 <b>9</b></span></div>
                     <button class="expand-btn">All rounds ›</button>
                   </div>
                 </div>
@@ -888,7 +746,7 @@ if (missing.length) await db.games.bulkAdd(missing)</code></pre>
                     </div>
                   </div>
                   <div class="recent-row">
-                    <div class="recent-chips"><span class="chip">R5 <b>11</b></span><span class="chip">R6 <b>10</b></span></div>
+                    <div class="recent-chips"><span class="wp-chip">R5 <b>11</b></span><span class="wp-chip">R6 <b>10</b></span></div>
                     <button class="expand-btn">All rounds ›</button>
                   </div>
                 </div>
@@ -948,7 +806,7 @@ if (missing.length) await db.games.bulkAdd(missing)</code></pre>
                     </div>
                   </div>
                   <div class="recent-row">
-                    <div class="recent-chips"><span class="chip">R5 <b>5</b></span><span class="chip">R6 <b>12</b></span></div>
+                    <div class="recent-chips"><span class="wp-chip">R5 <b>5</b></span><span class="wp-chip">R6 <b>12</b></span></div>
                     <button class="expand-btn">Hide rounds ⌃</button>
                   </div>
                   <div class="history-grid">
@@ -976,7 +834,7 @@ if (missing.length) await db.games.bulkAdd(missing)</code></pre>
                     </div>
                   </div>
                   <div class="recent-row">
-                    <div class="recent-chips"><span class="chip">R5 <b>7</b></span><span class="chip">R6 <b>9</b></span></div>
+                    <div class="recent-chips"><span class="wp-chip">R5 <b>7</b></span><span class="wp-chip">R6 <b>9</b></span></div>
                     <button class="expand-btn">All rounds ›</button>
                   </div>
                 </div>
@@ -1036,7 +894,7 @@ if (missing.length) await db.games.bulkAdd(missing)</code></pre>
                     </div>
                   </div>
                   <div class="recent-row">
-                    <div class="recent-chips"><span class="chip">R7 <b>3</b></span><span class="chip">R8 <b>6</b></span></div>
+                    <div class="recent-chips"><span class="wp-chip">R7 <b>3</b></span><span class="wp-chip">R8 <b>6</b></span></div>
                     <button class="expand-btn">All rounds ›</button>
                   </div>
                 </div>
@@ -1049,7 +907,7 @@ if (missing.length) await db.games.bulkAdd(missing)</code></pre>
                     </div>
                   </div>
                   <div class="recent-row">
-                    <div class="recent-chips"><span class="chip">R7 <b>8</b></span><span class="chip">R8 <b>4</b></span></div>
+                    <div class="recent-chips"><span class="wp-chip">R7 <b>8</b></span><span class="wp-chip">R8 <b>4</b></span></div>
                     <button class="expand-btn">All rounds ›</button>
                   </div>
                 </div>
@@ -1062,7 +920,7 @@ if (missing.length) await db.games.bulkAdd(missing)</code></pre>
                     </div>
                   </div>
                   <div class="recent-row">
-                    <div class="recent-chips"><span class="chip">R7 <b>9</b></span><span class="chip">R8 <b>7</b></span></div>
+                    <div class="recent-chips"><span class="wp-chip">R7 <b>9</b></span><span class="wp-chip">R8 <b>7</b></span></div>
                     <button class="expand-btn">All rounds ›</button>
                   </div>
                 </div>
@@ -1131,7 +989,7 @@ if (missing.length) await db.games.bulkAdd(missing)</code></pre>
                     </div>
                   </div>
                   <div class="recent-row">
-                    <div class="recent-chips"><span class="chip">R2 <span style="color:var(--red)">♥</span> <b>12</b></span><span class="chip">R3 <span style="color:var(--text)">♠</span> <b>0</b></span></div>
+                    <div class="recent-chips"><span class="wp-chip">R2 <span style="color:var(--danger)">♥</span> <b>12</b></span><span class="wp-chip">R3 <span style="color:var(--text)">♠</span> <b>0</b></span></div>
                     <button class="expand-btn">All rounds ›</button>
                   </div>
                 </div>
@@ -1154,7 +1012,7 @@ if (missing.length) await db.games.bulkAdd(missing)</code></pre>
                     </div>
                   </div>
                   <div class="recent-row">
-                    <div class="recent-chips"><span class="chip">R2 <span style="color:var(--red)">♥</span> <b>11</b></span><span class="chip">R3 <span style="color:var(--text)">♠</span> <b>0</b></span></div>
+                    <div class="recent-chips"><span class="wp-chip">R2 <span style="color:var(--danger)">♥</span> <b>11</b></span><span class="wp-chip">R3 <span style="color:var(--text)">♠</span> <b>0</b></span></div>
                     <button class="expand-btn">All rounds ›</button>
                   </div>
                 </div>
@@ -1173,7 +1031,7 @@ if (missing.length) await db.games.bulkAdd(missing)</code></pre>
         </div>
       </div>
 
-      <h3>Desktop layout</h3>
+      <h3 id="desktop-layout">Desktop layout</h3>
       <div class="desktop-frame">
         <div class="desktop-chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
         <div class="desktop-body">
@@ -1201,7 +1059,7 @@ if (missing.length) await db.games.bulkAdd(missing)</code></pre>
                 <input class="score-input" value="8" inputmode="numeric" aria-label="Alice points">
               </div>
               <div class="recent-row">
-                <div class="recent-chips"><span class="chip">R5 <b>5</b></span><span class="chip">R6 <b>12</b></span></div>
+                <div class="recent-chips"><span class="wp-chip">R5 <b>5</b></span><span class="wp-chip">R6 <b>12</b></span></div>
                 <button class="expand-btn">All rounds ›</button>
               </div>
             </div>
@@ -1217,7 +1075,7 @@ if (missing.length) await db.games.bulkAdd(missing)</code></pre>
                 <input class="score-input" placeholder="0" inputmode="numeric" aria-label="Bob points">
               </div>
               <div class="recent-row">
-                <div class="recent-chips"><span class="chip">R5 <b>7</b></span><span class="chip">R6 <b>9</b></span></div>
+                <div class="recent-chips"><span class="wp-chip">R5 <b>7</b></span><span class="wp-chip">R6 <b>9</b></span></div>
                 <button class="expand-btn">All rounds ›</button>
               </div>
             </div>
@@ -1233,7 +1091,7 @@ if (missing.length) await db.games.bulkAdd(missing)</code></pre>
                 <input class="score-input" placeholder="0" inputmode="numeric" aria-label="Carol points">
               </div>
               <div class="recent-row">
-                <div class="recent-chips"><span class="chip">R5 <b>11</b></span><span class="chip">R6 <b>10</b></span></div>
+                <div class="recent-chips"><span class="wp-chip">R5 <b>11</b></span><span class="wp-chip">R6 <b>10</b></span></div>
                 <button class="expand-btn">All rounds ›</button>
               </div>
             </div>
@@ -1250,10 +1108,10 @@ if (missing.length) await db.games.bulkAdd(missing)</code></pre>
     </section>
 
     <section id="implementation">
-      <h2><span class="num">7</span>Implementation plan</h2>
+      <h2 id="7implementation-plan"><span class="num">7</span>Implementation plan</h2>
       <p>Suggested order. Each phase leaves the app buildable.</p>
 
-      <h3>Phase A — game engine &amp; data</h3>
+      <h3 id="phase-a-game-engine-data">Phase A — game engine &amp; data</h3>
       <ul class="checklist">
         <li>Add <code>scoreDirection</code>, <code>roundMode</code>, <code>usesDealer</code> to <code>CardGame</code>.</li>
         <li>Set <code>scoreDirection</code> on Up &amp; Down (high) and Pay Me (low); set <code>usesDealer: true</code> on Up &amp; Down.</li>
@@ -1266,7 +1124,7 @@ if (missing.length) await db.games.bulkAdd(missing)</code></pre>
         <li>Optimise scoreboard score loading to one query.</li>
       </ul>
 
-      <h3>Phase B — session page rewrite</h3>
+      <h3 id="phase-b-session-page-rewrite">Phase B — session page rewrite</h3>
       <ul class="checklist">
         <li>Replace the wide table with the card grid and sticky submit dock.</li>
         <li>Extract <code>PlayerCard</code> (name, total, current inputs, recent chips, expandable history).</li>
@@ -1279,14 +1137,14 @@ if (missing.length) await db.games.bulkAdd(missing)</code></pre>
         <li>Ensure 44px touch targets, <code>inputMode="numeric"</code>, and no horizontal overflow at 390px.</li>
       </ul>
 
-      <h3>Phase C — new-session &amp; home polish</h3>
+      <h3 id="phase-c-new-session-home-polish">Phase C — new-session &amp; home polish</h3>
       <ul class="checklist">
         <li>Gate the First Dealer section on <code>usesDealer</code> instead of the Up &amp; Down slug.</li>
         <li>Verify the game picker handles games with empty <code>config_schema</code>.</li>
         <li>Optional: add <code>inputMode="numeric"</code> to numeric setup fields.</li>
       </ul>
 
-      <h3>Phase D — Playwright &amp; design history</h3>
+      <h3 id="phase-d-playwright-design-history">Phase D — Playwright &amp; design history</h3>
       <ul class="checklist">
         <li>Add <code>@playwright/test</code>, <code>playwright.config.ts</code>, mobile/desktop projects, and the package scripts.</li>
         <li>Gate the PWA dev service worker behind <code>!process.env.PLAYWRIGHT</code> so tests are not cached.</li>
@@ -1297,7 +1155,7 @@ if (missing.length) await db.games.bulkAdd(missing)</code></pre>
         <li>Add <code>.github/workflows/test.yml</code> and update <code>.gitignore</code>.</li>
       </ul>
 
-      <h3>Phase E — verification</h3>
+      <h3 id="phase-e-verification">Phase E — verification</h3>
       <ul class="checklist">
         <li><code>npm run build</code> passes (TypeScript + Vite).</li>
         <li><code>npm test</code> passes on both mobile and desktop projects.</li>
@@ -1310,10 +1168,10 @@ if (missing.length) await db.games.bulkAdd(missing)</code></pre>
     </section>
 
     <section id="testing">
-      <h2><span class="num">8</span>Testing &amp; design history with Playwright</h2>
+      <h2 id="8testing-design-history-with-playwright"><span class="num">8</span>Testing &amp; design history with Playwright</h2>
       <p>Playwright gives us two things at once: functional end-to-end coverage of the new game flows, and committed screenshots that act as both a regression guard and a browsable record of the design.</p>
 
-      <div class="callout green">
+      <div class="callout check"><span class="label">Decided</span>
         <strong>Two layers:</strong>
         <ul style="margin-bottom:0">
           <li><strong>Regression baselines</strong> — <code>toHaveScreenshot()</code> assertions in <code>tests/visual/</code>. CI fails on an unexpected visual diff.</li>
@@ -1321,7 +1179,7 @@ if (missing.length) await db.games.bulkAdd(missing)</code></pre>
         </ul>
       </div>
 
-      <h3>8.1 Setup</h3>
+      <h3 id="8-1-setup">8.1 Setup</h3>
       <ul>
         <li>Add <code>@playwright/test</code> as a dev dependency and install Chromium (<code>npx playwright install --with-deps chromium</code>).</li>
         <li>Two projects: <strong>mobile-chrome</strong> (Pixel 7) and <strong>desktop-chrome</strong> (1280×800). Use <code>deviceScaleFactor: 1</code> so snapshots stay small and stable.</li>
@@ -1384,7 +1242,7 @@ export default defineConfig({
 
       <p>Add <code>test-results/</code>, <code>playwright-report/</code>, <code>blob-report/</code>, and <code>playwright/.cache/</code> to <code>.gitignore</code>. Commit the visual baselines and the design-history gallery.</p>
 
-      <h3>8.2 Functional e2e coverage</h3>
+      <h3 id="8-2-functional-e2e-coverage">8.2 Functional e2e coverage</h3>
       <table class="data">
         <thead>
           <tr><th>Spec</th><th>Covers</th></tr>
@@ -1413,7 +1271,7 @@ export default defineConfig({
         </tbody>
       </table>
 
-      <h3>8.3 Visual regression snapshots</h3>
+      <h3 id="8-3-visual-regression-snapshots">8.3 Visual regression snapshots</h3>
       <p><code>tests/visual/session.spec.ts</code> builds a deterministic session through the UI, then asserts screenshots:</p>
       <ul>
         <li><strong>Active High Score, collapsed</strong> — mobile and desktop.</li>
@@ -1435,15 +1293,23 @@ export default defineConfig({
 
       <h3 id="design-history">8.4 Design history gallery</h3>
       <p>The visual regression baselines are machine-oriented. For a human-readable history, a separate capture spec writes a dated gallery:</p>
-      <pre><code>docs/design-history/
-├── index.html                 # timeline, newest first
-└── 2026-11-01/
-    ├── high-score-active-mobile-light.jpg
-    ├── high-score-active-desktop-light.jpg
-    ├── high-score-expanded-mobile-light.jpg
-    ├── low-score-complete-mobile-light.jpg
-    ├── up-and-down-active-mobile-light.jpg
-    └── ...dark variants</code></pre>
+      <ul class="tree">
+  <li class="folder">docs/design-history/
+    <ul>
+      <li>index.html <span class="tree-note">timeline, newest first</span></li>
+      <li class="folder">2026-11-01/
+        <ul>
+          <li>high-score-active-mobile-light.jpg</li>
+          <li>high-score-active-desktop-light.jpg</li>
+          <li>high-score-expanded-mobile-light.jpg</li>
+          <li>low-score-complete-mobile-light.jpg</li>
+          <li>up-and-down-active-mobile-light.jpg</li>
+          <li>… <span class="tree-note">dark variants</span></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
       <ul>
         <li><code>tests/design-history/capture.spec.ts</code> uses a separate <code>playwright.design.config.ts</code> so it is excluded from the normal test run. The design config reuses the same <code>use</code>/<code>webServer</code> settings and points <code>testDir</code> at <code>./tests/design-history</code>.</li>
         <li><code>npm run design:capture</code> captures the key screens at mobile + desktop and light + dark, writes them into <code>docs/design-history/&lt;YYYY-MM-DD&gt;/</code> as JPEGs (quality ~85 to keep the repo small), and regenerates <code>docs/design-history/index.html</code>.</li>
@@ -1451,11 +1317,11 @@ export default defineConfig({
         <li>The index is a simple static page: date headings, a grid of thumbnails, and links to full-size images. It can be opened directly from the repo or published later.</li>
       </ul>
 
-      <div class="callout">
+      <div class="callout note"><span class="label">Note</span>
         <strong>Why both?</strong> Baselines answer “did the UI change unexpectedly?” The gallery answers “what did the UI look like last month?” Playwright is the engine for both, so there is no second screenshot tool to maintain.
       </div>
 
-      <h3>8.5 Deterministic fixtures &amp; accessible selectors</h3>
+      <h3 id="8-5-deterministic-fixtures-accessible-selectors">8.5 Deterministic fixtures &amp; accessible selectors</h3>
       <ul>
         <li><code>tests/helpers/fixtures.ts</code> exposes <code>createSession()</code>, <code>submitRound()</code>, <code>finishGame()</code>, <code>expandHistory()</code>, and <code>setTheme()</code>. Each Playwright test gets a fresh browser context and therefore a fresh IndexedDB, so no cleanup is needed.</li>
         <li>Prefer accessible selectors over CSS classes:
@@ -1470,7 +1336,7 @@ export default defineConfig({
         <li>For the Finish confirmation, keep the existing <code>confirm()</code> dialog and accept it in Playwright via <code>page.on('dialog', d =&gt; d.accept())</code>. If we later replace it with an inline modal, update the fixture helper.</li>
       </ul>
 
-      <h3>8.6 CI</h3>
+      <h3 id="8-6-ci">8.6 CI</h3>
       <p>Add <code>.github/workflows/test.yml</code> for pull requests and pushes to <code>main</code>:</p>
       <pre><code>name: Test
 on:
@@ -1503,7 +1369,7 @@ jobs:
         <li>If desired later, move the test job into <code>deploy.yml</code> and add <code>needs: test</code> to the deploy job for a hard gate.</li>
       </ul>
 
-      <h3>8.7 Test scenarios</h3>
+      <h3 id="8-7-test-scenarios">8.7 Test scenarios</h3>
       <table class="data">
         <thead>
           <tr><th>Scenario</th><th>Expected</th></tr>
@@ -1558,7 +1424,7 @@ jobs:
     </section>
 
     <section id="risks">
-      <h2><span class="num">9</span>Risks &amp; edge cases</h2>
+      <h2 id="9risks-edge-cases"><span class="num">9</span>Risks &amp; edge cases</h2>
       <ul>
         <li><strong>Seed migration:</strong> insert only missing slugs. Never wipe or overwrite existing game rows, sessions, or players.</li>
         <li><strong>Open-mode completion:</strong> <code>total_rounds: 0</code> must not make the scoreboard empty. Use <code>rounds.length</code> in the max-rounds calculation.</li>
@@ -1575,7 +1441,7 @@ jobs:
     </section>
 
     <section id="iteration">
-      <h2><span class="num">10</span>Visual iteration notes</h2>
+      <h2 id="10visual-iteration-notes"><span class="num">10</span>Visual iteration notes</h2>
       <p>Once we switch to build mode, these are the things worth trying on a real phone before locking the design:</p>
       <ul>
         <li><strong>Card density:</strong> decided — one card per row at every screen size. The list is width-capped on desktop rather than switching to multiple columns.</li>
@@ -1588,7 +1454,7 @@ jobs:
         <li><strong>Points input:</strong> plain number input vs. number input with quick +/- steppers for common values.</li>
       </ul>
 
-      <div class="callout green">
+      <div class="callout check"><span class="label">Decided</span>
         <strong>Next step:</strong> switch to build mode. I’ll implement Phase A first so both new games are playable, then iterate the card visuals against the mockups on a real viewport. Once the visuals settle, Phase D locks in the Playwright e2e suite, the visual baselines, and the first design-history capture.
       </div>
     </section>
@@ -1596,25 +1462,15 @@ jobs:
     <div class="footer-note">
       Cardz plan · static HTML mockup · open in a browser and use the ☾/☀ button to preview dark mode.
     </div>
-  </div>
-
-  <script>
-    (function () {
-      var root = document.documentElement;
-      var btn = document.getElementById('themeToggle');
-      var stored = localStorage.getItem('cardz-plan-theme');
-      if (stored) root.setAttribute('data-theme', stored);
-      function sync() {
-        btn.textContent = root.getAttribute('data-theme') === 'dark' ? '☀' : '☾';
-      }
-      sync();
-      btn.addEventListener('click', function () {
-        var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-        root.setAttribute('data-theme', next);
-        localStorage.setItem('cardz-plan-theme', next);
-        sync();
-      });
-    })();
-  </script>
+</div>
+<!-- /docs:content -->
+<nav class="docs-pager" aria-label="Previous and next">
+<a class="prev" href="../design-history/index.html"><span class="dir">Previous</span>Design history</a>
+<a class="next" href="../planning/idb-vs-dexie-comparison.html"><span class="dir">Next</span>idb vs Dexie.js comparison</a>
+</nav>
+</article>
+<aside class="docs-toc" aria-label="On this page"></aside>
+</main>
+</div>
 </body>
 </html>

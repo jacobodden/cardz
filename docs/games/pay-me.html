@@ -1,61 +1,110 @@
 <!doctype html>
+<!-- Generated around the content block by docs-sync (~/development/.tools).
+     Edit only between docs:content markers, then run docs-sync. -->
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Pay Me — Cardz rules</title>
-  <link rel="stylesheet" href="../assets/docs.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pay Me · Cardz</title>
+<meta name="description" content="An 11-round Contract Rummy game for 2 to 6 players. Lowest score wins.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap">
+<link rel="stylesheet" href="../assets/docs.css">
+<script src="../assets/docs.js"></script>
 </head>
 <body>
-  <header class="band">
-    <div class="wrap">
-      <p class="crumbs"><a href="../index.html">Cardz docs</a> / <a href="index.html">Games</a></p>
-      <h1>Pay Me</h1>
-      <p class="lede">An 11-round Contract Rummy game for 2 to 6 players. Lowest score wins.</p>
-    </div>
-  </header>
-  <main class="wrap">
-    <h2>Description</h2>
-    <p>Players build melds to empty their hands. Hand sizes grow by one card each round, from 3 to 13 cards, and the wild card changes every round to match the number of cards in play.</p>
+<a class="skip" href="#main">Skip to content</a>
+<header class="docs-header">
+  <a class="docs-brand" href="../index.html"><span class="name">Cardz</span><span class="tagline">Scorekeeping for card games</span></a>
+  <span class="spacer"></span>
+  <button class="menu-button" type="button" aria-expanded="false" aria-controls="docs-nav">Menu</button>
+  <div class="segmented" role="radiogroup" aria-label="Theme">
+    <button type="button" role="radio" data-theme-choice="auto" aria-checked="true">Auto</button>
+    <button type="button" role="radio" data-theme-choice="light" aria-checked="false">Light</button>
+    <button type="button" role="radio" data-theme-choice="dark" aria-checked="false">Dark</button>
+  </div>
+</header>
+<div class="docs-shell">
+<nav class="docs-nav" id="docs-nav" aria-label="Pages">
+  <p class="group">Guide</p>
+  <ul>
+    <li><a href="../index.html">Overview</a></li>
+    <li><a href="../architecture.html">Architecture</a></li>
+  </ul>
+  <p class="group">Games</p>
+  <ul>
+    <li><a href="../games/index.html">Games</a></li>
+    <li><a href="../games/up-and-down.html">Up and Down the River</a></li>
+    <li><a href="../games/pay-me.html" aria-current="page">Pay Me</a></li>
+    <li><a href="../games/high-score.html">High Score</a></li>
+    <li><a href="../games/low-score.html">Low Score</a></li>
+  </ul>
+  <p class="group">Project</p>
+  <ul>
+    <li><a href="../design-history/index.html">Design history</a></li>
+  </ul>
+  <p class="group">Planning notes</p>
+  <ul>
+    <li><a href="../planning/cardz-points-and-mobile-plan.html">Points games and mobile plan</a></li>
+    <li><a href="../planning/idb-vs-dexie-comparison.html">idb vs Dexie.js comparison</a></li>
+    <li><a href="../planning/storage-refactor-comparison.html">Storage refactor comparison</a></li>
+  </ul>
+</nav>
+<main class="docs-page" id="main">
+<article class="docs-content">
+<!-- docs:content -->
+<h1>Pay Me</h1>
+<p class="lede">An 11-round Contract Rummy game for 2 to 6 players. Lowest score wins.</p>
+<h2 id="description">Description</h2>
+<p>Players build melds to empty their hands. Hand sizes grow by one card each round, from 3 to 13 cards, and the wild card changes every round to match the number of cards in play.</p>
 
-    <h2>Setup</h2>
-    <h3>Deck</h3>
-    <p>Use one standard deck for 2 players, two decks for 3–4, or three decks for 5–6. Jokers are omitted.</p>
-    <h3>Table</h3>
-    <p>Place the remaining deck in the center as a draw pile and flip the top card face up to start the discard pile.</p>
-    <h3>Wilds</h3>
-    <p>All cards matching the round's hand size are wild. Round 1 deals 3 cards, so threes are wild; round 11 deals 13 cards, so kings are wild.</p>
+<h2 id="setup">Setup</h2>
+<h3 id="deck">Deck</h3>
+<p>Use one standard deck for 2 players, two decks for 3–4, or three decks for 5–6. Jokers are omitted.</p>
+<h3 id="table">Table</h3>
+<p>Place the remaining deck in the center as a draw pile and flip the top card face up to start the discard pile.</p>
+<h3 id="wilds">Wilds</h3>
+<p>All cards matching the round's hand size are wild. Round 1 deals 3 cards, so threes are wild; round 11 deals 13 cards, so kings are wild.</p>
 
-    <h2>Gameplay</h2>
-    <h3>Dealing</h3>
-    <p>The first hand deals 3 cards to each player. Each later round adds 1 more card, peaking at 13 cards in round 11.</p>
-    <h3>Turns</h3>
-    <p>On your turn, draw either the top face-up card from the discard pile or the top card from the stock pile.</p>
-    <h3>Melding</h3>
-    <p>If you have valid melds (a set of 3 or more of a kind, or a run of 3 or more consecutive cards in the same suit), you can lay them on the table.</p>
-    <h3>Discarding</h3>
-    <p>End your turn by discarding one card face up.</p>
+<h2 id="gameplay">Gameplay</h2>
+<h3 id="dealing">Dealing</h3>
+<p>The first hand deals 3 cards to each player. Each later round adds 1 more card, peaking at 13 cards in round 11.</p>
+<h3 id="turns">Turns</h3>
+<p>On your turn, draw either the top face-up card from the discard pile or the top card from the stock pile.</p>
+<h3 id="melding">Melding</h3>
+<p>If you have valid melds (a set of 3 or more of a kind, or a run of 3 or more consecutive cards in the same suit), you can lay them on the table.</p>
+<h3 id="discarding">Discarding</h3>
+<p>End your turn by discarding one card face up.</p>
 
-    <h2>Going out</h2>
-    <p>When you can lay down your entire hand, say “Pay Me”. Every other player may draw one more card to try to finish melding their hand. You then lay down your melded hand, and the other players may play off it with any unmelded cards in their own hand, for example:</p>
-    <ul>
-      <li>adding another 4 to your set of fours;</li>
-      <li>adding the 9♣ to your run of 5♣ 6♣ 7♣ 8♣ (it must match the suit).</li>
-    </ul>
+<h2 id="going-out">Going out</h2>
+<p>When you can lay down your entire hand, say “Pay Me”. Every other player may draw one more card to try to finish melding their hand. You then lay down your melded hand, and the other players may play off it with any unmelded cards in their own hand, for example:</p>
+<ul>
+  <li>adding another 4 to your set of fours;</li>
+  <li>adding the 9♣ to your run of 5♣ 6♣ 7♣ 8♣ (it must match the suit).</li>
+</ul>
 
-    <h2>Scoring</h2>
-    <p>Each player scores the value of the cards left in their hand:</p>
-    <div class="table-scroll">
-      <table>
-        <thead><tr><th>Card</th><th>Points</th></tr></thead>
-        <tbody>
-          <tr><td>Jack, Queen, King</td><td>10</td></tr>
-          <tr><td>Ace</td><td>1</td></tr>
-          <tr><td>2–10</td><td>Face value</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <p>The player with the lowest total after all 11 rounds wins the pot.</p>
-  </main>
+<h2 id="scoring">Scoring</h2>
+<p>Each player scores the value of the cards left in their hand:</p>
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Card</th><th>Points</th></tr></thead>
+    <tbody>
+      <tr><td>Jack, Queen, King</td><td>10</td></tr>
+      <tr><td>Ace</td><td>1</td></tr>
+      <tr><td>2–10</td><td>Face value</td></tr>
+    </tbody>
+  </table>
+</div>
+<p>The player with the lowest total after all 11 rounds wins the pot.</p>
+<!-- /docs:content -->
+<nav class="docs-pager" aria-label="Previous and next">
+<a class="prev" href="../games/up-and-down.html"><span class="dir">Previous</span>Up and Down the River</a>
+<a class="next" href="../games/high-score.html"><span class="dir">Next</span>High Score</a>
+</nav>
+</article>
+<aside class="docs-toc" aria-label="On this page"></aside>
+</main>
+</div>
 </body>
 </html>

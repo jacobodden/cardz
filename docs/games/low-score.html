@@ -1,39 +1,88 @@
 <!doctype html>
+<!-- Generated around the content block by docs-sync (~/development/.tools).
+     Edit only between docs:content markers, then run docs-sync. -->
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Low Score — Cardz rules</title>
-  <link rel="stylesheet" href="../assets/docs.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Low Score · Cardz</title>
+<meta name="description" content="A generic scorekeeper for any game where the lowest total wins.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap">
+<link rel="stylesheet" href="../assets/docs.css">
+<script src="../assets/docs.js"></script>
 </head>
 <body>
-  <header class="band">
-    <div class="wrap">
-      <p class="crumbs"><a href="../index.html">Cardz docs</a> / <a href="index.html">Games</a></p>
-      <h1>Low Score</h1>
-      <p class="lede">A generic scorekeeper for any game where the lowest total wins.</p>
-    </div>
-  </header>
-  <main class="wrap">
-    <h2>Description</h2>
-    <p>Low Score is not a card game itself. It tracks points across an open-ended number of rounds for any game where the lowest total wins.</p>
+<a class="skip" href="#main">Skip to content</a>
+<header class="docs-header">
+  <a class="docs-brand" href="../index.html"><span class="name">Cardz</span><span class="tagline">Scorekeeping for card games</span></a>
+  <span class="spacer"></span>
+  <button class="menu-button" type="button" aria-expanded="false" aria-controls="docs-nav">Menu</button>
+  <div class="segmented" role="radiogroup" aria-label="Theme">
+    <button type="button" role="radio" data-theme-choice="auto" aria-checked="true">Auto</button>
+    <button type="button" role="radio" data-theme-choice="light" aria-checked="false">Light</button>
+    <button type="button" role="radio" data-theme-choice="dark" aria-checked="false">Dark</button>
+  </div>
+</header>
+<div class="docs-shell">
+<nav class="docs-nav" id="docs-nav" aria-label="Pages">
+  <p class="group">Guide</p>
+  <ul>
+    <li><a href="../index.html">Overview</a></li>
+    <li><a href="../architecture.html">Architecture</a></li>
+  </ul>
+  <p class="group">Games</p>
+  <ul>
+    <li><a href="../games/index.html">Games</a></li>
+    <li><a href="../games/up-and-down.html">Up and Down the River</a></li>
+    <li><a href="../games/pay-me.html">Pay Me</a></li>
+    <li><a href="../games/high-score.html">High Score</a></li>
+    <li><a href="../games/low-score.html" aria-current="page">Low Score</a></li>
+  </ul>
+  <p class="group">Project</p>
+  <ul>
+    <li><a href="../design-history/index.html">Design history</a></li>
+  </ul>
+  <p class="group">Planning notes</p>
+  <ul>
+    <li><a href="../planning/cardz-points-and-mobile-plan.html">Points games and mobile plan</a></li>
+    <li><a href="../planning/idb-vs-dexie-comparison.html">idb vs Dexie.js comparison</a></li>
+    <li><a href="../planning/storage-refactor-comparison.html">Storage refactor comparison</a></li>
+  </ul>
+</nav>
+<main class="docs-page" id="main">
+<article class="docs-content">
+<!-- docs:content -->
+<h1>Low Score</h1>
+<p class="lede">A generic scorekeeper for any game where the lowest total wins.</p>
+<h2 id="description">Description</h2>
+<p>Low Score is not a card game itself. It tracks points across an open-ended number of rounds for any game where the lowest total wins.</p>
 
-    <h2>Setup</h2>
-    <ul>
-      <li>Players: 2 to 10.</li>
-      <li>No game-specific configuration is required.</li>
-      <li>Optionally pick the <strong>First dealer</strong> (the first player by default).</li>
-    </ul>
+<h2 id="setup">Setup</h2>
+<ul>
+  <li>Players: 2 to 10.</li>
+  <li>No game-specific configuration is required.</li>
+  <li>Optionally pick the <strong>First dealer</strong> (the first player by default).</li>
+</ul>
 
-    <h2>Gameplay</h2>
-    <p>Each round, enter the points each player earned. Negative points are allowed, so penalties and bonuses can both be recorded. Press <strong>Submit round</strong> to save the round and move to the next one.</p>
-    <p>The dealer's card shows a solid <strong>D</strong>, and the round line names them. After each round the deal passes to the next player. Tap the faint <strong>D</strong> on any other player's card to make them the dealer instead, for example when the deal goes out of turn. <strong>Undo</strong> brings back the undone round's dealer too.</p>
+<h2 id="gameplay">Gameplay</h2>
+<p>Each round, enter the points each player earned. Negative points are allowed, so penalties and bonuses can both be recorded. Press <strong>Submit round</strong> to save the round and move to the next one.</p>
+<p>The dealer's card shows a solid <strong>D</strong>, and the round line names them. After each round the deal passes to the next player. Tap the faint <strong>D</strong> on any other player's card to make them the dealer instead, for example when the deal goes out of turn. <strong>Undo</strong> brings back the undone round's dealer too.</p>
 
-    <h2>Scoring</h2>
-    <p>A player's total is the sum of all their round scores. The lowest total wins.</p>
+<h2 id="scoring">Scoring</h2>
+<p>A player's total is the sum of all their round scores. The lowest total wins.</p>
 
-    <h2>Ending the game</h2>
-    <p>There is no fixed round count. Press <strong>Finish game</strong> whenever you are done. The trailing unscored round is discarded, and the final standings are shown. <strong>Undo</strong> reopens the game if you finish too early.</p>
-  </main>
+<h2 id="ending-the-game">Ending the game</h2>
+<p>There is no fixed round count. Press <strong>Finish game</strong> whenever you are done. The trailing unscored round is discarded, and the final standings are shown. <strong>Undo</strong> reopens the game if you finish too early.</p>
+<!-- /docs:content -->
+<nav class="docs-pager" aria-label="Previous and next">
+<a class="prev" href="../games/high-score.html"><span class="dir">Previous</span>High Score</a>
+<a class="next" href="../design-history/index.html"><span class="dir">Next</span>Design history</a>
+</nav>
+</article>
+<aside class="docs-toc" aria-label="On this page"></aside>
+</main>
+</div>
 </body>
 </html>

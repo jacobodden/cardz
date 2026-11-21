@@ -1,93 +1,105 @@
-<!DOCTYPE html>
+<!doctype html>
+<!-- Generated around the content block by docs-sync (~/development/.tools).
+     Edit only between docs:content markers, then run docs-sync. -->
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cardz-local — idb vs Dexie.js Comparison</title>
-  <style>
-    :root {
-      --bg: #f5f5f0;
-      --surface: #ffffff;
-      --text: #1a1a1a;
-      --muted: #6b6b6b;
-      --border: #d4d4c8;
-      --accent-idb: #7c3aed;
-      --accent-dexie: #0891b2;
-      --pro-bg: #ecfdf5;
-      --pro-border: #6ee7b7;
-      --con-bg: #fef2f2;
-      --con-border: #fca5a5;
-      --code-bg: #1e293b;
-      --code-fg: #e2e8f0;
-    }
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-      padding: 2rem 1rem;
-    }
-    .container { max-width: 1100px; margin: 0 auto; }
-
-    header {
-      text-align: center;
-      margin-bottom: 3rem;
-    }
-    header h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; }
-    header p { color: var(--muted); margin-top: 0.5rem; font-size: 1.05rem; }
-    header .meta { margin-top: 0.75rem; font-size: 0.85rem; color: var(--muted); }
-    header .decision {
-      display: inline-block;
-      margin-top: 1rem;
-      padding: 0.5rem 1.25rem;
-      background: #ecfdf5;
-      border: 1px solid #6ee7b7;
-      border-radius: 8px;
-      font-size: 0.88rem;
-    }
-
-    /* At-a-glance row */
-    .atg {
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>idb vs Dexie.js comparison · Cardz</title>
+<meta name="description" content="Choosing a wrapper for client-only IndexedDB storage in cardz-local">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap">
+<link rel="stylesheet" href="../assets/docs.css">
+<script src="../assets/docs.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="docs-header">
+  <a class="docs-brand" href="../index.html"><span class="name">Cardz</span><span class="tagline">Scorekeeping for card games</span></a>
+  <span class="spacer"></span>
+  <button class="menu-button" type="button" aria-expanded="false" aria-controls="docs-nav">Menu</button>
+  <div class="segmented" role="radiogroup" aria-label="Theme">
+    <button type="button" role="radio" data-theme-choice="auto" aria-checked="true">Auto</button>
+    <button type="button" role="radio" data-theme-choice="light" aria-checked="false">Light</button>
+    <button type="button" role="radio" data-theme-choice="dark" aria-checked="false">Dark</button>
+  </div>
+</header>
+<div class="docs-shell">
+<nav class="docs-nav" id="docs-nav" aria-label="Pages">
+  <p class="group">Guide</p>
+  <ul>
+    <li><a href="../index.html">Overview</a></li>
+    <li><a href="../architecture.html">Architecture</a></li>
+  </ul>
+  <p class="group">Games</p>
+  <ul>
+    <li><a href="../games/index.html">Games</a></li>
+    <li><a href="../games/up-and-down.html">Up and Down the River</a></li>
+    <li><a href="../games/pay-me.html">Pay Me</a></li>
+    <li><a href="../games/high-score.html">High Score</a></li>
+    <li><a href="../games/low-score.html">Low Score</a></li>
+  </ul>
+  <p class="group">Project</p>
+  <ul>
+    <li><a href="../design-history/index.html">Design history</a></li>
+  </ul>
+  <p class="group">Planning notes</p>
+  <ul>
+    <li><a href="../planning/cardz-points-and-mobile-plan.html">Points games and mobile plan</a></li>
+    <li><a href="../planning/idb-vs-dexie-comparison.html" aria-current="page">idb vs Dexie.js comparison</a></li>
+    <li><a href="../planning/storage-refactor-comparison.html">Storage refactor comparison</a></li>
+  </ul>
+</nav>
+<main class="docs-page" id="main">
+<article class="docs-content">
+<!-- docs:content -->
+<h1>idb vs Dexie.js comparison</h1>
+<p class="lede">Choosing a wrapper for client-only IndexedDB storage in cardz-local</p>
+<p>Decision context: offline-first, single-device, no server sync | July 2026</p>
+<p>Previous decision: migrate from Express+SQLite to client-side IndexedDB</p>
+<div class="callout note"><span class="label">Archived</span>
+<p>A write-up from an earlier decision, kept for reference. It describes the options at the time, not necessarily the current code.</p>
+</div>
+<style>
+.legacy *::before, .legacy *::after { box-sizing: border-box; margin: 0; padding: 0; }
+.legacy .atg {
       display: grid;
       grid-template-columns: 1fr;
       gap: 1rem;
       margin-bottom: 2rem;
     }
-    @media (min-width: 800px) {
-      .atg { grid-template-columns: 1fr 1fr 1fr; }
-    }
-    .atg-item {
+@media (min-width: 800px) {
+.legacy .atg { grid-template-columns: 1fr 1fr 1fr; }
+}
+.legacy .atg-item {
       text-align: center;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 10px;
       padding: 1rem;
     }
-    .atg-item .num {
+.legacy .atg-item .num {
       font-size: 1.75rem;
       font-weight: 700;
       line-height: 1.2;
     }
-    .atg-item .lbl {
+.legacy .atg-item .lbl {
       font-size: 0.78rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
       color: var(--muted);
     }
-
-    /* Card grid */
-    .grid {
+.legacy .wp-grid {
       display: grid;
       grid-template-columns: 1fr;
       gap: 1.5rem;
       margin-bottom: 2rem;
     }
-    @media (min-width: 800px) {
-      .grid { grid-template-columns: 1fr 1fr; }
-    }
-
-    .card {
+@media (min-width: 800px) {
+.legacy .wp-grid { grid-template-columns: 1fr 1fr; }
+}
+.legacy .wp-card {
       background: var(--surface);
       border-radius: 12px;
       border: 1px solid var(--border);
@@ -95,43 +107,39 @@
       display: flex;
       flex-direction: column;
     }
-    .card-header {
+.legacy .card-header {
       padding: 1.25rem 1.5rem;
       border-bottom: 1px solid var(--border);
     }
-    .card-header h2 { font-size: 1.2rem; font-weight: 600; }
-    .card-header .sub {
+.legacy .card-header h2 { font-size: 1.2rem; font-weight: 600; }
+.legacy .card-header .sub {
       font-size: 0.82rem;
       color: var(--muted);
       margin-top: 0.2rem;
     }
-    .card-body { padding: 1.25rem 1.5rem 1.5rem; flex: 1; }
-
-    .card-body h3 {
+.legacy .card-body { padding: 1.25rem 1.5rem 1.5rem; flex: 1; }
+.legacy .card-body h3 {
       font-size: 0.8rem;
       text-transform: uppercase;
       letter-spacing: 0.06em;
       color: var(--muted);
       margin: 1.25rem 0 0.5rem;
     }
-    .card-body h3:first-child { margin-top: 0; }
-
-    .pro-list, .con-list {
+.legacy .card-body h3:first-child { margin-top: 0; }
+.legacy .pro-list, .legacy .con-list {
       list-style: none;
       display: flex;
       flex-direction: column;
       gap: 0.4rem;
     }
-    .pro-list li, .con-list li {
+.legacy .pro-list li, .legacy .con-list li {
       padding: 0.5rem 0.7rem;
       border-radius: 6px;
       font-size: 0.88rem;
-      border-left: 3px solid transparent;
     }
-    .pro-list li { background: var(--pro-bg); border-left-color: var(--pro-border); }
-    .con-list li { background: var(--con-bg); border-left-color: var(--con-border); }
-
-    .tag {
+.legacy .pro-list li { background: var(--success-tint); }
+.legacy .con-list li { background: var(--danger-tint); }
+.legacy .tag {
       display: inline-block;
       font-size: 0.65rem;
       font-weight: 600;
@@ -142,42 +150,28 @@
       margin-right: 0.3rem;
       vertical-align: middle;
     }
-    .tag-sz  { background: #fce7f3; color: #9d174d; }
-    .tag-api { background: #e0e7ff; color: #3730a3; }
-    .tag-dx  { background: #fef3c7; color: #92400e; }
-    .tag-ft  { background: #d1fae5; color: #065f46; }
-    .tag-rsk { background: #fee2e2; color: #991b1b; }
-
-    /* Code samples */
-    .code-sample {
+.legacy .tag-sz { background: var(--raised); color: var(--muted); }
+.legacy .tag-api { background: var(--raised); color: var(--muted); }
+.legacy .tag-dx { background: var(--warning-tint); color: var(--warning); }
+.legacy .tag-ft { background: var(--success-tint); color: var(--success); }
+.legacy .tag-rsk { background: var(--danger-tint); color: var(--danger); }
+.legacy .code-sample {
       margin-top: 1.5rem;
     }
-    .code-sample h4 {
+.legacy .code-sample h4 {
       font-size: 0.78rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
       color: var(--muted);
       margin-bottom: 0.4rem;
     }
-    pre {
-      background: var(--code-bg);
-      color: var(--code-fg);
-      border-radius: 6px;
-      padding: 0.75rem 1rem;
-      font-size: 0.78rem;
-      overflow-x: auto;
-      line-height: 1.5;
-    }
-    code { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
-    .kw { color: #c084fc; }
-    .fn { color: #67e8f9; }
-    .str { color: #a5f3fc; }
-    .cm { color: #64748b; font-style: italic; }
-    .num { color: #fbbf24; }
-    .op { color: #f472b6; }
-
-    /* Feature table */
-    .feat-table-wrap {
+.legacy .kw { color: var(--muted); }
+.legacy .fn { color: var(--muted); }
+.legacy .str { color: var(--muted); }
+.legacy .cm { color: var(--muted); font-style: italic; }
+.legacy .num { color: var(--warning); }
+.legacy .op { color: var(--muted); }
+.legacy .feat-table-wrap {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 10px;
@@ -185,85 +179,71 @@
       margin-bottom: 2rem;
       overflow-x: auto;
     }
-    .feat-table-wrap h2 {
+.legacy .feat-table-wrap h2 {
       font-size: 1.15rem;
       font-weight: 600;
       margin-bottom: 0.75rem;
     }
-    table.feat {
+.legacy table.feat {
       width: 100%;
       border-collapse: collapse;
       font-size: 0.88rem;
     }
-    table.feat th, table.feat td {
+.legacy table.feat th, .legacy table.feat td {
       text-align: left;
       padding: 0.5rem 0.75rem;
       border-bottom: 1px solid var(--border);
     }
-    table.feat th {
+.legacy table.feat th {
       font-weight: 600;
       color: var(--muted);
       font-size: 0.78rem;
       text-transform: uppercase;
       letter-spacing: 0.04em;
     }
-    table.feat tr:last-child td { border-bottom: none; }
-    table.feat .center { text-align: center; }
-    .check { color: #059669; }
-    .cross { color: #dc2626; }
-    .warn  { color: #d97706; }
-
-    /* Recommendation */
-    .rec {
+.legacy table.feat tr:last-child td { border-bottom: none; }
+.legacy table.feat .center { text-align: center; }
+.legacy .check { color: var(--success); }
+.legacy .cross { color: var(--danger); }
+.legacy .warn { color: var(--warning); }
+.legacy .rec {
       background: var(--surface);
-      border: 2px solid var(--accent-dexie);
+      border: 2px solid var(--primary);
       border-radius: 12px;
       padding: 1.5rem 2rem;
     }
-    .rec h2 {
+.legacy .rec h2 {
       font-size: 1.15rem;
       font-weight: 600;
       margin-bottom: 0.75rem;
     }
-    .rec p { font-size: 0.92rem; margin-bottom: 0.5rem; }
-    .rec p:last-child { margin-bottom: 0; }
-
-    /* Verdict scores inline */
-    .score-bar {
+.legacy .rec p { font-size: 0.92rem; margin-bottom: 0.5rem; }
+.legacy .rec p:last-child { margin-bottom: 0; }
+.legacy .score-bar {
       display: flex;
       align-items: center;
       gap: 0.3rem;
       margin: 0.5rem 0;
     }
-    .score-dot { width: 14px; height: 14px; border-radius: 50%; }
-    .dot-on  { background: #059669; }
-    .dot-off { background: #d4d4c8; }
-    .score-label {
+.legacy .score-dot { width: 14px; height: 14px; border-radius: 50%; }
+.legacy .dot-on { background: var(--success); }
+.legacy .dot-off { background: var(--raised); }
+.legacy .score-label {
       font-size: 0.75rem;
       color: var(--muted);
       margin-left: 0.4rem;
     }
-  </style>
-</head>
-<body>
-<div class="container">
-
-  <header>
-    <h1>&#128451;&#65039; IndexedDB Library Comparison: <code>idb</code> vs <code>dexie</code></h1>
-    <p>Choosing a wrapper for client-only IndexedDB storage in &#9936;-local</p>
-    <p class="meta">Decision context: offline-first, single-device, no server sync | July 2026</p>
-    <div class="decision">&#128215; Previous decision: migrate from Express+SQLite to client-side IndexedDB</div>
-  </header>
-
-  <!-- At-a-glance stats -->
+</style>
+<div class="legacy">
+<!-- At-a-glance stats -->
   <div class="atg">
     <div class="atg-item">
-      <div class="num" style="color: var(--accent-idb);">idb</div>
+      <div class="num" style="color: var(--secondary);">idb</div>
       <div class="lbl">v8.0.3</div>
       <div style="font-size:0.8rem;color:var(--muted);margin-top:0.25rem;">npm i idb</div>
     </div>
     <div class="atg-item">
-      <div class="num" style="color: var(--accent-dexie);">dexie</div>
+      <div class="num" style="color: var(--primary);">dexie</div>
       <div class="lbl">v4.4.4</div>
       <div style="font-size:0.8rem;color:var(--muted);margin-top:0.25rem;">npm i dexie</div>
     </div>
@@ -275,12 +255,12 @@
   </div>
 
   <!-- SIDE-BY-SIDE CARDS -->
-  <div class="grid">
+  <div class="wp-grid">
 
     <!-- idb -->
-    <div class="card">
-      <div class="card-header" style="border-left: 4px solid var(--accent-idb);">
-        <h2><code>idb</code> &mdash; minimal promise wrapper</h2>
+    <div class="wp-card">
+      <div class="card-header">
+        <h2 id="idb-minimal-promise-wrapper"><code>idb</code> &mdash; minimal promise wrapper</h2>
         <div class="sub">by Jake Archibald &middot; ~1.5 KB gzipped</div>
       </div>
       <div class="card-body">
@@ -291,7 +271,7 @@
           <span class="score-label">4/5 &mdash; Simplicity &amp; size</span>
         </div>
 
-        <h3>&#9989; Pros</h3>
+        <h3 id="pros">Pros</h3>
         <ul class="pro-list">
           <li><span class="tag tag-sz">Size</span> Tiny &mdash; adds negligible bundle weight (~1.5 KB gzipped)</li>
           <li><span class="tag tag-api">API</span> Mirrors native IndexedDB &mdash; no magic, zero surprises</li>
@@ -302,7 +282,7 @@
           <li><span class="tag tag-rsk">Risk</span> Low risk &mdash; thin wrapper, unlikely to break or need updates</li>
         </ul>
 
-        <h3>&#10060; Cons</h3>
+        <h3 id="cons">Cons</h3>
         <ul class="con-list">
           <li><span class="tag tag-api">API</span> Verbose &mdash; still need to open stores, manage transactions manually</li>
           <li><span class="tag tag-api">API</span> No query builder &mdash; must use IDB ranges and indexes directly</li>
@@ -314,9 +294,9 @@
     </div>
 
     <!-- dexie -->
-    <div class="card">
-      <div class="card-header" style="border-left: 4px solid var(--accent-dexie);">
-        <h2><code>dexie</code> &mdash; full-featured DB wrapper</h2>
+    <div class="wp-card">
+      <div class="card-header">
+        <h2 id="dexie-full-featured-db-wrapper"><code>dexie</code> &mdash; full-featured DB wrapper</h2>
         <div class="sub">by David Fahlander &middot; ~16 KB gzipped</div>
       </div>
       <div class="card-body">
@@ -327,7 +307,7 @@
           <span class="score-label">5/5 &mdash; Fit for app-level data</span>
         </div>
 
-        <h3>&#9989; Pros</h3>
+        <h3 id="pros-2">Pros</h3>
         <ul class="pro-list">
           <li><span class="tag tag-api">API</span> Rich query builder &mdash; <code>.where(&hellip;).sortBy(&hellip;)</code>, compound queries</li>
           <li><span class="tag tag-api">API</span> Declarative schema with <code>db.version().stores()</code> &mdash; clean migrations</li>
@@ -339,7 +319,7 @@
           <li><span class="tag tag-dx">DX</span> Excellent documentation and community examples</li>
         </ul>
 
-        <h3>&#10060; Cons</h3>
+        <h3 id="cons-2">Cons</h3>
         <ul class="con-list">
           <li><span class="tag tag-sz">Size</span> ~10&times; larger than idb (~16 KB vs ~1.5 KB gzipped)</li>
           <li><span class="tag tag-api">API</span> More abstraction &mdash; magic can hide what IndexedDB is actually doing</li>
@@ -353,7 +333,7 @@
 
   <!-- FEATURE COMPARISON TABLE -->
   <div class="feat-table-wrap">
-    <h2>&#128202; Feature Comparison</h2>
+    <h2 id="feature-comparison">Feature Comparison</h2>
     <table class="feat">
       <thead>
         <tr>
@@ -442,7 +422,7 @@
 
   <!-- CODE COMPARISON -->
   <div class="feat-table-wrap">
-    <h2>&#128220; Code Comparison &mdash; Same operations in both libraries</h2>
+    <h2 id="code-comparison-same-operations-in-both-libraries">Code Comparison &mdash; Same operations in both libraries</h2>
 
     <table class="feat">
       <thead>
@@ -545,7 +525,7 @@ db.<span class="fn">version</span>(<span class="num">1</span>).<span class="fn">
 
   <!-- ARCHITECTURE SKETCH -->
   <div class="feat-table-wrap">
-    <h2>&#127959;&#65039; How each would plug into the existing codebase</h2>
+    <h2 id="how-each-would-plug-into-the-existing-codebase">How each would plug into the existing codebase</h2>
 
     <table class="feat">
       <thead>
@@ -583,7 +563,7 @@ db.<span class="fn">version</span>(<span class="num">1</span>).<span class="fn">
 
   <!-- RECOMMENDATION -->
   <div class="rec">
-    <h2>&#128200; Recommendation: <code>dexie</code> for cardz-local</h2>
+    <h2 id="recommendation-dexie-for-cardz-local">Recommendation: <code>dexie</code> for cardz-local</h2>
 
     <p><strong>Why Dexie wins for this codebase:</strong></p>
     <p>
@@ -617,7 +597,15 @@ db.<span class="fn">version</span>(<span class="num">1</span>).<span class="fn">
       with relational data and React integration, Dexie is the better fit.
     </p>
   </div>
-
+</div>
+<!-- /docs:content -->
+<nav class="docs-pager" aria-label="Previous and next">
+<a class="prev" href="../planning/cardz-points-and-mobile-plan.html"><span class="dir">Previous</span>Points games and mobile plan</a>
+<a class="next" href="../planning/storage-refactor-comparison.html"><span class="dir">Next</span>Storage refactor comparison</a>
+</nav>
+</article>
+<aside class="docs-toc" aria-label="On this page"></aside>
+</main>
 </div>
 </body>
 </html>
