@@ -1,0 +1,15 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Cardz",
+  "description": "Scorekeeping for card games",
+  "colors": { "primary": "#a03800", "light": "#ff7a1a", "dark": "#a03800" },
+  "navigation": {
+    "groups": [
+      { "group": "Guide", "pages": ["index", "architecture"] },
+      { "group": "Games", "pages": ["games/index", "games/up-and-down", "games/pay-me", "games/high-score", "games/low-score"] },
+      { "group": "Project", "pages": ["design-history/index"] },
+      { "group": "Planning notes", "pages": ["planning/cardz-points-and-mobile-plan", "planning/idb-vs-dexie-comparison", "planning/storage-refactor-comparison"] }
+    ]
+  }
+}
