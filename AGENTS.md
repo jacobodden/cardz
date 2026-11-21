@@ -4,7 +4,7 @@ Card game rules (HTML; read them as text):
 - @docs/games/high-score.html
 - @docs/games/low-score.html
 
-Docs live in `docs/` as HTML sharing `docs/assets/docs.css` (Felt tokens, light and dark); start at `docs/index.html`, see `docs/architecture.html` for the overview. Keep docs in HTML: no Markdown under `docs/`. Add a rules page under `docs/games/` (and link it from `docs/games/index.html` and `README.md`) when adding a game.
+Docs are HTML on the Worn Hoodie docs kit (https://claude.ai/artifact/6p89SgFCrEgLm6cuiPLVPh, its Docs page): `docs/*.html`, nav in `docs/docs.json` (Mintlify's format), the kit in `docs/assets/` (never edit; `docs-sync kit` copies it). Edit only between a page's `docs:content` markers, then run `docs-sync` and `docs-sync --check` (`~/development/.tools`). Start at `docs/index.html`; `docs/architecture.html` is the overview. Keep docs in HTML: no Markdown under `docs/`; the README is a short stub linking to them. Add a rules page under `docs/games/` when adding a game: link it from `docs/games/index.html`, add it to the Games group in `docs/docs.json`, and list it in `README.md`. `docs/design-history/index.html` is generated: edit the template in `tests/design-history/gallery.ts` (it rewrites only the content block), then `npm run design:index` and `docs-sync`. The planning notes keep their original layouts under a `.legacy` wrapper, recoloured to kit tokens; new write-ups use the kit's components instead. The app's own themes (Felt, Midnight) are separate from the docs' look.
 
 ## Tech stack
 

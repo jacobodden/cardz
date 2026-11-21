@@ -1,32 +1,86 @@
 <!doctype html>
+<!-- Generated around the content block by docs-sync (~/development/.tools).
+     Edit only between docs:content markers, then run docs-sync. -->
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Cardz docs</title>
-  <link rel="stylesheet" href="assets/docs.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cardz</title>
+<meta name="description" content="Game rules, how the app is built, and a record of how it has looked over time.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap">
+<link rel="stylesheet" href="assets/docs.css">
+<script src="assets/docs.js"></script>
 </head>
 <body>
-  <header class="band">
-    <div class="wrap">
-      <h1>Cardz docs</h1>
-      <p class="lede">Game rules, how the app is built, and a record of how it has looked over time.</p>
-    </div>
-  </header>
-  <main class="wrap">
-    <ul class="cards">
-      <li><a class="card" href="games/index.html"><span class="title">Games</span><span class="desc">Rules for Up and Down the River, Pay Me, High Score and Low Score.</span></a></li>
-      <li><a class="card" href="architecture.html"><span class="title">Architecture</span><span class="desc">Stack, source layout, data model, themes, PWA, tests and deployment.</span></a></li>
-      <li><a class="card" href="design-history/index.html"><span class="title">Design history</span><span class="desc">Dated screenshots of the UI, and how to capture a new milestone.</span></a></li>
-    </ul>
+<a class="skip" href="#main">Skip to content</a>
+<header class="docs-header">
+  <a class="docs-brand" href="index.html"><span class="name">Cardz</span><span class="tagline">Scorekeeping for card games</span></a>
+  <span class="spacer"></span>
+  <button class="menu-button" type="button" aria-expanded="false" aria-controls="docs-nav">Menu</button>
+  <div class="segmented" role="radiogroup" aria-label="Theme">
+    <button type="button" role="radio" data-theme-choice="auto" aria-checked="true">Auto</button>
+    <button type="button" role="radio" data-theme-choice="light" aria-checked="false">Light</button>
+    <button type="button" role="radio" data-theme-choice="dark" aria-checked="false">Dark</button>
+  </div>
+</header>
+<div class="docs-shell">
+<nav class="docs-nav" id="docs-nav" aria-label="Pages">
+  <p class="group">Guide</p>
+  <ul>
+    <li><a href="index.html" aria-current="page">Overview</a></li>
+    <li><a href="architecture.html">Architecture</a></li>
+  </ul>
+  <p class="group">Games</p>
+  <ul>
+    <li><a href="games/index.html">Games</a></li>
+    <li><a href="games/up-and-down.html">Up and Down the River</a></li>
+    <li><a href="games/pay-me.html">Pay Me</a></li>
+    <li><a href="games/high-score.html">High Score</a></li>
+    <li><a href="games/low-score.html">Low Score</a></li>
+  </ul>
+  <p class="group">Project</p>
+  <ul>
+    <li><a href="design-history/index.html">Design history</a></li>
+  </ul>
+  <p class="group">Planning notes</p>
+  <ul>
+    <li><a href="planning/cardz-points-and-mobile-plan.html">Points games and mobile plan</a></li>
+    <li><a href="planning/idb-vs-dexie-comparison.html">idb vs Dexie.js comparison</a></li>
+    <li><a href="planning/storage-refactor-comparison.html">Storage refactor comparison</a></li>
+  </ul>
+</nav>
+<main class="docs-page" id="main">
+<article class="docs-content">
+<!-- docs:content -->
+<h1>Overview</h1>
+<p class="lede">Game rules, how the app is built, and a record of how it has looked over time.</p>
+<figure class="frame">
+<img class="only-dark" src="design-history/2026-11-02/session-active-desktop-dark.jpg" alt="A Cardz session in the dark theme: each player's card with their running total and this round's score">
+<img class="only-light" src="design-history/2026-11-02/session-active-desktop-light.jpg" alt="A Cardz session in the light theme: each player's card with their running total and this round's score">
+<figcaption>A session in progress. The picture follows the docs' theme; more in the <a href="design-history/index.html">design history</a>.</figcaption>
+</figure>
+<ul class="cards">
+  <li><a class="card" href="games/index.html"><span class="title">Games</span><span class="desc">Rules for Up and Down the River, Pay Me, High Score and Low Score.</span></a></li>
+  <li><a class="card" href="architecture.html"><span class="title">Architecture</span><span class="desc">Stack, source layout, data model, themes, PWA, tests and deployment.</span></a></li>
+  <li><a class="card" href="design-history/index.html"><span class="title">Design history</span><span class="desc">Dated screenshots of the UI, and how to capture a new milestone.</span></a></li>
+</ul>
 
-    <h2>Planning notes</h2>
-    <p>Write-ups from earlier decisions, kept for reference. They describe the options at the time, not necessarily the current code.</p>
-    <ul>
-      <li><a href="planning/idb-vs-dexie-comparison.html">idb vs Dexie.js comparison</a></li>
-      <li><a href="planning/storage-refactor-comparison.html">Storage refactor comparison</a></li>
-      <li><a href="planning/cardz-points-and-mobile-plan.html">Points games and mobile plan</a></li>
-    </ul>
-  </main>
+<h2 id="planning-notes">Planning notes</h2>
+<p>Write-ups from earlier decisions, kept for reference. They describe the options at the time, not necessarily the current code.</p>
+<ul>
+  <li><a href="planning/idb-vs-dexie-comparison.html">idb vs Dexie.js comparison</a></li>
+  <li><a href="planning/storage-refactor-comparison.html">Storage refactor comparison</a></li>
+  <li><a href="planning/cardz-points-and-mobile-plan.html">Points games and mobile plan</a></li>
+</ul>
+<!-- /docs:content -->
+<nav class="docs-pager" aria-label="Previous and next">
+<a class="next" href="architecture.html"><span class="dir">Next</span>Architecture</a>
+</nav>
+</article>
+<aside class="docs-toc" aria-label="On this page"></aside>
+</main>
+</div>
 </body>
 </html>

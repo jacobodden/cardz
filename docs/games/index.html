@@ -1,26 +1,75 @@
 <!doctype html>
+<!-- Generated around the content block by docs-sync (~/development/.tools).
+     Edit only between docs:content markers, then run docs-sync. -->
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Games — Cardz docs</title>
-  <link rel="stylesheet" href="../assets/docs.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Games · Cardz</title>
+<meta name="description" content="Rules for each game Cardz keeps score for. The scoring code lives in src/games/.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap">
+<link rel="stylesheet" href="../assets/docs.css">
+<script src="../assets/docs.js"></script>
 </head>
 <body>
-  <header class="band">
-    <div class="wrap">
-      <p class="crumbs"><a href="../index.html">Cardz docs</a></p>
-      <h1>Games</h1>
-      <p class="lede">Rules for each game Cardz keeps score for. The scoring code lives in <code>src/games/</code>.</p>
-    </div>
-  </header>
-  <main class="wrap">
-    <ul class="cards">
-      <li><a class="card" href="up-and-down.html"><span class="title">Up and Down the River</span><span class="desc">Trick-taking. Bid the exact number of tricks you will win. Highest total wins.</span></a></li>
-      <li><a class="card" href="pay-me.html"><span class="title">Pay Me</span><span class="desc">Contract Rummy over 11 rounds. Lowest total wins.</span></a></li>
-      <li><a class="card" href="high-score.html"><span class="title">High Score</span><span class="desc">Open-ended points for any game where the highest total wins.</span></a></li>
-      <li><a class="card" href="low-score.html"><span class="title">Low Score</span><span class="desc">Open-ended points for any game where the lowest total wins.</span></a></li>
-    </ul>
-  </main>
+<a class="skip" href="#main">Skip to content</a>
+<header class="docs-header">
+  <a class="docs-brand" href="../index.html"><span class="name">Cardz</span><span class="tagline">Scorekeeping for card games</span></a>
+  <span class="spacer"></span>
+  <button class="menu-button" type="button" aria-expanded="false" aria-controls="docs-nav">Menu</button>
+  <div class="segmented" role="radiogroup" aria-label="Theme">
+    <button type="button" role="radio" data-theme-choice="auto" aria-checked="true">Auto</button>
+    <button type="button" role="radio" data-theme-choice="light" aria-checked="false">Light</button>
+    <button type="button" role="radio" data-theme-choice="dark" aria-checked="false">Dark</button>
+  </div>
+</header>
+<div class="docs-shell">
+<nav class="docs-nav" id="docs-nav" aria-label="Pages">
+  <p class="group">Guide</p>
+  <ul>
+    <li><a href="../index.html">Overview</a></li>
+    <li><a href="../architecture.html">Architecture</a></li>
+  </ul>
+  <p class="group">Games</p>
+  <ul>
+    <li><a href="../games/index.html" aria-current="page">Games</a></li>
+    <li><a href="../games/up-and-down.html">Up and Down the River</a></li>
+    <li><a href="../games/pay-me.html">Pay Me</a></li>
+    <li><a href="../games/high-score.html">High Score</a></li>
+    <li><a href="../games/low-score.html">Low Score</a></li>
+  </ul>
+  <p class="group">Project</p>
+  <ul>
+    <li><a href="../design-history/index.html">Design history</a></li>
+  </ul>
+  <p class="group">Planning notes</p>
+  <ul>
+    <li><a href="../planning/cardz-points-and-mobile-plan.html">Points games and mobile plan</a></li>
+    <li><a href="../planning/idb-vs-dexie-comparison.html">idb vs Dexie.js comparison</a></li>
+    <li><a href="../planning/storage-refactor-comparison.html">Storage refactor comparison</a></li>
+  </ul>
+</nav>
+<main class="docs-page" id="main">
+<article class="docs-content">
+<!-- docs:content -->
+<h1>Games</h1>
+<p class="lede">Rules for each game Cardz keeps score for. The scoring code lives in <code>src/games/</code>.</p>
+<ul class="cards">
+  <li><a class="card" href="up-and-down.html"><span class="title">Up and Down the River</span><span class="desc">Trick-taking. Bid the exact number of tricks you will win. Highest total wins.</span></a></li>
+  <li><a class="card" href="pay-me.html"><span class="title">Pay Me</span><span class="desc">Contract Rummy over 11 rounds. Lowest total wins.</span></a></li>
+  <li><a class="card" href="high-score.html"><span class="title">High Score</span><span class="desc">Open-ended points for any game where the highest total wins.</span></a></li>
+  <li><a class="card" href="low-score.html"><span class="title">Low Score</span><span class="desc">Open-ended points for any game where the lowest total wins.</span></a></li>
+</ul>
+<!-- /docs:content -->
+<nav class="docs-pager" aria-label="Previous and next">
+<a class="prev" href="../architecture.html"><span class="dir">Previous</span>Architecture</a>
+<a class="next" href="../games/up-and-down.html"><span class="dir">Next</span>Up and Down the River</a>
+</nav>
+</article>
+<aside class="docs-toc" aria-label="On this page"></aside>
+</main>
+</div>
 </body>
 </html>
