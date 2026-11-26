@@ -23,6 +23,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    id: '2026-11-26',
+    date: '2026-11-26',
+    title: 'Longer Up & Down games',
+    items: [
+      'In Up & Down, you can set a peak hand size above 10 when the deck has enough cards, e.g. 12 for 4 players.',
+      'The New game page shows the largest peak for your number of players.',
+    ],
+  },
+  {
     id: '2026-11-16',
     date: '2026-11-16',
     title: 'Pay Me waits for every score',

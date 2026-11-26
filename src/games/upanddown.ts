@@ -3,7 +3,8 @@ import { dealerChip } from './dealer'
 
 const SUITS = ['♠', '♥', '♣', '♦']
 const RED_SUITS = new Set(['♥', '♦'])
-const MAX_PEAK = 10
+/** Suggested peak when the deck allows it; players can set a higher one. */
+const DEFAULT_PEAK = 10
 
 /** Largest hand every player can be dealt from one deck (one card turned for trump). */
 function maxHandSize(playerCount: number): number {
@@ -63,17 +64,22 @@ export const upAndDown: CardGame = {
         key: 'peak',
         label: 'Peak hand size',
         type: 'number',
-        defaultValue: MAX_PEAK,
+        defaultValue: DEFAULT_PEAK,
         min: 1,
-        max: MAX_PEAK,
-        description: 'Maximum number of cards per hand at the peak round (capped by player count)',
+        // The deck limit for the smallest table; getConfigLimits lowers it.
+        max: maxHandSize(3),
+        description: 'Most cards in one hand, at the middle round; the number of players sets the limit',
       },
     ]
   },
 
   getDefaultConfig(playerCount: number) {
-    if (playerCount < 1) return { peak: MAX_PEAK }
-    return { peak: Math.min(maxHandSize(playerCount), MAX_PEAK) }
+    if (playerCount < 1) return { peak: DEFAULT_PEAK }
+    return { peak: Math.min(maxHandSize(playerCount), DEFAULT_PEAK) }
+  },
+
+  getConfigLimits(playerCount: number) {
+    return { peak: { max: maxHandSize(playerCount) } }
   },
 
   validateRound(meta: RoundMeta, inputs: PlayerScoreInput[]): string | null {

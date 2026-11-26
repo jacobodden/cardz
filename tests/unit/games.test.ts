@@ -4,7 +4,7 @@ import { canSplitMissedTricks, upAndDown } from '../../src/games/upanddown'
 import { payMe } from '../../src/games/payme'
 import { highScore, lowScore } from '../../src/games/points'
 import { nextDealerId } from '../../src/games/dealer'
-import { getDefaultConfig, type RoundMeta } from '../../src/games/types'
+import { getConfigMax, getDefaultConfig, type RoundMeta } from '../../src/games/types'
 
 const meta = (hand_size = 0): RoundMeta => ({ round_number: 1, hand_size, data: {} })
 
@@ -38,11 +38,29 @@ describe('getDefaultConfig', () => {
     expect(getDefaultConfig(highScore, 4)).toEqual({})
   })
 
-  it('caps the Up & Down peak by player count and the schema max', () => {
+  it('suggests an Up & Down peak of 10, or less when the deck runs out first', () => {
     expect(getDefaultConfig(upAndDown, 0)).toEqual({ peak: 10 })
-    expect(getDefaultConfig(upAndDown, 3)).toEqual({ peak: 10 }) // 51/3 = 17, capped at 10
+    expect(getDefaultConfig(upAndDown, 3)).toEqual({ peak: 10 }) // 51/3 = 17 allowed; 10 suggested
     expect(getDefaultConfig(upAndDown, 6)).toEqual({ peak: 8 })
     expect(getDefaultConfig(upAndDown, 7)).toEqual({ peak: 7 })
+  })
+})
+
+describe('getConfigMax', () => {
+  const peakField = upAndDown.getConfigSchema().find((f) => f.key === 'peak')!
+
+  it('limits the Up & Down peak to what one deck deals for the player count', () => {
+    expect(getConfigMax(upAndDown, peakField, 3)).toBe(17)
+    expect(getConfigMax(upAndDown, peakField, 4)).toBe(12)
+    expect(getConfigMax(upAndDown, peakField, 5)).toBe(10)
+    expect(getConfigMax(upAndDown, peakField, 6)).toBe(8)
+    expect(getConfigMax(upAndDown, peakField, 7)).toBe(7)
+  })
+
+  it('uses the schema max with no players yet or for games without the hook', () => {
+    expect(getConfigMax(upAndDown, peakField, 0)).toBe(17)
+    expect(getConfigMax(payMe, { key: 'x', label: 'X', type: 'number', defaultValue: 1, max: 5 }, 4)).toBe(5)
+    expect(getConfigMax(undefined, peakField, 4)).toBe(17)
   })
 })
 
@@ -67,6 +85,12 @@ describe('Up & Down', () => {
     // 51 / 7 = 7 cards max with 7 players
     expect(Math.max(...hands(7, { peak: 10 }))).toBe(7)
     expect(hands(7, { peak: 10 })).toHaveLength(13)
+  })
+
+  it('deals a configured peak above 10 when the deck allows it (#74)', () => {
+    expect(Math.max(...hands(4, { peak: 12 }))).toBe(12)
+    expect(hands(4, { peak: 12 })).toHaveLength(23)
+    expect(hands(3, { peak: 17 })).toHaveLength(33)
   })
 
   it('uses the deck limit as the peak when no config is given', () => {

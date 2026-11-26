@@ -458,14 +458,49 @@ test('New game: the peak field can be cleared and falls back to the suggested va
   await peak.fill('0')
   await peak.press('Tab')
   await expect(peak).toHaveValue('1')
+  // The limit is what one deck deals: 51 / 3 = 17 cards for 3 players.
+  await expect(page.getByText('Suggested: 10 for 3 players · up to 17')).toBeVisible()
   await peak.fill('25')
   await peak.press('Tab')
-  await expect(peak).toHaveValue('10')
+  await expect(peak).toHaveValue('17')
 
   // Starting with the field empty uses the suggested peak of 10: 19 rounds.
   await peak.fill('')
   await page.getByTestId('start-game').click()
   await expect(page.getByTestId('round-number')).toHaveText('Round 1 of 19')
+})
+
+test('New game: an Up & Down peak above 10 is kept up to the deck limit (#74)', async ({ page }) => {
+  await page.goto('/sessions/new')
+  await page.locator('[data-game-slug="up-and-down"]').click()
+  for (const [i, name] of ['Ann', 'Ben', 'Cal'].entries()) {
+    if (i >= 2) await page.getByTestId('add-player').click()
+    await page.getByTestId('player-name-input').nth(i).fill(name)
+  }
+  const peak = page.getByTestId('config-peak')
+  await peak.fill('12')
+  await peak.press('Tab')
+  await expect(peak).toHaveValue('12')
+
+  // More players lower the limit, and the entered peak follows it down: 51 / 7 = 7.
+  for (const [i, name] of ['Dee', 'Eve', 'Fay', 'Gus'].entries()) {
+    await page.getByTestId('add-player').click()
+    await page.getByTestId('player-name-input').nth(3 + i).fill(name)
+  }
+  await expect(peak).toHaveValue('7')
+  await expect(page.getByText('Calculated: 7 for 7 players · up to 7')).toBeVisible()
+})
+
+test('New game: an Up & Down peak of 12 deals 23 rounds (#74)', async ({ page }) => {
+  await page.goto('/sessions/new')
+  await page.locator('[data-game-slug="up-and-down"]').click()
+  for (const [i, name] of ['Ann', 'Ben', 'Cal'].entries()) {
+    if (i >= 2) await page.getByTestId('add-player').click()
+    await page.getByTestId('player-name-input').nth(i).fill(name)
+  }
+  await page.getByTestId('config-peak').fill('12')
+  await page.getByTestId('start-game').click()
+  await expect(page.getByTestId('round-number')).toHaveText('Round 1 of 23')
 })
 
 test('Session: unknown id shows not found instead of loading forever', async ({

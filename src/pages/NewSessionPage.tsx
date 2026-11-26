@@ -5,7 +5,7 @@ import { db } from '../db/dexie-db'
 import { createSession, addPlayer as addPlayerToSession, startSession } from '../db/sessions'
 import { getGame } from '../games'
 import type { Game } from '../db/dexie-db'
-import { getDefaultConfig } from '../games/types'
+import { getConfigMax, getDefaultConfig } from '../games/types'
 import FeltHero from '../components/FeltHero'
 import CardTile from '../components/CardTile'
 
@@ -55,9 +55,15 @@ export default function NewSessionPage() {
       for (const [key, value] of Object.entries(defaults)) {
         if (prev[key] === undefined || prev[key] === prevDefaults[key]) next[key] = value
       }
+      // A value entered for a smaller table can be above the new limit.
+      for (const field of gameImpl.getConfigSchema()) {
+        const value = next[field.key]
+        const max = getConfigMax(gameImpl, field, validCount)
+        if (value != null && max !== undefined && value > max) next[field.key] = max
+      }
       return next
     })
-  }, [gameImpl, defaults])
+  }, [gameImpl, defaults, validCount])
 
   function updateConfig(key: string, raw: string) {
     setConfig((prev) => ({ ...prev, [key]: raw === '' ? null : Number(raw) }))
@@ -67,7 +73,7 @@ export default function NewSessionPage() {
     const field = selectedGame?.config_schema.find((f) => f.key === key)
     const value = config[key]
     if (!field || value == null) return
-    const clamped = clamp(value, field.min, field.max)
+    const clamped = clamp(value, field.min, getConfigMax(gameImpl, field, validCount))
     if (clamped !== value) setConfig((prev) => ({ ...prev, [key]: clamped }))
   }
 
@@ -76,7 +82,7 @@ export default function NewSessionPage() {
     const resolved: Record<string, number> = {}
     for (const field of selectedGame?.config_schema ?? []) {
       const value = config[field.key] ?? defaults[field.key] ?? field.defaultValue
-      resolved[field.key] = clamp(value, field.min, field.max)
+      resolved[field.key] = clamp(value, field.min, getConfigMax(gameImpl, field, validCount))
     }
     return resolved
   }
@@ -204,6 +210,9 @@ export default function NewSessionPage() {
               const value = config[field.key]
               const suggested = autoValue ?? field.defaultValue
               const isManuallyEdited = autoValue !== null && value != null && value !== autoValue
+              const max = getConfigMax(gameImpl, field, validCount)
+              // Show the limit only for games that set one per table size.
+              const tableMax = validCount >= 1 && gameImpl?.getConfigLimits ? max : undefined
               return (
                 <div key={field.key}>
                   <label htmlFor={`config-${field.key}`} className={`block ${SECTION_HEADING}`}>
@@ -218,7 +227,7 @@ export default function NewSessionPage() {
                       onChange={(e) => updateConfig(field.key, e.target.value)}
                       onBlur={() => clampConfig(field.key)}
                       min={field.min}
-                      max={field.max}
+                      max={max}
                       inputMode="numeric"
                       aria-label={field.label}
                       data-testid={`config-${field.key}`}
@@ -228,6 +237,7 @@ export default function NewSessionPage() {
                       <p className="text-[13px] text-muted">
                         {isManuallyEdited ? 'Suggested' : 'Calculated'}: {autoValue} for {validCount} player
                         {validCount > 1 ? 's' : ''}
+                        {tableMax !== undefined && ` · up to ${tableMax}`}
                       </p>
                     )}
                     {autoValue === null && field.description && (
