@@ -103,6 +103,13 @@ export interface CardGame {
    */
   getDefaultConfig?(playerCount: number): Record<string, number>
   /**
+   * Tighter config limits for the given player count, keyed by field. The
+   * schema's `min`/`max` stay the bounds for any table size; a `max` here
+   * can only lower them (e.g. Up & Down's peak is limited by the deck).
+   * See `getConfigMax()`.
+   */
+  getConfigLimits?(playerCount: number): Record<string, { max?: number }>
+  /**
    * Check a round's inputs against the game's rules before scoring.
    * Returns a message explaining the problem, or `null` when the round is
    * valid. The session page calls it with partial inputs while the player is
@@ -125,4 +132,18 @@ export function getDefaultConfig(game: CardGame, playerCount: number): Record<st
     defaults[field.key] = field.defaultValue
   }
   return { ...defaults, ...game.getDefaultConfig?.(playerCount) }
+}
+
+/**
+ * The largest value `field` takes at `playerCount`: the schema's `max`, lowered
+ * by the game's `getConfigLimits` when there is at least one player.
+ */
+export function getConfigMax(
+  game: CardGame | undefined,
+  field: ConfigField,
+  playerCount: number
+): number | undefined {
+  const limit = playerCount >= 1 ? game?.getConfigLimits?.(playerCount)[field.key]?.max : undefined
+  if (limit === undefined) return field.max
+  return field.max === undefined ? limit : Math.min(field.max, limit)
 }
