@@ -67,6 +67,8 @@ img { max-width: 100%; height: auto; }
 .segmented button[aria-checked="true"] {
   background: var(--raised); color: var(--text); border-color: var(--border);
 }
+/* The theme came with the URL (?theme=, an app's docs): the app chooses it, not the page. */
+.theme-fixed .docs-header .segmented { display: none; }
 
 .menu-button {
   display: none;

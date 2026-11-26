@@ -1,5 +1,7 @@
 // Worn Hoodie docs kit: the theme switch, the narrow-screen menu, heading anchors and the
 // "On this page" list. Pages read fine without it: it only adds to them.
+// ?theme=light or ?theme=dark in the URL (an app opening its docs) sets the theme, hides
+// the switch and is carried on to the pages the reader opens next.
 (function () {
   "use strict";
   var root = document.documentElement;
@@ -12,12 +14,27 @@
     if (choice === "light" || choice === "dark") root.setAttribute("data-theme", choice);
     else root.removeAttribute("data-theme");
   }
+  var fixed = (/[?&]theme=(light|dark)(?:&|$)/.exec(location.search) || [])[1];
   // Before first paint (this script loads in <head>). With no stored choice, a data-theme
   // the page sets itself stays.
-  if (stored() !== "auto") apply(stored());
+  if (fixed) { apply(fixed); root.classList.add("theme-fixed"); }
+  else if (stored() !== "auto") apply(stored());
   root.classList.add("js");
 
+  // Links to the other pages keep ?theme, so the whole set opens in the app's theme.
+  function carryTheme() {
+    document.querySelectorAll("a[href]").forEach(function (a) {
+      var href = a.getAttribute("href");
+      if (href.charAt(0) === "#" || /^[a-z][a-z0-9+.-]*:|^\/\//i.test(href)) return;
+      var u = new URL(href, location.href);
+      if (!/\.html$/.test(u.pathname)) return;
+      u.searchParams.set("theme", fixed);
+      a.setAttribute("href", u.href);
+    });
+  }
+
   function setUp() {
+    if (fixed) carryTheme();
     // Theme switch: Auto (the OS), Light, Dark.
     var current = stored();
     document.querySelectorAll("[data-theme-choice]").forEach(function (b) {
