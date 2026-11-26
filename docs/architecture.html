@@ -57,7 +57,7 @@
 <h1>Architecture</h1>
 <p class="lede">A local-first scorekeeper: a static React app that keeps every session in the browser's IndexedDB. No server, no sync, no sign-in.</p>
 <div class="callout note"><span class="label">Note</span>
-<p><code>AGENTS.md</code> at the repo root is the short working reference (conventions, schema, where things live). This page is the longer overview.</p>
+<p><code>CLAUDE.md</code> at the repo root holds the working rules for Claude Code: conventions, tests, baselines and the commands to use. This page is the overview.</p>
 </div>
 
 <h2 id="stack">Stack</h2>
@@ -158,7 +158,7 @@ scores    ++id, round_id, player_id, score, data_json</code></pre>
   <li><code>getRounds(playerCount, config)</code>: the round plan. Fixed games (Up and Down, Pay Me) generate every round up front; open games (High and Low Score) add rounds as they are played.</li>
   <li><code>getRoundSchema(round)</code>: the inputs to collect per player or per round.</li>
   <li><code>computeScore(meta, inputs)</code>: turn inputs into scores.</li>
-  <li>Optional <code>validateRound</code> (e.g. the hook rule), <code>getRoundInfo</code> (chips like trump or wilds) and <code>getDefaultConfig</code>.</li>
+  <li>Optional <code>validateRound</code> (e.g. the hook rule), <code>getRoundInfo</code> (chips like trump or wilds), <code>getDefaultConfig</code> and <code>getConfigLimits</code> (a lower config maximum for the number of players, such as the Up and Down peak).</li>
 </ul>
 <p><code>usesDealer</code> games store each round's dealer as <code>data.dealer_player_id</code> (helpers in <code>src/games/dealer.ts</code>), starting from the New game <strong>First dealer</strong>. Fixed games set every round's dealer up front. Open games pass the deal to the next seat when a round is submitted, and <code>setDealer</code> (<code>src/db/rounds.ts</code>) moves it for the round in play: the Session page's <strong>D</strong> chip on each player card. Undo restores the dealer with the round.</p>
 <p>To add a game: write the module, register it, add unit tests in <code>tests/unit/</code> and a rules page in <a href="games/index.html"><code>docs/games/</code></a>.</p>
@@ -167,11 +167,11 @@ scores    ++id, round_id, player_id, score, data_json</code></pre>
 <p>The UI is the <strong>Card Table</strong> design: a felt band across the top holds the page title and the current round, with the standings and score entry below it on the table. It is built for phones first and also works on desktop.</p>
 <ul>
 <li><strong>Light and dark mode</strong>: follows the system by default; the moon/sun button in the header switches it.</li>
-<li><strong>Color themes</strong>: Felt (green) and Midnight (violet), picked from the palette button in the header. Mode and theme are independent and remembered on the device.</li>
+<li><strong>Color themes</strong>: Felt, Midnight, Ocean, Ember, Graphite, Bagel and Skol, picked from the palette button in the header. Mode and theme are independent and remembered on the device.</li>
 <li><strong>Design history</strong>: dated screenshots of how the app has looked over time are in the <a href="design-history/index.html">design history</a>.</li>
 </ul>
 <div class="callout note"><span class="label">Note</span>
-<p>The app has its own themes (Felt, Midnight). These docs use the Worn Hoodie docs kit shared by all the projects' docs; the app's look is not tied to it.</p>
+<p>The app has its own color themes. These docs use the Worn Hoodie docs kit shared by all the projects' docs; the app's look is not tied to it.</p>
 </div>
 <h2 id="themes">Themes</h2>
 <p>Light/dark mode and the color theme are independent. Mode is the <code>.dark</code> class on <code>&lt;html&gt;</code>, stored in <code>localStorage('theme')</code>. The color theme is <code>data-palette</code> on <code>&lt;html&gt;</code>, stored in <code>localStorage('palette')</code>, with each theme's tokens in <code>src/index.css</code> and its entry in <code>src/themes.ts</code>. A startup script in <code>index.html</code> applies both before first paint, using the registry that <code>vite.config.ts</code> injects. <code>Layout.tsx</code> keeps <code>&lt;meta name="theme-color"&gt;</code> in step with the felt color.</p>
