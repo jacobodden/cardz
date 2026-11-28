@@ -1,3 +1,4 @@
+import { dealerChip } from './dealer'
 import type { CardGame, RoundMeta, InputField, PlayerScoreInput, PlayerScoreResult, ConfigField, RoundInfoChip } from './types'
 
 const FACE_NAMES: Record<number, string> = { 11: 'Jacks', 12: 'Queens', 13: 'Kings' }
@@ -16,7 +17,7 @@ export const payMe: CardGame = {
   scoreDirection: 'low',
   cardFace: { rank: '5', suit: '♥' },
   roundMode: 'fixed',
-  usesDealer: false,
+  usesDealer: true,
 
   getConfigSchema(): ConfigField[] {
     return []
@@ -47,10 +48,13 @@ export const payMe: CardGame = {
     ]
   },
 
-  getRoundInfo(meta: RoundMeta): RoundInfoChip[] {
+  getRoundInfo(meta: RoundMeta, { players }): RoundInfoChip[] {
+    const chips: RoundInfoChip[] = []
+    const dealer = dealerChip(meta, players)
+    if (dealer) chips.push(dealer)
     const wild = Number(meta.data.wildCard)
-    if (!wild) return []
-    return [{ key: 'wild', label: 'Wilds', value: wildCardName(wild) }]
+    if (wild) chips.push({ key: 'wild', label: 'Wilds', value: wildCardName(wild) })
+    return chips
   },
 
   computeScore(_meta: RoundMeta, inputs: PlayerScoreInput[]): PlayerScoreResult[] {

@@ -314,6 +314,17 @@ describe('getRoundInfo', () => {
     expect(wilds).toEqual(['3s', '4s', '5s', '6s', '7s', '8s', '9s', '10s', 'Jacks', 'Queens', 'Kings'])
     expect(payMe.getRoundInfo!(rounds[0], { players })[0]).toMatchObject({ label: 'Wilds' })
   })
+
+  it('Pay Me names the dealer before the wild card, when the round has one', () => {
+    expect(payMe.getRoundInfo!(meta({ wildCard: 3, dealer_player_id: 2 }), { players })).toEqual([
+      { key: 'dealer', label: 'Dealer', value: 'Bob' },
+      { key: 'wild', label: 'Wilds', value: '3s' },
+    ])
+    // Games started before Pay Me had a dealer.
+    expect(payMe.getRoundInfo!(meta({ wildCard: 3 }), { players })).toEqual([
+      { key: 'wild', label: 'Wilds', value: '3s' },
+    ])
+  })
 })
 
 describe('dealer', () => {

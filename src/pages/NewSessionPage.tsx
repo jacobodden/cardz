@@ -26,7 +26,8 @@ export default function NewSessionPage() {
   // null = the user cleared the field; the suggested value is used instead.
   const [config, setConfig] = useState<Record<string, number | null>>({})
   const [playerNames, setPlayerNames] = useState<string[]>(['', ''])
-  const [firstDealerIndex, setFirstDealerIndex] = useState(0)
+  // The name slot (index into playerNames) picked as first dealer.
+  const [dealerSlot, setDealerSlot] = useState(0)
   const [creating, setCreating] = useState(false)
 
   const validCount = playerNames.filter(Boolean).length
@@ -93,6 +94,9 @@ export default function NewSessionPage() {
 
   function removePlayer(i: number) {
     setPlayerNames(playerNames.filter((_, idx) => idx !== i))
+    // Keep the pick on the same player as the slots below move up.
+    if (i < dealerSlot) setDealerSlot(dealerSlot - 1)
+    else if (i === dealerSlot) setDealerSlot(0)
   }
 
   function updatePlayer(i: number, name: string) {
@@ -104,8 +108,11 @@ export default function NewSessionPage() {
   async function handleStart() {
     if (!selectedGame) return
     setCreating(true)
+    // Blank slots add no player, so count the dealer's seat among the named
+    // ones. A pick that is now blank falls back to the first player.
+    const namedSlots = playerNames.flatMap((name, i) => (name ? [i] : []))
     const sessionConfig = usesDealer
-      ? { ...resolvedConfig(), first_dealer_index: firstDealerIndex }
+      ? { ...resolvedConfig(), first_dealer_index: Math.max(0, namedSlots.indexOf(dealerSlot)) }
       : resolvedConfig()
 
     const session = await createSession(selectedGame.id!, title || undefined)
@@ -308,17 +315,19 @@ export default function NewSessionPage() {
               </label>
               <select
                 id="first-dealer"
-                value={firstDealerIndex}
-                onChange={(e) => setFirstDealerIndex(Number(e.target.value))}
+                value={playerNames[dealerSlot] ? dealerSlot : playerNames.findIndex(Boolean)}
+                onChange={(e) => setDealerSlot(Number(e.target.value))}
                 aria-label="First Dealer"
                 data-testid="first-dealer"
                 className={INPUT}
               >
-                {playerNames.map((name, i) => (
-                  <option key={i} value={i}>
-                    {name || `Player ${i + 1}`}
-                  </option>
-                ))}
+                {playerNames.map((name, i) =>
+                  name ? (
+                    <option key={i} value={i}>
+                      {name}
+                    </option>
+                  ) : null
+                )}
               </select>
             </section>
           )}
