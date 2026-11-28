@@ -4,7 +4,7 @@ import { canSplitMissedTricks, upAndDown } from '../../src/games/upanddown'
 import { payMe } from '../../src/games/payme'
 import { highScore, lowScore } from '../../src/games/points'
 import { nextDealerId } from '../../src/games/dealer'
-import { getConfigMax, getDefaultConfig, type RoundMeta } from '../../src/games/types'
+import { getConfigMax, getDefaultConfig, getRoundInfo, type RoundMeta } from '../../src/games/types'
 
 const meta = (hand_size = 0): RoundMeta => ({ round_number: 1, hand_size, data: {} })
 
@@ -295,35 +295,58 @@ describe('getRoundInfo', () => {
   ]
   const meta = (data: Record<string, any>): RoundMeta => ({ round_number: 1, hand_size: 3, data })
 
-  it('Up & Down shows the dealer, and trump once chosen (red for red suits)', () => {
-    expect(upAndDown.getRoundInfo!(meta({ dealer_player_id: 2 }), { players })).toEqual([
-      { key: 'dealer', label: 'Dealer', value: 'Bob' },
-    ])
-    expect(upAndDown.getRoundInfo!(meta({ dealer_player_id: 1, trump: '♥' }), { players })).toEqual([
-      { key: 'dealer', label: 'Dealer', value: 'Ann' },
+  it('Up & Down shows trump once chosen (red for red suits)', () => {
+    expect(getRoundInfo(upAndDown, meta({}), { players })).toEqual([])
+    expect(getRoundInfo(upAndDown, meta({ trump: '♥' }), { players })).toEqual([
       { key: 'trump', label: 'Trump', value: '♥', history: true, tone: 'red' },
     ])
-    expect(upAndDown.getRoundInfo!(meta({ trump: '♠' }), { players })).toEqual([
+    expect(getRoundInfo(upAndDown, meta({ trump: '♠' }), { players })).toEqual([
       { key: 'trump', label: 'Trump', value: '♠', history: true },
     ])
   })
 
   it('Pay Me shows the wild card for every round', () => {
     const rounds = payMe.getRounds(2)
-    const wilds = rounds.map((r) => payMe.getRoundInfo!(r, { players })[0]?.value)
+    const wilds = rounds.map((r) => getRoundInfo(payMe, r, { players })[0]?.value)
     expect(wilds).toEqual(['3s', '4s', '5s', '6s', '7s', '8s', '9s', '10s', 'Jacks', 'Queens', 'Kings'])
-    expect(payMe.getRoundInfo!(rounds[0], { players })[0]).toMatchObject({ label: 'Wilds' })
+    expect(getRoundInfo(payMe, rounds[0], { players })[0]).toMatchObject({ label: 'Wilds' })
   })
 
-  it('Pay Me names the dealer before the wild card, when the round has one', () => {
-    expect(payMe.getRoundInfo!(meta({ wildCard: 3, dealer_player_id: 2 }), { players })).toEqual([
+  it('puts the dealer first in every dealer game, before the game\'s own chips', () => {
+    expect(getRoundInfo(payMe, meta({ wildCard: 3, dealer_player_id: 2 }), { players })).toEqual([
       { key: 'dealer', label: 'Dealer', value: 'Bob' },
       { key: 'wild', label: 'Wilds', value: '3s' },
     ])
-    // Games started before Pay Me had a dealer.
-    expect(payMe.getRoundInfo!(meta({ wildCard: 3 }), { players })).toEqual([
+    expect(getRoundInfo(upAndDown, meta({ dealer_player_id: 1, trump: '♥' }), { players })).toEqual([
+      { key: 'dealer', label: 'Dealer', value: 'Ann' },
+      { key: 'trump', label: 'Trump', value: '♥', history: true, tone: 'red' },
+    ])
+    for (const game of [highScore, lowScore]) {
+      expect(getRoundInfo(game, meta({ dealer_player_id: 1 }), { players })).toEqual([
+        { key: 'dealer', label: 'Dealer', value: 'Ann' },
+      ])
+    }
+  })
+
+  it('names no dealer when the round has none, or theirs is not seated', () => {
+    // Pay Me games started before Pay Me had a dealer.
+    expect(getRoundInfo(payMe, meta({ wildCard: 3 }), { players })).toEqual([
       { key: 'wild', label: 'Wilds', value: '3s' },
     ])
+    expect(getRoundInfo(highScore, meta({}), { players })).toEqual([])
+    expect(getRoundInfo(highScore, meta({ dealer_player_id: 42 }), { players })).toEqual([])
+  })
+
+  it('adds no dealer chip in a game without a dealer', () => {
+    const noDealer = { ...highScore, usesDealer: false }
+    expect(getRoundInfo(noDealer, meta({ dealer_player_id: 1 }), { players })).toEqual([])
+  })
+
+  it('no game adds the dealer chip itself', () => {
+    for (const game of getAllGames()) {
+      const own = game.getRoundInfo?.(meta({ dealer_player_id: 1 })) ?? []
+      expect(own.some((chip) => chip.key === 'dealer')).toBe(false)
+    }
   })
 })
 
@@ -343,15 +366,5 @@ describe('dealer', () => {
   it('has no next dealer without a seated current one', () => {
     expect(nextDealerId(seats, undefined)).toBeUndefined()
     expect(nextDealerId(seats, 42)).toBeUndefined()
-  })
-
-  it('High and Low Score show the round dealer as a chip', () => {
-    const players = [{ id: 5, name: 'Ann' }]
-    for (const game of [highScore, lowScore]) {
-      expect(game.usesDealer).toBe(true)
-      const info = game.getRoundInfo!({ round_number: 1, hand_size: 0, data: { dealer_player_id: 5 } }, { players })
-      expect(info).toEqual([{ key: 'dealer', label: 'Dealer', value: 'Ann' }])
-      expect(game.getRoundInfo!({ round_number: 1, hand_size: 0, data: {} }, { players })).toEqual([])
-    }
   })
 })

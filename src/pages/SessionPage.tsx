@@ -13,7 +13,7 @@ import type { RoundMetaInfo, ScoreboardRow } from '../db/rounds'
 import { getGame } from '../games'
 import { canMoveDealer } from '../games/dealer'
 import { topByTotal } from '../games/standings'
-import type { InputField, PlayerScoreInput, RoundInfoChip, ScoreDirection } from '../games/types'
+import { getRoundInfo, type InputField, type PlayerScoreInput, type RoundInfoChip, type ScoreDirection } from '../games/types'
 import FeltHero from '../components/FeltHero'
 import HeaderActions from '../components/HeaderActions'
 import { HeroSlotContext } from '../components/heroSlot'
@@ -227,10 +227,11 @@ export default function SessionPage() {
 
   const gameImpl = session?.game ? getGame(session.game.slug) : undefined
 
-  /** The game's info chips for a round, from its stored data. */
+  /** The info chips for a round, from its stored data: dealer first, then the game's own. */
   function roundInfo(roundNum: number, data: Record<string, any> | undefined): RoundInfoChip[] {
-    if (!gameImpl?.getRoundInfo || !data) return []
-    return gameImpl.getRoundInfo(
+    if (!gameImpl || !data) return []
+    return getRoundInfo(
+      gameImpl,
       { round_number: roundNum, hand_size: data.handSize ?? 0, data },
       { players: session?.players ?? [] },
     )
