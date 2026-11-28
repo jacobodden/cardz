@@ -178,6 +178,17 @@ describe('sessions', () => {
     ])
   })
 
+  it('rotates the Pay Me dealer from the chosen first dealer, wrapping around', async () => {
+    const { sessionId, playerIds } = await startGame('pay-me', ['A', 'B', 'C'], { first_dealer_index: 2 })
+    const configs = (await db.sessions.get(sessionId))!.config_json.round_configs
+    expect(configs.map((c: any) => c.data.dealer_player_id)).toEqual(
+      Array.from({ length: 11 }, (_, i) => playerIds[(2 + i) % 3])
+    )
+    expect((await getCurrentRound(sessionId)).data_json.dealer_player_id).toBe(playerIds[2])
+    await submitRound(sessionId, payMeRound(playerIds, [0, 4, 9]))
+    expect((await getCurrentRound(sessionId)).data_json.dealer_player_id).toBe(playerIds[0])
+  })
+
   it('starts open games with no round plan', async () => {
     const { sessionId } = await startGame('high-score', ['A', 'B'])
     const session = await db.sessions.get(sessionId)
@@ -409,6 +420,8 @@ describe('points game dealer', () => {
   it('refuses other games, other players and finished games', async () => {
     const ud = await startGame('up-and-down', ['A', 'B', 'C'], { peak: 3 })
     await expect(setDealer(ud.sessionId, ud.playerIds[1])).rejects.toThrow(/can't be changed/)
+    const pm = await startGame('pay-me', ['A', 'B'])
+    await expect(setDealer(pm.sessionId, pm.playerIds[1])).rejects.toThrow(/can't be changed/)
 
     const a = await startGame('high-score', ['A', 'B'])
     const b = await startGame('high-score', ['C', 'D'])

@@ -23,6 +23,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    id: '2026-11-27',
+    date: '2026-11-27',
+    title: 'Pay Me shows who deals',
+    items: [
+      'In Pay Me, pick the first dealer when you start. A D on their card marks who is dealing, and the deal passes to the next player each round.',
+      'Up & Down now shows the D on the dealer\'s card too.',
+      'Pay Me games started before this update show no dealer.',
+      'Fixed: the first dealer you pick stays picked when you remove a player or leave a name blank.',
+    ],
+  },
+  {
     id: '2026-11-26',
     date: '2026-11-26',
     title: 'Longer Up & Down games',

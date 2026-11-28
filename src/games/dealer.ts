@@ -1,10 +1,19 @@
-import type { RoundInfoChip, RoundMeta } from './types'
+import type { CardGame, RoundInfoChip, RoundMeta } from './types'
 
 /**
- * The dealer is stored on each round as `data.dealer_player_id`. Fixed-length
- * games (Up & Down) set it for every round up front; open-ended games pass it
- * to the next seat after each round, and players can move it at will.
+ * The dealer is stored on each round as `data.dealer_player_id`. Fixed games
+ * set it for every round up front; open games pass it to the next seat after
+ * each round, and players can move it at will. The Session page marks the
+ * dealer with a D in every dealer game.
  */
+
+/**
+ * Whether players can move the dealer: only open games, where the deal is
+ * passed on round by round. Fixed games set every round's dealer up front.
+ */
+export function canMoveDealer(game: CardGame | undefined): boolean {
+  return !!game?.usesDealer && game.roundMode === 'open'
+}
 
 /**
  * The player after `currentId` in seat order (`order_index`), wrapping

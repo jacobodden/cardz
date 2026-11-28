@@ -1,6 +1,6 @@
 import { db } from './dexie-db'
 import { getGame } from '../games'
-import { nextDealerId } from '../games/dealer'
+import { canMoveDealer, nextDealerId } from '../games/dealer'
 import type { InputField } from '../games/types'
 
 export interface ScoreboardRow {
@@ -199,7 +199,7 @@ export async function setDealer(sessionId: number, playerId: number): Promise<vo
 
     const game = await db.games.get(session.game_id)
     const gameImpl = game ? getGame(game.slug) : undefined
-    if (!gameImpl?.usesDealer || gameImpl.roundMode !== 'open') {
+    if (!canMoveDealer(gameImpl)) {
       throw new Error("This game's dealer can't be changed")
     }
 

@@ -11,6 +11,7 @@ import {
 } from '../db/rounds'
 import type { RoundMetaInfo, ScoreboardRow } from '../db/rounds'
 import { getGame } from '../games'
+import { canMoveDealer } from '../games/dealer'
 import { topByTotal } from '../games/standings'
 import type { InputField, PlayerScoreInput, RoundInfoChip, ScoreDirection } from '../games/types'
 import FeltHero from '../components/FeltHero'
@@ -252,8 +253,10 @@ export default function SessionPage() {
   const roundNumber = round && !round.complete ? round.round_number : null
 
   const rawRoundData: Record<string, any> = round?.data_json ?? {}
-  // Open games pass the deal round to round, and players can move it.
-  const movableDealer = active && !!gameImpl?.usesDealer && gameImpl.roundMode === 'open'
+  // Every dealer game marks the dealer with a D. Open games pass the deal
+  // round to round, and players can move it; fixed games set it up front.
+  const showDealer = active && !!gameImpl?.usesDealer
+  const movableDealer = active && canMoveDealer(gameImpl)
   const dealerId: number | undefined = rawRoundData.dealer_player_id
   const handSize: number = rawRoundData.handSize ?? 0
 
@@ -472,11 +475,11 @@ export default function SessionPage() {
                     <h2 data-testid="player-name" className="truncate text-base font-bold text-ink">
                       {row.name}
                     </h2>
-                    {movableDealer && (
+                    {showDealer && (
                       <DealerChip
                         name={row.name}
                         dealing={row.player_id === dealerId}
-                        onPick={() => handleSetDealer(row.player_id)}
+                        onPick={movableDealer ? () => handleSetDealer(row.player_id) : undefined}
                       />
                     )}
                   </div>
@@ -999,10 +1002,11 @@ function UndoIcon() {
 }
 
 /**
- * The dealer button on a player card: a solid D on the dealer, and a faint
- * dashed D on everyone else that makes them the dealer when tapped.
+ * The dealer button on a player card: a solid D on the dealer, and, when the
+ * dealer can be moved (`onPick`), a faint dashed D on everyone else that makes
+ * them the dealer when tapped.
  */
-function DealerChip({ name, dealing, onPick }: { name: string; dealing: boolean; onPick: () => void }) {
+function DealerChip({ name, dealing, onPick }: { name: string; dealing: boolean; onPick?: () => void }) {
   const disc = 'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] leading-none font-extrabold'
   if (dealing) {
     return (
@@ -1017,6 +1021,7 @@ function DealerChip({ name, dealing, onPick }: { name: string; dealing: boolean;
       </span>
     )
   }
+  if (!onPick) return null
   return (
     <button
       type="button"

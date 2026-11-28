@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 import {
   createSession,
+  editSavedRows,
   expectNoHorizontalOverflow,
   expectPlayerTotal,
   expandHistory,
@@ -515,35 +516,9 @@ test('seeding: existing installs gain the new games', async ({ page }) => {
   await expect(page.getByTestId('game-option')).toHaveCount(4)
 
   // Simulate an existing install that only knows the original two games.
-  await page.evaluate(async () => {
-    await new Promise<void>((resolve, reject) => {
-      const request = indexedDB.open('cardz')
-      request.onerror = () => reject(request.error)
-      request.onsuccess = () => {
-        const database = request.result
-        const tx = database.transaction('games', 'readwrite')
-        const store = tx.objectStore('games')
-        const cursorRequest = store.openCursor()
-
-        cursorRequest.onerror = () => reject(cursorRequest.error)
-        cursorRequest.onsuccess = () => {
-          const cursor = cursorRequest.result
-          if (!cursor) return
-          const value = cursor.value as { slug?: string }
-          if (value.slug === 'high-score' || value.slug === 'low-score') {
-            cursor.delete()
-          }
-          cursor.continue()
-        }
-
-        tx.oncomplete = () => {
-          database.close()
-          resolve()
-        }
-        tx.onerror = () => reject(tx.error)
-      }
-    })
-  })
+  await editSavedRows(page, 'games', (game) =>
+    game.slug === 'high-score' || game.slug === 'low-score' ? null : undefined
+  )
 
   await page.reload()
   await expect(page.getByTestId('game-option')).toHaveCount(4)

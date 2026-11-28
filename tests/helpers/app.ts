@@ -37,6 +37,58 @@ async function seedStorage(page: Page, key: string, value: string): Promise<void
 }
 
 /**
+ * Rewrite the saved rows of one IndexedDB store in the open app, like data
+ * saved by an older version. `edit` runs in the page, so it must use only its
+ * argument: return the new row, `null` to delete it, or `undefined` to keep it.
+ */
+export async function editSavedRows(
+  page: Page,
+  store: string,
+  edit: (row: any) => any
+): Promise<void> {
+  await page.evaluate(
+    ({ store, editSource }) =>
+      new Promise<void>((resolve, reject) => {
+        let edit: (row: any) => any
+        try {
+          edit = new Function(`return (${editSource})`)()
+        } catch (error) {
+          reject(error)
+          return
+        }
+        const request = indexedDB.open('cardz')
+        request.onerror = () => reject(request.error)
+        request.onsuccess = () => {
+          const database = request.result
+          const tx = database.transaction(store, 'readwrite')
+          const cursorRequest = tx.objectStore(store).openCursor()
+          cursorRequest.onerror = () => reject(cursorRequest.error)
+          cursorRequest.onsuccess = () => {
+            const cursor = cursorRequest.result
+            if (!cursor) return
+            try {
+              const next = edit(cursor.value)
+              if (next === null) cursor.delete()
+              else if (next !== undefined) cursor.update(next)
+              cursor.continue()
+            } catch (error) {
+              reject(error)
+              tx.abort()
+            }
+          }
+          tx.oncomplete = () => {
+            database.close()
+            resolve()
+          }
+          tx.onerror = () => reject(tx.error)
+          tx.onabort = () => reject(tx.error)
+        }
+      }),
+    { store, editSource: edit.toString() }
+  )
+}
+
+/**
  * Set light or dark mode before the first navigation. Call this before
  * createSession(). A later call wins over an earlier one.
  */
