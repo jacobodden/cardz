@@ -1,3 +1,5 @@
+import { dealerChip } from './dealer'
+
 export interface RoundMeta {
   round_number: number
   hand_size: number
@@ -57,7 +59,7 @@ export interface RoundInfoChip {
 }
 
 export interface RoundInfoContext {
-  /** Players in the session, to resolve ids stored in round data (e.g. the dealer). */
+  /** Players in the session, to name the round's dealer from its stored id. */
   players: { id: number; name: string }[]
 }
 
@@ -121,8 +123,20 @@ export interface CardGame {
    * above the score inputs, and chips marked `history` also appear in each
    * player's round history. `meta.data` is the round's stored data, so
    * values entered while scoring (e.g. trump) show once the round is saved.
+   * Leave out the dealer chip: callers use the shared `getRoundInfo(game, …)`
+   * below, which adds it.
    */
-  getRoundInfo?(meta: RoundMeta, context: RoundInfoContext): RoundInfoChip[]
+  getRoundInfo?(meta: RoundMeta): RoundInfoChip[]
+}
+
+/**
+ * The chips for a round: "Dealer <name>" first in every `usesDealer` game
+ * whose round has a seated dealer, then the game's own chips.
+ */
+export function getRoundInfo(game: CardGame, meta: RoundMeta, context: RoundInfoContext): RoundInfoChip[] {
+  const dealer = game.usesDealer ? dealerChip(meta, context.players) : null
+  const own = game.getRoundInfo?.(meta) ?? []
+  return dealer ? [dealer, ...own] : own
 }
 
 /** Config defaults for `game` at `playerCount`, falling back to the schema. */

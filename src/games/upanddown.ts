@@ -1,5 +1,4 @@
 import type { CardGame, RoundMeta, InputField, PlayerScoreInput, PlayerScoreResult, ConfigField, RoundInfoChip } from './types'
-import { dealerChip } from './dealer'
 
 const SUITS = ['♠', '♥', '♣', '♦']
 const RED_SUITS = new Set(['♥', '♦'])
@@ -149,22 +148,18 @@ export const upAndDown: CardGame = {
     ]
   },
 
-  getRoundInfo(meta: RoundMeta, { players }): RoundInfoChip[] {
-    const chips: RoundInfoChip[] = []
-    const dealer = dealerChip(meta, players)
-    if (dealer) chips.push(dealer)
-
+  getRoundInfo(meta: RoundMeta): RoundInfoChip[] {
     const trump = meta.data.trump
-    if (typeof trump === 'string' && trump) {
-      chips.push({
+    if (typeof trump !== 'string' || !trump) return []
+    return [
+      {
         key: 'trump',
         label: 'Trump',
         value: trump,
         history: true,
         ...(RED_SUITS.has(trump) ? { tone: 'red' as const } : {}),
-      })
-    }
-    return chips
+      },
+    ]
   },
 
   computeScore(_meta: RoundMeta, inputs: PlayerScoreInput[]): PlayerScoreResult[] {
